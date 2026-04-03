@@ -5,7 +5,7 @@ guiLaTeX - Canvas Component
 Visual canvas for LaTeX element rendering and manipulation
 """
 
-from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsItem
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsItem, QGraphicsLineItem
 from PyQt6.QtGui import QPainter, QPen, QBrush, QColor, QFont
 from PyQt6.QtCore import Qt, QRectF, QPointF
 
@@ -28,6 +28,20 @@ class LaTeXElement(QGraphicsItem):
         self.color = QColor(0, 0, 0)
         self.rotation = 0
         self.scale = 1.0
+        
+        # Resize and rotation handles
+        self.handle_size = 8
+        self.resize_handles = [
+            (0, 0), (0.5, 0), (1, 0),  # Top left, top center, top right
+            (1, 0.5),  # Right center
+            (1, 1), (0.5, 1), (0, 1),  # Bottom right, bottom center, bottom left
+            (0, 0.5)   # Left center
+        ]
+        self.rotation_handle = (0.5, -0.1)  # Above the top center
+        
+        # Mouse interaction
+        self.drag_start_pos = None
+        self.drag_handle = None
     
     def boundingRect(self):
         """Return bounding rectangle"""
@@ -50,6 +64,128 @@ class LaTeXElement(QGraphicsItem):
         painter.setPen(QPen(self.color))
         painter.setFont(self.font)
         painter.drawText(self.boundingRect(), Qt.AlignmentFlag.AlignCenter, self.text)
+        
+        # Draw resize and rotation handles if selected
+        if self.isSelected():
+            self.draw_handles(painter)
+    
+    def draw_handles(self, painter):
+        """Draw resize and rotation handles"""
+        painter.setBrush(QBrush(QColor(0, 120, 215)))
+        painter.setPen(QPen(QColor(255, 255, 255), 1))
+        
+        # Draw resize handles
+        for handle in self.resize_handles:
+            x = handle[0] * self.width
+            y = handle[1] * self.height
+            rect = QRectF(
+                x - self.handle_size / 2, 
+                y - self.handle_size / 2, 
+                self.handle_size, 
+                self.handle_size
+            )
+            painter.drawRect(rect)
+        
+        # Draw rotation handle
+        x = self.rotation_handle[0] * self.width
+        y = self.rotation_handle[1] * self.height
+        rect = QRectF(
+            x - self.handle_size / 2, 
+            y - self.handle_size / 2, 
+            self.handle_size, 
+            self.handle_size
+        )
+        painter.setBrush(QBrush(QColor(255, 165, 0)))
+        painter.drawRect(rect)
+    
+    def get_handle_at(self, pos):
+        """Get handle at position"""
+        # Check resize handles
+        for i, handle in enumerate(self.resize_handles):
+            x = handle[0] * self.width
+            y = handle[1] * self.height
+            rect = QRectF(
+                x - self.handle_size / 2, 
+                y - self.handle_size / 2, 
+                self.handle_size, 
+                self.handle_size
+            )
+            if rect.contains(pos):
+                return f"resize_{i}"
+        
+        # Check rotation handle
+        x = self.rotation_handle[0] * self.width
+        y = self.rotation_handle[1] * self.height
+        rect = QRectF(
+            x - self.handle_size / 2, 
+            y - self.handle_size / 2, 
+            self.handle_size, 
+            self.handle_size
+        )
+        if rect.contains(pos):
+            return "rotate"
+        
+        return None
+    
+    def mousePressEvent(self, event):
+        """Handle mouse press event"""
+        pos = event.pos()
+        self.drag_handle = self.get_handle_at(pos)
+        if self.drag_handle:
+            self.drag_start_pos = pos
+        else:
+            super().mousePressEvent(event)
+    
+    def mouseMoveEvent(self, event):
+        """Handle mouse move event"""
+        if self.drag_handle:
+            pos = event.pos()
+            if self.drag_start_pos:
+                dx = pos.x() - self.drag_start_pos.x()
+                dy = pos.y() - self.drag_start_pos.y()
+                
+                if self.drag_handle == "rotate":
+                    # Calculate rotation angle
+                    center = QPointF(self.width / 2, self.height / 2)
+                    start_angle = (self.drag_start_pos - center).angle()
+                    current_angle = (pos - center).angle()
+                    angle_diff = (current_angle - start_angle) % 360
+                    self.rotation = (self.rotation + angle_diff) % 360
+                    self.setRotation(self.rotation)
+                elif self.drag_handle.startswith("resize_"):
+                    # Handle resize
+                    handle_idx = int(self.drag_handle.split("_")[1])
+                    handle = self.resize_handles[handle_idx]
+                    
+                    # Calculate new width and height
+                    if handle[0] == 1:  # Right side
+                        new_width = max(20, self.width + dx)
+                    elif handle[0] == 0:  # Left side
+                        new_width = max(20, self.width - dx)
+                    else:
+                        new_width = self.width
+                    
+                    if handle[1] == 1:  # Bottom side
+                        new_height = max(20, self.height + dy)
+                    elif handle[1] == 0:  # Top side
+                        new_height = max(20, self.height - dy)
+                    else:
+                        new_height = self.height
+                    
+                    # Update size
+                    self.width = new_width
+                    self.height = new_height
+                    self.update()
+                    
+            self.drag_start_pos = pos
+        else:
+            super().mouseMoveEvent(event)
+    
+    def mouseReleaseEvent(self, event):
+        """Handle mouse release event"""
+        self.drag_handle = None
+        self.drag_start_pos = None
+        super().mouseReleaseEvent(event)
 
 
 class TextElement(LaTeXElement):
@@ -76,10 +212,14 @@ class Canvas(QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        # Create scene
-        self.scene = QGraphicsScene()
-        self.scene.setSceneRect(0, 0, 800, 600)
-        self.setScene(self.scene)
+        # Page settings
+        self.page_width = 800
+        self.page_height = 600
+        self.current_page = 0
+        self.pages = []  # List of scenes for each page
+        
+        # Create first page
+        self.add_page()
         
         # Set view properties
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -87,10 +227,7 @@ class Canvas(QGraphicsView):
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         
-        # Add grid background
-        self.draw_grid()
-        
-        # Add sample elements
+        # Add sample elements to first page
         self.add_sample_elements()
         
         # Selection state
@@ -100,35 +237,66 @@ class Canvas(QGraphicsView):
         self.rubber_band = None
         self.rubber_band_start = None
     
+    def add_page(self):
+        """Add a new page"""
+        scene = QGraphicsScene()
+        scene.setSceneRect(0, 0, self.page_width, self.page_height)
+        self.pages.append(scene)
+        self.setScene(scene)
+        self.current_page = len(self.pages) - 1
+        self.draw_grid()
+    
+    def switch_page(self, page_index):
+        """Switch to a specific page"""
+        if 0 <= page_index < len(self.pages):
+            self.setScene(self.pages[page_index])
+            self.current_page = page_index
+    
+    def get_current_page(self):
+        """Get current page scene"""
+        return self.pages[self.current_page]
+    
+    def get_page_count(self):
+        """Get number of pages"""
+        return len(self.pages)
+    
     def draw_grid(self):
         """Draw grid background"""
         grid_size = 20
-        scene_rect = self.scene.sceneRect()
+        scene = self.get_current_page()
+        scene_rect = scene.sceneRect()
+        
+        # Clear existing grid lines
+        for item in scene.items():
+            if hasattr(item, 'type') and item.type() == QGraphicsLineItem.Type:
+                scene.removeItem(item)
         
         # Draw horizontal lines
         for y in range(0, int(scene_rect.height()), grid_size):
-            self.scene.addLine(0, y, scene_rect.width(), y, QPen(QColor(220, 220, 220), 0.5))
+            scene.addLine(0, y, scene_rect.width(), y, QPen(QColor(220, 220, 220), 0.5, Qt.PenStyle.DashLine))
         
         # Draw vertical lines
         for x in range(0, int(scene_rect.width()), grid_size):
-            self.scene.addLine(x, 0, x, scene_rect.height(), QPen(QColor(220, 220, 220), 0.5))
+            scene.addLine(x, 0, x, scene_rect.height(), QPen(QColor(220, 220, 220), 0.5, Qt.PenStyle.DashLine))
     
     def add_sample_elements(self):
         """Add sample elements to canvas"""
+        scene = self.get_current_page()
         # Add text element
         text_element = TextElement(100, 100)
-        self.scene.addItem(text_element)
+        scene.addItem(text_element)
         
         # Add math element
         math_element = MathElement(350, 100)
-        self.scene.addItem(math_element)
+        scene.addItem(math_element)
     
     def resizeEvent(self, event):
         """Handle resize event"""
         super().resizeEvent(event)
         # Adjust scene size based on view size
         view_rect = self.viewport().rect()
-        self.scene.setSceneRect(0, 0, view_rect.width(), view_rect.height())
+        scene = self.get_current_page()
+        scene.setSceneRect(0, 0, view_rect.width(), view_rect.height())
         self.draw_grid()
     
     def mousePressEvent(self, event):
@@ -215,25 +383,29 @@ class Canvas(QGraphicsView):
     
     def update_selected_items(self):
         """Update selected items list"""
-        self.selected_items = [item for item in self.scene.items() if item.isSelected()]
+        scene = self.get_current_page()
+        self.selected_items = [item for item in scene.items() if item.isSelected()]
     
     def deselect_all(self):
         """Deselect all items"""
-        for item in self.scene.items():
+        scene = self.get_current_page()
+        for item in scene.items():
             item.setSelected(False)
         self.selected_items = []
     
     def select_all(self):
         """Select all items"""
-        for item in self.scene.items():
+        scene = self.get_current_page()
+        for item in scene.items():
             if isinstance(item, LaTeXElement):
                 item.setSelected(True)
         self.update_selected_items()
     
     def delete_selected_items(self):
         """Delete selected items"""
+        scene = self.get_current_page()
         for item in self.selected_items[:]:
-            self.scene.removeItem(item)
+            scene.removeItem(item)
         self.selected_items = []
     
     def copy_selected_items(self):

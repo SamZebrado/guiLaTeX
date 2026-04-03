@@ -69,10 +69,11 @@ class MainWindow(QMainWindow):
         self.pdf_preview.set_latex_engines(self.latex_engine, self.latex_generator)
         
         # Connect canvas selection changes to property panel
-        self.canvas.scene.selectionChanged.connect(self.on_selection_changed)
+        scene = self.canvas.get_current_page()
+        scene.selectionChanged.connect(self.on_selection_changed)
         
         # Connect canvas changes to PDF preview
-        self.canvas.scene.changed.connect(self.on_scene_changed)
+        scene.changed.connect(self.on_scene_changed)
         
     def create_menu_bar(self):
         """Create menu bar"""
@@ -168,8 +169,9 @@ class MainWindow(QMainWindow):
     
     def export_document(self):
         """Export document"""
-        # Get elements from canvas
-        elements = [item for item in self.canvas.scene.items() 
+        # Get elements from current page
+        scene = self.canvas.get_current_page()
+        elements = [item for item in scene.items() 
                    if hasattr(item, 'text')]
         
         if not elements:
@@ -193,8 +195,9 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Preview", "LaTeX engine not found")
             return
         
-        # Get elements from canvas
-        elements = [item for item in self.canvas.scene.items() 
+        # Get elements from current page
+        scene = self.canvas.get_current_page()
+        elements = [item for item in scene.items() 
                    if hasattr(item, 'text')]
         
         if not elements:
@@ -224,8 +227,9 @@ class MainWindow(QMainWindow):
     
     def on_selection_changed(self):
         """Handle canvas selection changes"""
-        # Get selected items
-        selected_items = [item for item in self.canvas.scene.items() if item.isSelected()]
+        # Get selected items from current page
+        scene = self.canvas.get_current_page()
+        selected_items = [item for item in scene.items() if item.isSelected()]
         
         # Set first selected item to property panel
         if selected_items:
@@ -235,8 +239,9 @@ class MainWindow(QMainWindow):
     
     def on_scene_changed(self, regions=None):
         """Handle canvas scene changes"""
-        # Get all elements
-        elements = [item for item in self.canvas.scene.items() 
+        # Get all elements from current page
+        scene = self.canvas.get_current_page()
+        elements = [item for item in scene.items() 
                    if hasattr(item, 'text')]
         
         # Update PDF preview elements
