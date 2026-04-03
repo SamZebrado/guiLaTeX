@@ -64,25 +64,25 @@ Develop guiLaTeX - a visual LaTeX editor with drag-and-drop functionality simila
     - Files: src/gui/properties.cpp
 
 ### Phase 4: LaTeX Integration (Week 9-12)
-11. [ ] Visual-to-LaTeX code generation
+12. [ ] Visual-to-LaTeX code generation
     - Target: Generate LaTeX from visual elements
     - Verification: Visual changes produce correct LaTeX
-    - Files: src/latex/generator.cpp
+    - Files: src/latex/generator.py
 
-12. [ ] LaTeX-to-Visual parsing
+13. [ ] LaTeX-to-Visual parsing
     - Target: Parse LaTeX to visual elements
     - Verification: Can import existing LaTeX
-    - Files: src/latex/parser.cpp
+    - Files: src/latex/parser.py
 
-13. [ ] Real-time preview
+14. [ ] Real-time preview
     - Target: Live PDF preview
     - Verification: Preview updates in real-time
-    - Files: src/gui/preview.cpp
+    - Files: src/gui/preview.py
 
-14. [ ] Math formula editor
+15. [ ] Math formula editor
     - Target: Visual math formula editing
     - Verification: Can create/edit formulas visually
-    - Files: src/gui/matheditor.cpp
+    - Files: src/gui/matheditor.py
 
 ### Phase 5: Polish & Distribution (Week 13-16)
 15. [ ] Performance optimization

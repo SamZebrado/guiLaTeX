@@ -14,10 +14,10 @@
 - Technology stack chosen: Qt 6 (Python/PyQt6) for MVP development
 
 ## Active risks / blockers
-- Need to determine optimal technology stack (Qt vs Electron)
 - LaTeX-to-visual synchronization complexity
 - Performance concerns with real-time rendering
 - Cross-platform compatibility challenges
+- Python performance overhead for complex documents
 
 ## Current source-of-truth files
 - guiLaTeX/

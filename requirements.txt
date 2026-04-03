@@ -1,0 +1,19 @@
+# guiLaTeX Dependencies
+
+# Core dependencies
+PyQt6==6.11.0
+
+# Testing
+pytest==7.4.0
+pytest-qt==4.2.0
+
+# LaTeX integration
+latex==0.7.0
+
+# Utility
+numpy==1.26.0
+Pillow==10.0.0
+
+# Development
+build==0.10.0
+wheel==0.41.0
