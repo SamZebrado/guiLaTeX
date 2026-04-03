@@ -6,15 +6,20 @@ Develop guiLaTeX - a visual LaTeX editor with drag-and-drop functionality simila
 ## Milestones
 
 ### Phase 1: Foundation (Week 1-2)
-1. [ ] Technology stack decision
+1. [x] Technology stack decision
    - Target: Choose between Qt (C++/Python) vs Electron
    - Verification: Document decision rationale
    - Files: docs/architecture.md
 
-2. [ ] Project structure setup
+2. [x] Project structure setup
    - Target: Create basic project structure
    - Verification: Directory structure exists
    - Files: src/, tests/, docs/, assets/
+
+3. [ ] Development environment setup (PyQt6)
+   - Target: Install PyQt6 and dependencies
+   - Verification: Can import PyQt6 in Python
+   - Files: requirements.txt
 
 3. [ ] Development environment setup
    - Target: Configure build system and dependencies

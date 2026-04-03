@@ -11,6 +11,7 @@
 - No existing tool fully meets requirements
 - System has TeX Live 2022 installed
 - macOS 26.2, ARM64 architecture
+- Technology stack chosen: Qt 6 (Python/PyQt6) for MVP development
 
 ## Active risks / blockers
 - Need to determine optimal technology stack (Qt vs Electron)

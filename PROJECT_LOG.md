@@ -25,5 +25,12 @@
 - What changed: Created dev-workflow skill for structured development
 - Why: Need disciplined workflow for medium-to-large project
 - Verified by: Skill file creation
-- Files / commands: <workspace-root>/.trae/skills/dev-workflow/SKILL.md
+- Files / commands: .trae/skills/dev-workflow/SKILL.md
 - Follow-up: Apply workflow to guiLaTeX development
+
+## 2026-04-03 15:00 - Technology Stack Decision
+- What changed: Chose Qt 6 (Python/PyQt6) for MVP development
+- Why: Balance of rapid development and performance
+- Verified by: Technology evaluation complete
+- Files / commands: Updated STATUS.md, PLAN.md
+- Follow-up: Begin setting up PyQt6 development environment
