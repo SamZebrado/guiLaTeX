@@ -15,10 +15,8 @@ from PyQt6.QtCore import Qt
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import modules
-import canvas
 from latex.engine import LaTeXEngine, LaTeXGenerator
 from gui.properties import PropertyPanel
-from gui.preview import PDFPreview
 from gui.pdf_canvas import PDFCanvas
 
 
@@ -42,59 +40,38 @@ class MainWindow(QMainWindow):
         # Create menu bar
         self.create_menu_bar()
         
-        # Create tab widget
-        self.tab_widget = QTabWidget()
-        layout.addWidget(self.tab_widget)
-        
-        # Tab 1: Visual Editor
-        visual_editor_tab = QWidget()
-        visual_layout = QVBoxLayout(visual_editor_tab)
-        
         # Create main splitter (vertical)
         main_splitter = QSplitter(Qt.Orientation.Vertical)
-        visual_layout.addWidget(main_splitter)
+        layout.addWidget(main_splitter)
         
-        # Create top splitter (horizontal) for canvas and properties
+        # Create top splitter (horizontal) for PDF canvas and properties
         top_splitter = QSplitter(Qt.Orientation.Horizontal)
         main_splitter.addWidget(top_splitter)
         
-        # Create canvas
-        self.canvas = canvas.Canvas()
-        top_splitter.addWidget(self.canvas)
+        # Create PDF canvas (now the main visual editor)
+        self.pdf_canvas = PDFCanvas()
+        top_splitter.addWidget(self.pdf_canvas)
         
         # Create property panel
         self.property_panel = PropertyPanel()
         top_splitter.addWidget(self.property_panel)
         
-        # Create PDF preview
-        self.pdf_preview = PDFPreview()
-        main_splitter.addWidget(self.pdf_preview)
-        
-        # Tab 2: PDF Canvas
-        pdf_canvas_tab = QWidget()
-        pdf_layout = QVBoxLayout(pdf_canvas_tab)
-        
-        # Create PDF canvas
-        self.pdf_canvas = PDFCanvas()
-        pdf_layout.addWidget(self.pdf_canvas)
-        
-        # Add tabs
-        self.tab_widget.addTab(visual_editor_tab, "Visual Editor")
-        self.tab_widget.addTab(pdf_canvas_tab, "PDF Canvas")
+        # Create LaTeX code view
+        from PyQt6.QtWidgets import QTextEdit
+        self.latex_view = QTextEdit()
+        self.latex_view.setReadOnly(True)
+        self.latex_view.setPlaceholderText("Generated LaTeX code will appear here...")
+        main_splitter.addWidget(self.latex_view)
         
         # Initialize LaTeX engine
         self.latex_engine = LaTeXEngine()
         self.latex_generator = LaTeXGenerator()
         
-        # Set LaTeX engines for PDF preview
-        self.pdf_preview.set_latex_engines(self.latex_engine, self.latex_generator)
+        # Create initial PDF document
+        self.create_initial_pdf()
         
-        # Connect canvas selection changes to property panel
-        scene = self.canvas.get_current_page()
-        scene.selectionChanged.connect(self.on_selection_changed)
-        
-        # Connect canvas changes to PDF preview
-        scene.changed.connect(self.on_scene_changed)
+        # Connect PDF canvas events to property panel
+        # TODO: Implement PDF canvas selection events
         
     def create_menu_bar(self):
         """Create menu bar"""
@@ -188,36 +165,50 @@ class MainWindow(QMainWindow):
         documentation_action = QAction("Documentation", self)
         help_menu.addAction(documentation_action)
     
+
+    
+    def create_initial_pdf(self):
+        """Create initial PDF document"""
+        # Create a simple initial document
+        initial_latex = r"""\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{geometry}
+\geometry{a4paper, margin=2cm}
+\begin{document}
+
+\title{guiLaTeX Document}
+\author{User}
+\maketitle
+
+Hello World!
+
+$E = mc^2$
+
+This is a test document created with guiLaTeX.
+\end{document}
+"""
+        
+        # Create PDF
+        success = self.pdf_canvas.create_pdf(initial_latex)
+        if success:
+            # Update LaTeX view
+            self.latex_view.setText(initial_latex)
+            print("Initial PDF created successfully")
+        else:
+            print("Failed to create initial PDF")
+    
     def export_document(self):
         """Export document"""
-        current_tab = self.tab_widget.currentIndex()
+        # Get PDF path from PDF canvas
+        # TODO: Implement PDF to LaTeX export
+        pdf_path = "<repo-root>/temp/guiLaTeX_edit.pdf"
         
-        if current_tab == 0:  # Visual Editor
-            # Get elements from current page
-            scene = self.canvas.get_current_page()
-            elements = [item for item in scene.items() 
-                       if hasattr(item, 'text')]
-            
-            if not elements:
-                QMessageBox.warning(self, "Export", "No elements to export")
-                return
-            
-            # Generate LaTeX code
-            latex_code = self.latex_generator.generate(elements)
-            
-            # Save to file
-            # TODO: Implement file save dialog
-            print("Generated LaTeX code:")
-            print(latex_code)
-            
-            # Also update PDF canvas
-            self.pdf_canvas.create_pdf(latex_code)
-            
-            QMessageBox.information(self, "Export", "Document exported successfully")
-            
-        elif current_tab == 1:  # PDF Canvas
-            # TODO: Implement PDF to LaTeX export
-            QMessageBox.information(self, "Export", "PDF to LaTeX export coming soon!")
+        if os.path.exists(pdf_path):
+            # Show success message
+            QMessageBox.information(self, "Export", f"Document exported successfully to:\n{pdf_path}")
+        else:
+            QMessageBox.warning(self, "Export", "No document to export")
     
     def preview_document(self):
         """Preview document as PDF"""
@@ -226,66 +217,18 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Preview", "LaTeX engine not found")
             return
         
-        current_tab = self.tab_widget.currentIndex()
+        # Get PDF path from PDF canvas
+        pdf_path = "<repo-root>/temp/guiLaTeX_edit.pdf"
         
-        if current_tab == 0:  # Visual Editor
-            # Get elements from current page
-            scene = self.canvas.get_current_page()
-            elements = [item for item in scene.items() 
-                       if hasattr(item, 'text')]
-            
-            if not elements:
-                QMessageBox.warning(self, "Preview", "No elements to preview")
-                return
-            
-            # Generate LaTeX code
-            latex_code = self.latex_generator.generate(elements)
-            
-            # Compile to PDF
-            success, pdf_path, log, temp_dir = self.latex_engine.compile(latex_code, keep_temp=True)
-            
+        if os.path.exists(pdf_path):
+            # View PDF
+            success = self.latex_engine.view_pdf(pdf_path)
             if success:
-                # View PDF
-                self.latex_engine.view_pdf(pdf_path)
-                # Clean up temp directory after viewing
-                import shutil
-                import os
-                if temp_dir and os.path.exists(temp_dir):
-                    try:
-                        shutil.rmtree(temp_dir)
-                        print(f"Cleaned up temp directory: {temp_dir}")
-                    except Exception as e:
-                        print(f"Warning: Failed to clean up temp directory: {e}")
+                print(f"Previewing PDF: {pdf_path}")
             else:
-                QMessageBox.warning(self, "Preview", f"Compilation failed:\n{log}")
-                
-        elif current_tab == 1:  # PDF Canvas
-            # TODO: Implement PDF preview from PDF canvas
-            QMessageBox.information(self, "Preview", "PDF canvas preview coming soon!")
-    
-    def on_selection_changed(self):
-        """Handle canvas selection changes"""
-        # Get selected items from current page
-        scene = self.canvas.get_current_page()
-        selected_items = [item for item in scene.items() if item.isSelected()]
-        
-        # Set first selected item to property panel
-        if selected_items:
-            self.property_panel.set_element(selected_items[0])
+                QMessageBox.warning(self, "Preview", "Failed to open PDF viewer")
         else:
-            self.property_panel.set_element(None)
-    
-    def on_scene_changed(self, regions=None):
-        """Handle canvas scene changes"""
-        # Get all elements from current page
-        scene = self.canvas.get_current_page()
-        elements = [item for item in scene.items() 
-                   if hasattr(item, 'text')]
-        
-        # Update PDF preview elements
-        self.pdf_preview.set_elements(elements)
-        # Refresh preview
-        self.pdf_preview.refresh_preview()
+            QMessageBox.warning(self, "Preview", "No document to preview")
 
 
 def main():

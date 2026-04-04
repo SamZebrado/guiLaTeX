@@ -7,8 +7,8 @@ PDF canvas viewer for interactive PDF editing
 
 import fitz  # PyMuPDF
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QLabel, QPushButton, QHBoxLayout
-from PyQt6.QtGui import QPixmap, QPainter, QImage, QPen, QBrush, QColor
-from PyQt6.QtCore import Qt, QSize, QRect
+from PyQt6.QtGui import QPixmap, QPainter, QImage, QPen, QBrush, QColor, QCursor
+from PyQt6.QtCore import Qt, QSize, QRect, QRectF, QPointF
 
 
 class PDFPageWidget(QWidget):
@@ -30,6 +30,44 @@ class PDFPageWidget(QWidget):
         # Set widget size
         self.setMinimumSize(int(self.width * 0.8), int(self.height * 0.8))
         
+        # Mouse interaction
+        self.drag_start_pos = None
+        self.selected_element = None
+        self.drag_handle = None
+        
+        # Extract text elements from PDF
+        self.text_elements = self.extract_text_elements()
+        
+        # Handle size
+        self.handle_size = 8
+        self.resize_handles = [
+            (0, 0), (0.5, 0), (1, 0),  # Top left, top center, top right
+            (1, 0.5),  # Right center
+            (1, 1), (0.5, 1), (0, 1),  # Bottom right, bottom center, bottom left
+            (0, 0.5)   # Left center
+        ]
+    
+    def extract_text_elements(self):
+        """Extract text elements from PDF page"""
+        text_elements = []
+        
+        # Get text blocks
+        blocks = self.page.get_text("blocks")
+        for i, block in enumerate(blocks):
+            x0, y0, x1, y1, text, block_type, page_num = block
+            if text.strip():
+                text_elements.append({
+                    'id': f'text_{i}',
+                    'type': 'text',
+                    'text': text.strip(),
+                    'x': x0,
+                    'y': y0,
+                    'width': x1 - x0,
+                    'height': y1 - y0
+                })
+        
+        return text_elements
+    
     def paintEvent(self, event):
         """Paint PDF page"""
         painter = QPainter(self)
@@ -41,6 +79,10 @@ class PDFPageWidget(QWidget):
         
         # Draw selection indicators
         self.draw_selections(painter)
+        
+        # Draw handles for selected element
+        if self.selected_element:
+            self.draw_handles(painter)
     
     def render_page(self):
         """Render PDF page to QPixmap"""
@@ -69,14 +111,166 @@ class PDFPageWidget(QWidget):
             )
             painter.drawRect(rect)
     
+    def draw_handles(self, painter):
+        """Draw resize handles for selected element"""
+        if not self.selected_element:
+            return
+        
+        painter.setBrush(QBrush(QColor(0, 120, 215)))
+        painter.setPen(QPen(QColor(255, 255, 255), 1))
+        
+        # Draw resize handles
+        element = self.selected_element
+        for handle in self.resize_handles:
+            x = element['x'] + handle[0] * element['width']
+            y = element['y'] + handle[1] * element['height']
+            rect = QRect(
+                int(x * self.scale - self.handle_size / 2),
+                int(y * self.scale - self.handle_size / 2),
+                self.handle_size,
+                self.handle_size
+            )
+            painter.drawRect(rect)
+    
+    def get_element_at(self, pos):
+        """Get element at position"""
+        # Convert mouse position to PDF coordinates
+        x = pos.x() / self.scale
+        y = pos.y() / self.scale
+        
+        # Check text elements
+        for element in self.text_elements:
+            rect = QRectF(
+                element['x'],
+                element['y'],
+                element['width'],
+                element['height']
+            )
+            if rect.contains(x, y):
+                return element
+        
+        return None
+    
+    def get_handle_at(self, pos):
+        """Get handle at position"""
+        if not self.selected_element:
+            return None
+        
+        # Convert mouse position to PDF coordinates
+        x = pos.x() / self.scale
+        y = pos.y() / self.scale
+        
+        # Check resize handles
+        element = self.selected_element
+        for i, handle in enumerate(self.resize_handles):
+            handle_x = element['x'] + handle[0] * element['width']
+            handle_y = element['y'] + handle[1] * element['height']
+            rect = QRectF(
+                handle_x - self.handle_size / 2 / self.scale,
+                handle_y - self.handle_size / 2 / self.scale,
+                self.handle_size / self.scale,
+                self.handle_size / self.scale
+            )
+            if rect.contains(x, y):
+                return f"resize_{i}"
+        
+        return None
+    
     def mousePressEvent(self, event):
         """Handle mouse press"""
-        # Convert mouse position to PDF coordinates
-        x = event.pos().x() / self.scale
-        y = event.pos().y() / self.scale
+        # Check if clicking on a handle
+        handle = self.get_handle_at(event.pos())
+        if handle:
+            self.drag_handle = handle
+            self.drag_start_pos = event.pos()
+            return
         
-        # TODO: Implement element selection logic
-        print(f"Mouse pressed at PDF coords: ({x:.2f}, {y:.2f})")
+        # Check if clicking on an element
+        element = self.get_element_at(event.pos())
+        if element:
+            # Clear previous selection
+            self.selected_elements = []
+            self.selected_element = element
+            self.selected_elements.append(element)
+            self.update()
+            print(f"Selected element: {element['text']}")
+        else:
+            # Clear selection
+            self.selected_elements = []
+            self.selected_element = None
+            self.update()
+    
+    def mouseMoveEvent(self, event):
+        """Handle mouse move"""
+        if self.drag_handle and self.selected_element and self.drag_start_pos:
+            # Calculate delta
+            dx = (event.pos().x() - self.drag_start_pos.x()) / self.scale
+            dy = (event.pos().y() - self.drag_start_pos.y()) / self.scale
+            
+            # Handle resize
+            if self.drag_handle.startswith("resize_"):
+                handle_idx = int(self.drag_handle.split("_")[1])
+                handle = self.resize_handles[handle_idx]
+                
+                element = self.selected_element
+                new_width = element['width']
+                new_height = element['height']
+                new_x = element['x']
+                new_y = element['y']
+                
+                if handle[0] == 1:  # Right side
+                    new_width = max(20, element['width'] + dx)
+                elif handle[0] == 0:  # Left side
+                    new_width = max(20, element['width'] - dx)
+                    new_x = element['x'] + dx
+                
+                if handle[1] == 1:  # Bottom side
+                    new_height = max(20, element['height'] + dy)
+                elif handle[1] == 0:  # Top side
+                    new_height = max(20, element['height'] - dy)
+                    new_y = element['y'] + dy
+                
+                # Update element
+                element['width'] = new_width
+                element['height'] = new_height
+                element['x'] = new_x
+                element['y'] = new_y
+                
+                self.update()
+                self.drag_start_pos = event.pos()
+    
+    def mouseReleaseEvent(self, event):
+        """Handle mouse release"""
+        self.drag_handle = None
+        self.drag_start_pos = None
+    
+    def hoverMoveEvent(self, event):
+        """Handle hover move"""
+        # Check if hovering over a handle
+        handle = self.get_handle_at(event.pos())
+        if handle:
+            if handle.startswith("resize_"):
+                handle_idx = int(handle.split("_")[1])
+                cursor_map = [
+                    Qt.CursorShape.SizeFDiagCursor,  # Top left
+                    Qt.CursorShape.SizeVerCursor,     # Top center
+                    Qt.CursorShape.SizeBDiagCursor,  # Top right
+                    Qt.CursorShape.SizeHorCursor,     # Right center
+                    Qt.CursorShape.SizeFDiagCursor,  # Bottom right
+                    Qt.CursorShape.SizeVerCursor,     # Bottom center
+                    Qt.CursorShape.SizeBDiagCursor,  # Bottom left
+                    Qt.CursorShape.SizeHorCursor      # Left center
+                ]
+                if 0 <= handle_idx < len(cursor_map):
+                    self.setCursor(cursor_map[handle_idx])
+                    return
+        
+        # Check if hovering over an element
+        element = self.get_element_at(event.pos())
+        if element:
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
     
     def set_scale(self, scale):
         """Set zoom scale"""
@@ -152,20 +346,31 @@ class PDFCanvas(QWidget):
         os.makedirs(pdf_dir, exist_ok=True)
         pdf_path = os.path.join(pdf_dir, 'guiLaTeX_edit.pdf')
         
+        # First compile to temporary directory
         engine = LaTeXEngine()
-        success, pdf_path, log, temp_dir = engine.compile(latex_code, output_path=pdf_path, keep_temp=False)
+        success, temp_pdf_path, log, temp_dir = engine.compile(latex_code, keep_temp=True)
         
         if success:
-            self.load_pdf(pdf_path)
-            # Clean up temp directory immediately
+            # Copy the generated PDF to our persistent location
             import shutil
-            if temp_dir and os.path.exists(temp_dir):
-                try:
-                    shutil.rmtree(temp_dir)
-                    print(f"Cleaned up temp directory: {temp_dir}")
-                except Exception as e:
-                    print(f"Warning: Failed to clean up temp directory: {e}")
-            return True
+            try:
+                shutil.copy2(temp_pdf_path, pdf_path)
+                print(f"Copied PDF to: {pdf_path}")
+                
+                # Load the PDF
+                self.load_pdf(pdf_path)
+                
+                # Clean up temp directory
+                if temp_dir and os.path.exists(temp_dir):
+                    try:
+                        shutil.rmtree(temp_dir)
+                        print(f"Cleaned up temp directory: {temp_dir}")
+                    except Exception as e:
+                        print(f"Warning: Failed to clean up temp directory: {e}")
+                return True
+            except Exception as e:
+                print(f"Error copying PDF: {e}")
+                return False
         else:
             print(f"LaTeX compilation failed: {log}")
             return False
