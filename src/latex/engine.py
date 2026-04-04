@@ -38,12 +38,13 @@ class LaTeXEngine:
         """Check if LaTeX is available"""
         return self.latex_cmd is not None
     
-    def compile(self, latex_code, output_dir=None, keep_temp=False):
+    def compile(self, latex_code, output_dir=None, output_path=None, keep_temp=False):
         """Compile LaTeX code to PDF
         
         Args:
             latex_code (str): LaTeX code to compile
             output_dir (str, optional): Output directory
+            output_path (str, optional): Exact output PDF path
             keep_temp (bool): Whether to keep temporary directory after compilation
             
         Returns:
@@ -53,8 +54,12 @@ class LaTeXEngine:
             return False, None, "LaTeX engine not found", None
         
         # Create temporary directory if no output directory provided
-        if output_dir is None:
+        if output_dir is None and output_path is None:
             temp_dir = tempfile.mkdtemp()
+        elif output_path:
+            # Use directory from output_path
+            temp_dir = os.path.dirname(output_path)
+            os.makedirs(temp_dir, exist_ok=True)
         else:
             temp_dir = output_dir
             os.makedirs(temp_dir, exist_ok=True)
@@ -64,8 +69,12 @@ class LaTeXEngine:
         with open(tex_file, 'w', encoding='utf-8') as f:
             f.write(latex_code)
         
-        # Compile
-        pdf_file = os.path.join(temp_dir, 'document.pdf')
+        # Determine PDF output path
+        if output_path:
+            pdf_file = output_path
+        else:
+            pdf_file = os.path.join(temp_dir, 'document.pdf')
+        
         log_file = os.path.join(temp_dir, 'document.log')
         
         try:
@@ -88,7 +97,7 @@ class LaTeXEngine:
                 log = result.stdout + '\n' + result.stderr
             
             # Clean up temporary directory if not keeping it
-            if not keep_temp and output_dir is None and os.path.exists(temp_dir):
+            if not keep_temp and output_dir is None and output_path is None and os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
                 temp_dir = None
             
@@ -96,7 +105,7 @@ class LaTeXEngine:
             
         except Exception as e:
             # Clean up on error
-            if output_dir is None and os.path.exists(temp_dir):
+            if output_dir is None and output_path is None and os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
             return False, None, f"Error compiling LaTeX: {str(e)}", None
     

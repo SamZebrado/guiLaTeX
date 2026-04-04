@@ -142,18 +142,29 @@ class PDFCanvas(QWidget):
     
     def create_pdf(self, latex_code):
         """Create PDF from LaTeX code"""
-        # TODO: Implement LaTeX to PDF conversion
-        # For now, use a placeholder
         import sys
         import os
         sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
         from latex.engine import LaTeXEngine
+        
+        # Create a persistent PDF file in the project directory
+        pdf_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'temp')
+        os.makedirs(pdf_dir, exist_ok=True)
+        pdf_path = os.path.join(pdf_dir, 'guiLaTeX_edit.pdf')
+        
         engine = LaTeXEngine()
-        success, pdf_path, log, temp_dir = engine.compile(latex_code, keep_temp=True)
+        success, pdf_path, log, temp_dir = engine.compile(latex_code, output_path=pdf_path, keep_temp=False)
         
         if success:
             self.load_pdf(pdf_path)
-            # TODO: Clean up temp dir when done
+            # Clean up temp directory immediately
+            import shutil
+            if temp_dir and os.path.exists(temp_dir):
+                try:
+                    shutil.rmtree(temp_dir)
+                    print(f"Cleaned up temp directory: {temp_dir}")
+                except Exception as e:
+                    print(f"Warning: Failed to clean up temp directory: {e}")
             return True
         else:
             print(f"LaTeX compilation failed: {log}")

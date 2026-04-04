@@ -127,6 +127,61 @@ class LaTeXElement(QGraphicsItem):
         
         return None
     
+    def hoverEnterEvent(self, event):
+        """Handle hover enter event"""
+        pos = event.pos()
+        handle = self.get_handle_at(pos)
+        if handle:
+            if handle == "rotate":
+                self.setCursor(Qt.CursorShape.SizeAllCursor)
+            elif handle.startswith("resize_"):
+                handle_idx = int(handle.split("_")[1])
+                cursor_map = [
+                    Qt.CursorShape.SizeFDiagCursor,  # Top left
+                    Qt.CursorShape.SizeVerCursor,     # Top center
+                    Qt.CursorShape.SizeBDiagCursor,  # Top right
+                    Qt.CursorShape.SizeHorCursor,     # Right center
+                    Qt.CursorShape.SizeFDiagCursor,  # Bottom right
+                    Qt.CursorShape.SizeVerCursor,     # Bottom center
+                    Qt.CursorShape.SizeBDiagCursor,  # Bottom left
+                    Qt.CursorShape.SizeHorCursor      # Left center
+                ]
+                if 0 <= handle_idx < len(cursor_map):
+                    self.setCursor(cursor_map[handle_idx])
+        else:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+        super().hoverEnterEvent(event)
+    
+    def hoverMoveEvent(self, event):
+        """Handle hover move event"""
+        pos = event.pos()
+        handle = self.get_handle_at(pos)
+        if handle:
+            if handle == "rotate":
+                self.setCursor(Qt.CursorShape.SizeAllCursor)
+            elif handle.startswith("resize_"):
+                handle_idx = int(handle.split("_")[1])
+                cursor_map = [
+                    Qt.CursorShape.SizeFDiagCursor,  # Top left
+                    Qt.CursorShape.SizeVerCursor,     # Top center
+                    Qt.CursorShape.SizeBDiagCursor,  # Top right
+                    Qt.CursorShape.SizeHorCursor,     # Right center
+                    Qt.CursorShape.SizeFDiagCursor,  # Bottom right
+                    Qt.CursorShape.SizeVerCursor,     # Bottom center
+                    Qt.CursorShape.SizeBDiagCursor,  # Bottom left
+                    Qt.CursorShape.SizeHorCursor      # Left center
+                ]
+                if 0 <= handle_idx < len(cursor_map):
+                    self.setCursor(cursor_map[handle_idx])
+        else:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+        super().hoverMoveEvent(event)
+    
+    def hoverLeaveEvent(self, event):
+        """Handle hover leave event"""
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+        super().hoverLeaveEvent(event)
+    
     def mousePressEvent(self, event):
         """Handle mouse press event"""
         pos = event.pos()
@@ -165,22 +220,27 @@ class LaTeXElement(QGraphicsItem):
                     handle_idx = int(self.drag_handle.split("_")[1])
                     handle = self.resize_handles[handle_idx]
                     
-                    # Calculate new width and height
+                    # Get current position and size
+                    current_pos = self.pos()
+                    
+                    # Calculate new width and height based on mouse position
                     if handle[0] == 1:  # Right side
-                        new_width = max(20, self.width + dx)
+                        new_width = max(20, pos.x())
                     elif handle[0] == 0:  # Left side
-                        new_width = max(20, self.width - dx)
+                        new_width = max(20, self.width - (pos.x() - self.drag_start_pos.x()))
                         # Adjust position when resizing from left
-                        self.setPos(self.x() + dx, self.y())
+                        new_x = current_pos.x() + (pos.x() - self.drag_start_pos.x())
+                        self.setPos(new_x, current_pos.y())
                     else:
                         new_width = self.width
                     
                     if handle[1] == 1:  # Bottom side
-                        new_height = max(20, self.height + dy)
+                        new_height = max(20, pos.y())
                     elif handle[1] == 0:  # Top side
-                        new_height = max(20, self.height - dy)
+                        new_height = max(20, self.height - (pos.y() - self.drag_start_pos.y()))
                         # Adjust position when resizing from top
-                        self.setPos(self.x(), self.y() + dy)
+                        new_y = current_pos.y() + (pos.y() - self.drag_start_pos.y())
+                        self.setPos(current_pos.x(), new_y)
                     else:
                         new_height = self.height
                     
