@@ -152,6 +152,7 @@ class LaTeXElement(QGraphicsItem):
                     angle_diff = (current_angle - start_angle) % 360
                     self.rotation = (self.rotation + angle_diff) % 360
                     self.setRotation(self.rotation)
+                    self.scene().update()  # Force scene update
                 elif self.drag_handle.startswith("resize_"):
                     # Handle resize
                     handle_idx = int(self.drag_handle.split("_")[1])
@@ -176,6 +177,7 @@ class LaTeXElement(QGraphicsItem):
                     self.width = new_width
                     self.height = new_height
                     self.update()
+                    self.scene().update()  # Force scene update
                     
             self.drag_start_pos = pos
         else:
