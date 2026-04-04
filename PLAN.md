@@ -106,9 +106,15 @@ Develop guiLaTeX - a visual LaTeX editor with drag-and-drop functionality simila
     - Verification: Can render PDF pages with selectable elements
     - Files: src/gui/pdf_canvas.py
     - Constraints: WYSIWYG principle - only implement lossless features
-    - Current status: Working - elements can be selected and resized (terminal shows updates), but visual changes not yet visible in UI
-    - Issues: Visual element updates not appearing in preview area
-    - Next steps: Fix visual rendering of element size changes
+    - Current status: Working - elements can be selected, resized, and visual updates are visible in UI with semi-transparent traces of old positions
+    - Features implemented:
+      - Element selection with blue border and resize handles
+      - In-memory editing (reduces disk I/O)
+      - Visual updates showing element size changes with semi-transparent traces
+      - Font size scales proportionally with element size
+      - Save button to persist changes to disk
+    - Issues: None critical - visual feedback working as expected
+    - Next steps: Implement element movement and PDF text updating
 
 18. [ ] PDF-to-LaTeX reconstruction engine
     - Target: Extract annotated PDF elements back to LaTeX source

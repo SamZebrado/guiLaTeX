@@ -7,7 +7,7 @@ PDF canvas viewer for interactive PDF editing
 
 import fitz  # PyMuPDF
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QLabel, QPushButton, QHBoxLayout
-from PyQt6.QtGui import QPixmap, QPainter, QImage, QPen, QBrush, QColor, QCursor
+from PyQt6.QtGui import QPixmap, QPainter, QImage, QPen, QBrush, QColor, QCursor, QFont
 from PyQt6.QtCore import Qt, QSize, QRect, QRectF, QPointF
 
 
@@ -55,20 +55,26 @@ class PDFPageWidget(QWidget):
         """Extract text elements from PDF page"""
         text_elements = []
         
-        # Get text blocks
-        blocks = self.page.get_text("blocks")
+        # Get text blocks with detailed information
+        blocks = self.page.get_text("dict")["blocks"]
         for i, block in enumerate(blocks):
-            x0, y0, x1, y1, text, block_type, page_num = block
-            if text.strip():
-                text_elements.append({
-                    'id': f'text_{i}',
-                    'type': 'text',
-                    'text': text.strip(),
-                    'x': x0,
-                    'y': y0,
-                    'width': x1 - x0,
-                    'height': y1 - y0
-                })
+            if "lines" in block:
+                for line in block["lines"]:
+                    for span in line["spans"]:
+                        text = span["text"].strip()
+                        if text:
+                            text_elements.append({
+                                'id': f'text_{i}',
+                                'type': 'text',
+                                'text': text,
+                                'x': span["bbox"][0],
+                                'y': span["bbox"][1],
+                                'width': span["bbox"][2] - span["bbox"][0],
+                                'height': span["bbox"][3] - span["bbox"][1],
+                                'font_size': span["size"],
+                                'original_width': span["bbox"][2] - span["bbox"][0],
+                                'original_height': span["bbox"][3] - span["bbox"][1]
+                            })
         
         return text_elements
     
@@ -157,6 +163,24 @@ class PDFPageWidget(QWidget):
                 int(element['height'] * self.scale)
             )
             painter.drawRect(rect)
+            
+            # Calculate font size based on element scaling
+            if 'original_width' in element and 'original_height' in element:
+                width_scale = element['width'] / element['original_width']
+                height_scale = element['height'] / element['original_height']
+                scale_factor = min(width_scale, height_scale)
+                
+                # Get original font size (default to 12 if not available)
+                original_font_size = element.get('font_size', 12)
+                new_font_size = max(6, int(original_font_size * scale_factor * self.scale))
+            else:
+                # Fallback: estimate font size based on element height
+                new_font_size = max(6, int(element['height'] * 0.3 * self.scale))
+            
+            # Set font with calculated size
+            font = QFont()
+            font.setPointSize(new_font_size)
+            painter.setFont(font)
             
             # Draw element text
             painter.setPen(QPen(QColor(0, 0, 0)))
