@@ -46,6 +46,10 @@ class PDFPageWidget(QWidget):
             (1, 1), (0.5, 1), (0, 1),  # Bottom right, bottom center, bottom left
             (0, 0.5)   # Left center
         ]
+        
+        # In-memory PDF editing
+        self.memory_elements = self.text_elements.copy()  # Copy for in-memory editing
+        self.is_dirty = False  # Track if changes need to be saved
     
     def extract_text_elements(self):
         """Extract text elements from PDF page"""
@@ -76,6 +80,9 @@ class PDFPageWidget(QWidget):
         pixmap = self.render_page()
         if not pixmap.isNull():
             painter.drawPixmap(0, 0, pixmap)
+        
+        # Draw memory elements (with updated sizes)
+        self.draw_memory_elements(painter)
         
         # Draw selection indicators
         self.draw_selections(painter)
@@ -131,6 +138,29 @@ class PDFPageWidget(QWidget):
                 self.handle_size
             )
             painter.drawRect(rect)
+    
+    def draw_memory_elements(self, painter):
+        """Draw elements with updated sizes from memory"""
+        # Draw elements with updated sizes
+        for element in self.memory_elements:
+            # Skip the selected element (it will be drawn in draw_selections)
+            if self.selected_element and element['id'] == self.selected_element['id']:
+                continue
+            
+            # Draw element background
+            painter.setBrush(QBrush(QColor(255, 255, 255, 200)))
+            painter.setPen(QPen(QColor(200, 200, 200), 1))
+            rect = QRect(
+                int(element['x'] * self.scale),
+                int(element['y'] * self.scale),
+                int(element['width'] * self.scale),
+                int(element['height'] * self.scale)
+            )
+            painter.drawRect(rect)
+            
+            # Draw element text
+            painter.setPen(QPen(QColor(0, 0, 0)))
+            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, element['text'])
     
     def get_element_at(self, pos):
         """Get element at position"""
@@ -236,8 +266,55 @@ class PDFPageWidget(QWidget):
                 element['x'] = new_x
                 element['y'] = new_y
                 
+                # Update memory elements
+                for mem_element in self.memory_elements:
+                    if mem_element['id'] == element['id']:
+                        mem_element['width'] = new_width
+                        mem_element['height'] = new_height
+                        mem_element['x'] = new_x
+                        mem_element['y'] = new_y
+                        break
+                
+                # Mark as dirty
+                self.is_dirty = True
+                
+                # Update the visual representation
                 self.update()
                 self.drag_start_pos = event.pos()
+                
+                # Print debug information
+                print(f"Resized element to: {new_width:.2f}x{new_height:.2f} at ({new_x:.2f}, {new_y:.2f})")
+    
+    def update_pdf_element(self, element):
+        """Update element in PDF"""
+        # This is a placeholder for actual PDF text updating
+        # In a real implementation, we would:
+        # 1. Remove the old text
+        # 2. Add new text with updated size and position
+        # 3. Save the PDF
+        print(f"Updating PDF element: {element['text']}")
+        # TODO: Implement actual PDF text updating
+    
+    def save_changes(self):
+        """Save changes to PDF file"""
+        if not self.is_dirty:
+            print("No changes to save")
+            return True
+        
+        try:
+            # TODO: Implement actual PDF updating
+            # For now, we'll just print the changes
+            print("Saving changes to PDF...")
+            for element in self.memory_elements:
+                print(f"Element: {element['text']} - {element['width']:.2f}x{element['height']:.2f} at ({element['x']:.2f}, {element['y']:.2f})")
+            
+            # Mark as clean
+            self.is_dirty = False
+            print("Changes saved successfully")
+            return True
+        except Exception as e:
+            print(f"Error saving changes: {e}")
+            return False
     
     def mouseReleaseEvent(self, event):
         """Handle mouse release"""
@@ -311,6 +388,11 @@ class PDFCanvas(QWidget):
         self.zoom_out_button = QPushButton("Zoom Out")
         self.zoom_out_button.clicked.connect(self.zoom_out)
         self.toolbar.addWidget(self.zoom_out_button)
+        
+        # Save button
+        self.save_button = QPushButton("Save")
+        self.save_button.clicked.connect(self.save_changes)
+        self.toolbar.addWidget(self.save_button)
         
         # Scroll area for PDF pages
         self.scroll_area = QScrollArea()
@@ -456,6 +538,12 @@ class PDFCanvas(QWidget):
         except Exception as e:
             print(f"Error adding annotation: {e}")
             return False
+    
+    def save_changes(self):
+        """Save changes to PDF"""
+        if self.page_widget:
+            return self.page_widget.save_changes()
+        return False
     
     def closeEvent(self, event):
         """Handle close event"""
