@@ -7,7 +7,7 @@ Main application entry point
 
 import sys
 import os
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QMenuBar, QMenu, QSplitter, QMessageBox
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QMenuBar, QMenu, QSplitter, QMessageBox, QTabWidget
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
 
@@ -19,6 +19,7 @@ import canvas
 from latex.engine import LaTeXEngine, LaTeXGenerator
 from gui.properties import PropertyPanel
 from gui.preview import PDFPreview
+from gui.pdf_canvas import PDFCanvas
 
 
 class MainWindow(QMainWindow):
@@ -41,9 +42,17 @@ class MainWindow(QMainWindow):
         # Create menu bar
         self.create_menu_bar()
         
+        # Create tab widget
+        self.tab_widget = QTabWidget()
+        layout.addWidget(self.tab_widget)
+        
+        # Tab 1: Visual Editor
+        visual_editor_tab = QWidget()
+        visual_layout = QVBoxLayout(visual_editor_tab)
+        
         # Create main splitter (vertical)
         main_splitter = QSplitter(Qt.Orientation.Vertical)
-        layout.addWidget(main_splitter)
+        visual_layout.addWidget(main_splitter)
         
         # Create top splitter (horizontal) for canvas and properties
         top_splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -60,6 +69,18 @@ class MainWindow(QMainWindow):
         # Create PDF preview
         self.pdf_preview = PDFPreview()
         main_splitter.addWidget(self.pdf_preview)
+        
+        # Tab 2: PDF Canvas
+        pdf_canvas_tab = QWidget()
+        pdf_layout = QVBoxLayout(pdf_canvas_tab)
+        
+        # Create PDF canvas
+        self.pdf_canvas = PDFCanvas()
+        pdf_layout.addWidget(self.pdf_canvas)
+        
+        # Add tabs
+        self.tab_widget.addTab(visual_editor_tab, "Visual Editor")
+        self.tab_widget.addTab(pdf_canvas_tab, "PDF Canvas")
         
         # Initialize LaTeX engine
         self.latex_engine = LaTeXEngine()
@@ -169,24 +190,34 @@ class MainWindow(QMainWindow):
     
     def export_document(self):
         """Export document"""
-        # Get elements from current page
-        scene = self.canvas.get_current_page()
-        elements = [item for item in scene.items() 
-                   if hasattr(item, 'text')]
+        current_tab = self.tab_widget.currentIndex()
         
-        if not elements:
-            QMessageBox.warning(self, "Export", "No elements to export")
-            return
-        
-        # Generate LaTeX code
-        latex_code = self.latex_generator.generate(elements)
-        
-        # Save to file
-        # TODO: Implement file save dialog
-        print("Generated LaTeX code:")
-        print(latex_code)
-        
-        QMessageBox.information(self, "Export", "Document exported successfully")
+        if current_tab == 0:  # Visual Editor
+            # Get elements from current page
+            scene = self.canvas.get_current_page()
+            elements = [item for item in scene.items() 
+                       if hasattr(item, 'text')]
+            
+            if not elements:
+                QMessageBox.warning(self, "Export", "No elements to export")
+                return
+            
+            # Generate LaTeX code
+            latex_code = self.latex_generator.generate(elements)
+            
+            # Save to file
+            # TODO: Implement file save dialog
+            print("Generated LaTeX code:")
+            print(latex_code)
+            
+            # Also update PDF canvas
+            self.pdf_canvas.create_pdf(latex_code)
+            
+            QMessageBox.information(self, "Export", "Document exported successfully")
+            
+        elif current_tab == 1:  # PDF Canvas
+            # TODO: Implement PDF to LaTeX export
+            QMessageBox.information(self, "Export", "PDF to LaTeX export coming soon!")
     
     def preview_document(self):
         """Preview document as PDF"""
@@ -195,35 +226,42 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Preview", "LaTeX engine not found")
             return
         
-        # Get elements from current page
-        scene = self.canvas.get_current_page()
-        elements = [item for item in scene.items() 
-                   if hasattr(item, 'text')]
+        current_tab = self.tab_widget.currentIndex()
         
-        if not elements:
-            QMessageBox.warning(self, "Preview", "No elements to preview")
-            return
-        
-        # Generate LaTeX code
-        latex_code = self.latex_generator.generate(elements)
-        
-        # Compile to PDF
-        success, pdf_path, log, temp_dir = self.latex_engine.compile(latex_code, keep_temp=True)
-        
-        if success:
-            # View PDF
-            self.latex_engine.view_pdf(pdf_path)
-            # Clean up temp directory after viewing
-            import shutil
-            import os
-            if temp_dir and os.path.exists(temp_dir):
-                try:
-                    shutil.rmtree(temp_dir)
-                    print(f"Cleaned up temp directory: {temp_dir}")
-                except Exception as e:
-                    print(f"Warning: Failed to clean up temp directory: {e}")
-        else:
-            QMessageBox.warning(self, "Preview", f"Compilation failed:\n{log}")
+        if current_tab == 0:  # Visual Editor
+            # Get elements from current page
+            scene = self.canvas.get_current_page()
+            elements = [item for item in scene.items() 
+                       if hasattr(item, 'text')]
+            
+            if not elements:
+                QMessageBox.warning(self, "Preview", "No elements to preview")
+                return
+            
+            # Generate LaTeX code
+            latex_code = self.latex_generator.generate(elements)
+            
+            # Compile to PDF
+            success, pdf_path, log, temp_dir = self.latex_engine.compile(latex_code, keep_temp=True)
+            
+            if success:
+                # View PDF
+                self.latex_engine.view_pdf(pdf_path)
+                # Clean up temp directory after viewing
+                import shutil
+                import os
+                if temp_dir and os.path.exists(temp_dir):
+                    try:
+                        shutil.rmtree(temp_dir)
+                        print(f"Cleaned up temp directory: {temp_dir}")
+                    except Exception as e:
+                        print(f"Warning: Failed to clean up temp directory: {e}")
+            else:
+                QMessageBox.warning(self, "Preview", f"Compilation failed:\n{log}")
+                
+        elif current_tab == 1:  # PDF Canvas
+            # TODO: Implement PDF preview from PDF canvas
+            QMessageBox.information(self, "Preview", "PDF canvas preview coming soon!")
     
     def on_selection_changed(self):
         """Handle canvas selection changes"""

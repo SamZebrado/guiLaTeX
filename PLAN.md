@@ -91,15 +91,15 @@ Develop guiLaTeX - a visual LaTeX editor with drag-and-drop functionality simila
 ### Phase 5: PDF-as-Canvas Architecture (New - 2026-04-04)
 **Proposed by guiLaTeX-Starter**
 
-16. [ ] Research PDF editing & annotation standards
+16. [x] Research PDF editing & annotation standards
     - Target: Investigate PDF as editable canvas with metadata annotations
     - Verification: Complete research document on PDF editing feasibility
     - Files: docs/research/pdf-editing-standards.md
     - Key questions:
-      - Can PDF elements carry custom metadata for LaTeX reconstruction?
-      - What PDF standards support lossless editing (PDF/A, PDF/X)?
-      - Licensing requirements for PDF manipulation libraries
-      - Existing solutions (PDF.js, PyMuPDF, pdf-lib)
+      - Can PDF elements carry custom metadata for LaTeX reconstruction? ✅ Yes (via annotations)
+      - What PDF standards support lossless editing (PDF/A, PDF/X)? ✅ PDF 1.x/2.0
+      - Licensing requirements for PDF manipulation libraries ✅ No special license needed
+      - Existing solutions (PDF.js, PyMuPDF, pdf-lib) ✅ PyMuPDF recommended
 
 17. [ ] Prototype PDF canvas viewer
     - Target: Display PDF as interactive canvas instead of static preview
