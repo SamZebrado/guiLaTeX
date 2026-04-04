@@ -101,11 +101,14 @@ Develop guiLaTeX - a visual LaTeX editor with drag-and-drop functionality simila
       - Licensing requirements for PDF manipulation libraries ✅ No special license needed
       - Existing solutions (PDF.js, PyMuPDF, pdf-lib) ✅ PyMuPDF recommended
 
-17. [ ] Prototype PDF canvas viewer
+17. [x] Prototype PDF canvas viewer
     - Target: Display PDF as interactive canvas instead of static preview
     - Verification: Can render PDF pages with selectable elements
     - Files: src/gui/pdf_canvas.py
     - Constraints: WYSIWYG principle - only implement lossless features
+    - Current status: Working - elements can be selected and resized (terminal shows updates), but visual changes not yet visible in UI
+    - Issues: Visual element updates not appearing in preview area
+    - Next steps: Fix visual rendering of element size changes
 
 18. [ ] PDF-to-LaTeX reconstruction engine
     - Target: Extract annotated PDF elements back to LaTeX source
