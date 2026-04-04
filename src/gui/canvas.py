@@ -147,11 +147,18 @@ class LaTeXElement(QGraphicsItem):
                 if self.drag_handle == "rotate":
                     # Calculate rotation angle
                     center = QPointF(self.width / 2, self.height / 2)
-                    start_angle = (self.drag_start_pos - center).angle()
-                    current_angle = (pos - center).angle()
+                    start_vector = self.drag_start_pos - center
+                    current_vector = pos - center
+                    
+                    # Calculate angle difference in degrees
+                    start_angle = start_vector.angle()
+                    current_angle = current_vector.angle()
                     angle_diff = (current_angle - start_angle) % 360
+                    
+                    # Update rotation
                     self.rotation = (self.rotation + angle_diff) % 360
                     self.setRotation(self.rotation)
+                    self.update()
                     self.scene().update()  # Force scene update
                 elif self.drag_handle.startswith("resize_"):
                     # Handle resize
@@ -163,6 +170,8 @@ class LaTeXElement(QGraphicsItem):
                         new_width = max(20, self.width + dx)
                     elif handle[0] == 0:  # Left side
                         new_width = max(20, self.width - dx)
+                        # Adjust position when resizing from left
+                        self.setPos(self.x() + dx, self.y())
                     else:
                         new_width = self.width
                     
@@ -170,6 +179,8 @@ class LaTeXElement(QGraphicsItem):
                         new_height = max(20, self.height + dy)
                     elif handle[1] == 0:  # Top side
                         new_height = max(20, self.height - dy)
+                        # Adjust position when resizing from top
+                        self.setPos(self.x(), self.y() + dy)
                     else:
                         new_height = self.height
                     
