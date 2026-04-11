@@ -29,6 +29,9 @@ class MockQWidget:
         return MockQMenuBar()
     def close(self, *args):
         pass
+    @property
+    def element_changed(self):
+        return MockSignal()
 
 class MockQSplitter:
     def __init__(self, *args):
@@ -119,11 +122,17 @@ sys.modules['PyQt6.QtCore'] = MockQtCore
 sys.modules['PyQt6.QtGui'] = MockQtGui
 
 # Mock PDFCanvas to avoid Qt dependencies
+class MockSignal:
+    def connect(self, *args):
+        pass
+
 class MockPDFCanvas:
     def __init__(self, document_model=None):
         self.document_model = document_model
         self.page_widget = type('obj', (object,), {
-            'memory_elements': []
+            'memory_elements': [],
+            'element_selected': MockSignal(),
+            'element_modified': MockSignal()
         })
     def create_pdf(self, latex_code):
         # Mock success
@@ -172,7 +181,11 @@ except ImportError as e:
     traceback.print_exc()
     sys.exit(1)
 
-from src.model import DocumentModel, PageModel, ElementModel
+# Import model from the same path as main.py
+try:
+    from model import DocumentModel, PageModel, ElementModel
+except ImportError:
+    from src.model import DocumentModel, PageModel, ElementModel
 
 def test_main_window_creates_document_model():
     """Test that MainWindow creates DocumentModel"""

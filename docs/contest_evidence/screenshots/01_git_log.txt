@@ -1,0 +1,12 @@
+645a217 chore: snapshot guiLaTeX state before audit verification
+b2763c8 Fix font scaling with element resizing and update plan
+cf6d699 Update development status and plan with current progress
+3c92326 Implement in-memory PDF editing and visual element resizing
+f100caa Remove temporary files and fix QRectF import
+---
+On branch main
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/contest_evidence/
+
+nothing added to commit but untracked files present (use "git add" to track)

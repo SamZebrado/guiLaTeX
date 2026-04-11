@@ -1,0 +1,112 @@
+=== test_model.py ===
+============================================================
+Running Model Layer Tests
+============================================================
+
+Testing ElementModel...
+  ✓ Element created with ID: 6f7c4339
+  ✓ Initial state correct
+  ✓ Modification tracking works
+  ✓ Position update works
+  ✓ Point containment works
+  ✓ Deep copy works with new ID
+ElementModel tests passed!
+
+Testing PageModel...
+  ✓ Page created with ID: d66c1200
+  ✓ Elements added to page
+  ✓ Element lookup by ID works
+  ✓ Element selection works
+  ✓ Element hit testing works
+PageModel tests passed!
+
+Testing DocumentModel...
+  ✓ Document created with ID: 190c86d1
+  ✓ Auto-created first page
+  ✓ Page dirty tracking works
+  ✓ Dirty element detection works
+  ✓ Global element lookup works
+  ✓ Page addition works
+  ✓ Document deep copy works
+  ✓ Serialization works
+  ✓ Deserialization works
+DocumentModel tests passed!
+
+Testing ID uniqueness...
+  ✓ All 100 element IDs are unique
+  ✓ All 10 page IDs are unique
+  ✓ All 5 document IDs are unique
+ID uniqueness tests passed!
+
+Testing deep copy behavior...
+  ✓ Metadata deep copy works
+  ✓ Page deep copy works
+Deep copy tests passed!
+
+============================================================
+All tests passed!
+============================================================
+---
+=== test_model_integration_simple.py ===
+============================================================
+Running Simple Model Integration Tests
+============================================================
+
+Testing DocumentModel creation...
+  ✓ DocumentModel created successfully
+  ✓ Document title: Test Document
+  ✓ Number of pages: 1
+
+Testing PageModel functionality...
+  ✓ PageModel with elements created successfully
+
+Testing model integration logic...
+  ✓ Added 2 elements to page model
+  ✓ Model as source of truth works correctly
+
+Testing model passing...
+  ✓ DocumentModel passed to PDFCanvas successfully
+
+============================================================
+All tests passed!
+============================================================
+
+Summary:
+- DocumentModel can be created
+- PageModel can manage elements
+- Elements can be added to page model
+- Model serves as source of truth
+- Model can be passed between components
+---
+=== test_minimal_integration.py ===
+============================================================
+Running Minimal Integration Test
+============================================================
+
+Testing minimal model integration...
+  ✓ Document model created successfully
+  ✓ Page model with elements created successfully
+
+Testing model to old-style elements conversion...
+  ✓ Model to old-style elements conversion works
+
+Testing element modification...
+  ✓ Element modification syncs back to model
+  ✓ Dirty flags are set correctly
+
+Testing model as source of truth...
+  ✓ Model changes are reflected in UI elements
+  ✓ Model is the source of truth
+
+Minimal integration test completed successfully!
+
+Summary:
+- Model layer can be passed to PDFCanvas
+- Elements sync from model to UI
+- UI changes sync back to model
+- Model is the source of truth
+- Dirty flags work correctly
+
+============================================================
+All tests passed!
+============================================================

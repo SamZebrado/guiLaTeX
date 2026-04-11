@@ -1,0 +1,6 @@
+=== ldd libQt6Gui.so.6 ===
+	libEGL.so.1 => not found
+=== apt source test ===
+W: Failed to fetch http://mirrors.byted.org/ubuntu-ports/dists/jammy-updates/InRelease  Temporary failure resolving 'mirrors.byted.org'
+W: Failed to fetch http://mirrors.byted.org/ubuntu-ports/dists/jammy-security/InRelease  Temporary failure resolving 'mirrors.byted.org'
+W: Some index files failed to download. They have been ignored, or old ones used instead.

@@ -1,0 +1,21 @@
+⚠️  UI components not available (missing dependencies)
+============================================================
+Running Integration Tests
+============================================================
+
+Testing current PDFCanvas implementation...
+  ⚠️  Skipping PDFCanvas test due to missing dependencies
+  ✓ PDFCanvas test skipped (dependencies missing)
+
+Testing model layer...
+  ✓ ElementModel works
+  ✓ PageModel works
+  ✓ DocumentModel works
+
+Testing integration status...
+Traceback (most recent call last):
+  File "/sessions/69d9e98a76a0dc58407231fb/workspace/tests/test_integration.py", line 180, in <module>
+    test_no_integration_yet()
+  File "/sessions/69d9e98a76a0dc58407231fb/workspace/tests/test_integration.py", line 91, in test_no_integration_yet
+    assert 'DocumentModel' not in main_content, "main.py should not use DocumentModel yet"
+AssertionError: main.py should not use DocumentModel yet

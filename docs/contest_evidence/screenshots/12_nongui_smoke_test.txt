@@ -1,0 +1,26 @@
+=== Non-GUI imports ===
+model.DocumentModel: OK
+model.PageModel: OK
+model.ElementModel: OK
+latex.PDFToLaTeXConverter: OK
+latex.LaTeXEngine: OK
+
+=== PDFToLaTeXConverter output ===
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+
+\geometry{a4paper, margin=2cm}
+
+\begin{document}
+
+Hello
+Worl
+
+=== LaTeXEngine ===
+latex_cmd: None
+is_available: False

@@ -1,0 +1,9 @@
+Python 3.10.12
+---
+.venv_solo/bin/python
+---
+PyMuPDF           1.27.2.2
+PyQt6             6.7.1
+PyQt6-Qt6         6.7.3
+PyQt6_sip         13.11.1
+pytest            9.0.3

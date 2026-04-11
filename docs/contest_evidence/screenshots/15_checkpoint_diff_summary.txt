@@ -1,0 +1,24 @@
+# Diff Summary
+
+## requirements.txt
+- Added PyMuPDF>=1.20
+- Changed PyQt6==6.11.0 to PyQt6>=6.5,<6.8
+- Changed pytest==7.4.0 to pytest>=7.0
+- Changed pytest-qt==4.2.0 to pytest-qt>=4.0
+- Changed latex==0.7.0 to latex>=0.7.0
+- Changed numpy==1.26.0 to numpy>=2.0
+- Changed Pillow==10.0.0 to Pillow>=10.0.0
+- Changed build==0.10.0 to build>=0.10.0
+- Changed wheel==0.41.0 to wheel>=0.41.0
+
+## tests/test_integration.py
+- Renamed test_current_pdf_canvas_uses_old_path to test_current_pdf_canvas_has_backward_compatibility
+- Renamed test_no_integration_yet to test_model_integration_exists
+- Updated assertions to reflect current code state (model integration exists)
+- Updated test descriptions
+
+## tests/test_main_model_integration_no_qt.py
+- Added MockSignal class to simulate Qt signals
+- Updated MockPDFCanvas to include element_selected and element_modified signals
+- Updated MockQWidget to include element_changed signal property
+- Fixed model import path to match main.py

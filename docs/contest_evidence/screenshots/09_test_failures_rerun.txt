@@ -1,0 +1,47 @@
+=== test_main_model_integration_no_qt.py ===
+Traceback (most recent call last):
+  File "/sessions/69d9e98a76a0dc58407231fb/workspace/tests/test_main_model_integration_no_qt.py", line 264, in <module>
+    test_main_window_creates_document_model()
+  File "/sessions/69d9e98a76a0dc58407231fb/workspace/tests/test_main_model_integration_no_qt.py", line 182, in test_main_window_creates_document_model
+    window = MainWindow()
+  File "/sessions/69d9e98a76a0dc58407231fb/workspace/src/gui/main.py", line 93, in __init__
+    self.connect_pdf_canvas_events()
+  File "/sessions/69d9e98a76a0dc58407231fb/workspace/src/gui/main.py", line 263, in connect_pdf_canvas_events
+    self.pdf_canvas.page_widget.element_selected.connect(self.on_element_selected)
+AttributeError: type object 'obj' has no attribute 'element_selected'
+============================================================
+Running Main Model Integration Tests (No Qt)
+============================================================
+
+Testing MainWindow DocumentModel creation...
+DocumentModel created successfully
+Initial PDF created successfully
+Added 0 elements to document model
+PDF canvas refreshed with document model
+
+Test failed: type object 'obj' has no attribute 'element_selected'
+=== EXIT: 0 ===
+
+=== test_integration.py ===
+⚠️  UI components not available (missing dependencies)
+============================================================
+Running Integration Tests
+============================================================
+
+Testing current PDFCanvas implementation...
+  ⚠️  Skipping PDFCanvas test due to missing dependencies
+  ✓ PDFCanvas test skipped (dependencies missing)
+
+Testing model layer...
+  ✓ ElementModel works
+  ✓ PageModel works
+  ✓ DocumentModel works
+
+Testing integration status...
+Traceback (most recent call last):
+  File "/sessions/69d9e98a76a0dc58407231fb/workspace/tests/test_integration.py", line 180, in <module>
+    test_no_integration_yet()
+  File "/sessions/69d9e98a76a0dc58407231fb/workspace/tests/test_integration.py", line 91, in test_no_integration_yet
+    assert 'DocumentModel' not in main_content, "main.py should not use DocumentModel yet"
+AssertionError: main.py should not use DocumentModel yet
+=== EXIT: 1 ===

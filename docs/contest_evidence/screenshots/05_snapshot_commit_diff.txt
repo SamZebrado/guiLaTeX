@@ -1,0 +1,86 @@
+ .DS_Store                                          |  Bin 0 -> 6148 bytes
+ ARCHITECTURE_MIGRATION.md                          |  216 ++
+ DEVELOPMENT_STATUS.md                              |  130 -
+ MEMORY_DISK_SETUP.md                               |  229 ++
+ MULTI_AGENT_PLAN.md                                |  271 ++
+ PLAN.md                                            |  483 ++-
+ RUN_LEDGER.md                                      |  105 +
+ STABILITY_IMPROVEMENTS.md                          |  311 ++
+ STATUS.md                                          |  198 +-
+ agent_backup/PROJECT_LOG.md                        |    5 +
+ agent_backup/agent_progress/Builder_progress.json  |   30 +
+ .../agent_progress/Documenter_progress.json        |   41 +
+ agent_backup/agent_progress/Manager_progress.json  |    1 +
+ agent_backup/agent_progress/Planner_progress.json  |    1 +
+ agent_backup/agent_progress/test.txt               |    1 +
+ ...ilder_1bce7d4c-3fe7-46f6-bb3d-531d0a2c9a6b.json |   12 +
+ ...enter_390a682b-fff1-4ab8-b75f-bfbcf32b356c.json |   12 +
+ ...nager_73431e02-85e9-45e4-a88e-ff334d428f5e.json |   12 +
+ ...nager_833e76f9-5df5-45be-a04b-f9bb7b1f62ed.json |   12 +
+ ...nager_0372c3e2-2fde-4236-bbb0-e472f971bc6d.json |   12 +
+ ...nager_8966a4ec-e318-470f-840c-c89e538b24c4.json |   12 +
+ .../inbox/Manager/processed/test_message.json      |   13 +
+ ...anner_aa58567f-ed02-45a4-af25-f95adc88c418.json |   12 +
+ ...iewer_13638b12-24e6-48b8-95fb-2f096dc63f09.json |   12 +
+ agent_backup/logs/agent_Builder.log                |    3 +
+ agent_backup/logs/agent_Documenter.log             |    3 +
+ agent_backup/logs/agent_Manager.log                |   11 +
+ agent_backup/logs/agent_Planner.log                |    3 +
+ agent_backup/logs/agent_Reviewer.log               |    4 +
+ ...nager_833e76f9-5df5-45be-a04b-f9bb7b1f62ed.json |   12 +
+ ...nager_8966a4ec-e318-470f-840c-c89e538b24c4.json |   12 +
+ ...anner_aa58567f-ed02-45a4-af25-f95adc88c418.json |   12 +
+ ...ilder_1bce7d4c-3fe7-46f6-bb3d-531d0a2c9a6b.json |   12 +
+ ...iewer_13638b12-24e6-48b8-95fb-2f096dc63f09.json |   12 +
+ ...enter_390a682b-fff1-4ab8-b75f-bfbcf32b356c.json |   12 +
+ ...nager_73431e02-85e9-45e4-a88e-ff334d428f5e.json |   12 +
+ ...nager_0372c3e2-2fde-4236-bbb0-e472f971bc6d.json |   12 +
+ agent_backup/state/agents.tsv                      |    6 +
+ ... Agent \345\210\235\345\247\213\345\214\226.md" |  384 ++
+ ...247\213\345\214\226\351\205\215\347\275\256.md" |  396 ++
+ ...247\213\345\214\226\351\205\215\347\275\256.md" |  303 ++
+ .../guiLaTeX-Starter.md"                           | 3892 ++++++++++++++++++++
+ ...0\235\345\247\213\345\214\226 Builder Agent.md" |  344 ++
+ ...0\235\345\247\213\345\214\226 Planner Agent.md" |  641 ++++
+ agent_watchdog.sh                                  |  210 ++
+ src/gui/__pycache__/main.cpython-310.pyc           |  Bin 0 -> 8296 bytes
+ src/gui/__pycache__/main.cpython-39.pyc            |  Bin 0 -> 8258 bytes
+ src/gui/__pycache__/pdf_canvas.cpython-310.pyc     |  Bin 0 -> 17840 bytes
+ src/gui/__pycache__/pdf_canvas.cpython-314.pyc     |  Bin 29453 -> 32705 bytes
+ src/gui/__pycache__/pdf_canvas.cpython-39.pyc      |  Bin 0 -> 16365 bytes
+ src/gui/main.py                                    |  138 +-
+ src/gui/pdf_canvas.py                              |  253 +-
+ src/gui/properties.py                              |   90 +-
+ src/latex/pdf_reconstructor.py                     |  367 ++
+ src/model/__init__.py                              |   12 +
+ src/model/__pycache__/__init__.cpython-310.pyc     |  Bin 0 -> 467 bytes
+ src/model/__pycache__/__init__.cpython-39.pyc      |  Bin 0 -> 477 bytes
+ src/model/__pycache__/document.cpython-310.pyc     |  Bin 0 -> 7987 bytes
+ src/model/__pycache__/document.cpython-39.pyc      |  Bin 0 -> 7983 bytes
+ src/model/__pycache__/element.cpython-310.pyc      |  Bin 0 -> 5715 bytes
+ src/model/__pycache__/element.cpython-39.pyc       |  Bin 0 -> 5792 bytes
+ src/model/__pycache__/page.cpython-310.pyc         |  Bin 0 -> 6617 bytes
+ src/model/__pycache__/page.cpython-39.pyc          |  Bin 0 -> 6635 bytes
+ src/model/document.py                              |  256 ++
+ src/model/element.py                               |  202 +
+ src/model/page.py                                  |  205 ++
+ start_agents.sh                                    |  173 +
+ stop_agents.sh                                     |   40 +
+ sync_state.sh                                      |  226 ++
+ .../test_canvas.cpython-39-pytest-6.2.4.pyc        |  Bin 0 -> 6116 bytes
+ tests/test_integration.py                          |  190 +
+ tests/test_main_model_integration.py               |  139 +
+ tests/test_main_model_integration_no_qt.py         |  280 ++
+ tests/test_minimal_integration.py                  |  177 +
+ tests/test_model.py                                |  254 ++
+ tests/test_model_integration_simple.py             |  167 +
+ trae_multi_agent_ram/inbox/test_message.json       |   13 +
+ trae_multi_agent_ram/init_builder_prompt.txt       |   54 +
+ trae_multi_agent_ram/init_documenter_prompt.txt    |   53 +
+ trae_multi_agent_ram/init_manager_prompt.txt       |   54 +
+ trae_multi_agent_ram/init_planner_prompt.txt       |   53 +
+ trae_multi_agent_ram/init_reviewer_prompt.txt      |   53 +
+ trae_multi_agent_ram/state/CURRENT_RUN_STATE.json  |   66 +
+ .../state/STRUCTURED_TASK_TEMPLATE.json            |   50 +
+ trae_multi_agent_ram/state/agents.tsv              |    6 +
+ 85 files changed, 11624 insertions(+), 374 deletions(-)
