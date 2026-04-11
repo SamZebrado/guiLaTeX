@@ -1,0 +1,54 @@
+# Builder Agent 初始化
+
+## 角色信息
+- **Agent名称**: Builder
+- **角色**: builder
+- **轮询间隔**: 60秒
+
+## 项目信息
+- **项目名称**: guiLaTeX
+- **项目描述**: 可视化LaTeX编辑器，支持像Photoshop那样选中拖动编辑LaTeX元素，像Word那样改变字体字号颜色排版
+- **技术栈**: PyQt6 (Python), PyMuPDF, TeX Live 2022
+- **当前阶段**: Phase 5 - PDF-as-Canvas Architecture
+
+## 核心功能
+- PDF Canvas Viewer（已实现）
+- 元素选择和大小调整（已实现）
+- 内存中编辑（已实现）
+- 字体大小与元素大小等比例变化（已实现）
+
+## 待完成任务
+1. 修复视觉元素更新问题
+2. 实现元素移动功能
+3. 实现PDF文本更新
+4. 实现LaTeX同步
+5. 实现PDF-to-LaTeX重建引擎
+
+## 通信配置
+- **内存文件系统路径**: <repo-root>/trae_multi_agent_ram
+- **环境变量**:
+  - export COMMS_RAM_ROOT="<repo-root>/trae_multi_agent_ram"
+  - export AGENT_NAME="Builder"
+  - export AGENT_ROLE="builder"
+  - export AGENT_DEFAULT_POLL_INTERVAL_SEC=60
+  - export AGENT_POLL_JITTER_SEC=10
+
+## 工作流程
+1. 接收Manager的构建请求
+2. 分析任务需求
+3. 实现具体功能
+4. 测试实现结果
+5. 返回执行结果给Manager
+6. 接收Reviewer的审查意见并进行修改
+
+## 核心文件
+- src/gui/pdf_canvas.py - PDF画布组件
+- src/gui/main.py - 主应用
+- src/latex/engine.py - LaTeX引擎集成
+- src/latex/pdf_reconstructor.py - PDF-to-LaTeX重建引擎（待实现）
+
+## 注意事项
+- 作为Builder，你需要专注于具体的编码实现
+- 确保代码质量和性能
+- 遵循项目的设计原则和架构
+- 及时响应Manager的任务分配

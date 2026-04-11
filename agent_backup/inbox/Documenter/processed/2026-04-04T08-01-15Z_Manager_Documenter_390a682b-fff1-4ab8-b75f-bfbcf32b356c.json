@@ -1,0 +1,12 @@
+{
+  "id": "390a682b-fff1-4ab8-b75f-bfbcf32b356c",
+  "ts": "2026-04-04T08:01:15Z",
+  "from": "Manager",
+  "to": "Documenter",
+  "type": "DOC_UPDATE_REQUEST",
+  "thread_id": "test-thread-1775289527",
+  "body": "审查完成：ACCEPT\\n\\n测试多Agent通信机制",
+  "meta": {
+    "script_version": "trae_cn_multi_agent_v1"
+  }
+}

@@ -6,15 +6,18 @@ Property panel for editing element properties
 """
 
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QGroupBox, QLabel, QComboBox, 
+    QWidget, QVBoxLayout, QGroupBox, QLabel, QComboBox,
     QSpinBox, QPushButton, QColorDialog, QFormLayout, QLineEdit
 )
 from PyQt6.QtGui import QColor
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
 
 class PropertyPanel(QWidget):
     """Property panel for editing element properties"""
+    
+    # Signals
+    element_changed = pyqtSignal(str, str, object)  # element_id, property_name, value
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -98,7 +101,7 @@ class PropertyPanel(QWidget):
         """Set current element to edit
         
         Args:
-            element: LaTeXElement object
+            element: LaTeXElement object or dict (for PDF elements)
         """
         self.current_element = element
         self.update_properties()
@@ -114,21 +117,38 @@ class PropertyPanel(QWidget):
             self.y_spin.setValue(0)
             return
         
-        # Update font properties
-        if hasattr(self.current_element, 'font'):
-            font_family = self.current_element.font.family()
-            if font_family in [self.font_family_combo.itemText(i) for i in range(self.font_family_combo.count())]:
-                self.font_family_combo.setCurrentText(font_family)
-            self.font_size_spin.setValue(int(self.current_element.font.pointSize()))
-        
-        # Update text content
-        if hasattr(self.current_element, 'text'):
-            self.text_edit.setText(self.current_element.text)
-        
-        # Update position
-        pos = self.current_element.pos()
-        self.x_spin.setValue(int(pos.x()))
-        self.y_spin.setValue(int(pos.y()))
+        # Handle dict-style PDF elements
+        if isinstance(self.current_element, dict):
+            # Update font properties
+            font_size = self.current_element.get('font_size', 12)
+            self.font_size_spin.setValue(int(font_size))
+            
+            # Update text content
+            text = self.current_element.get('text', '')
+            self.text_edit.setText(text)
+            
+            # Update position
+            x = self.current_element.get('x', 0)
+            y = self.current_element.get('y', 0)
+            self.x_spin.setValue(int(x))
+            self.y_spin.setValue(int(y))
+        else:
+            # Handle QGraphicsItem-style elements (legacy)
+            # Update font properties
+            if hasattr(self.current_element, 'font'):
+                font_family = self.current_element.font.family()
+                if font_family in [self.font_family_combo.itemText(i) for i in range(self.font_family_combo.count())]:
+                    self.font_family_combo.setCurrentText(font_family)
+                self.font_size_spin.setValue(int(self.current_element.font.pointSize()))
+            
+            # Update text content
+            if hasattr(self.current_element, 'text'):
+                self.text_edit.setText(self.current_element.text)
+            
+            # Update position
+            pos = self.current_element.pos()
+            self.x_spin.setValue(int(pos.x()))
+            self.y_spin.setValue(int(pos.y()))
     
     def on_font_family_changed(self, family):
         """Handle font family change"""
@@ -138,7 +158,16 @@ class PropertyPanel(QWidget):
     
     def on_font_size_changed(self, size):
         """Handle font size change"""
-        if self.current_element and hasattr(self.current_element, 'font'):
+        if not self.current_element:
+            return
+        
+        # Handle dict-style PDF elements
+        if isinstance(self.current_element, dict):
+            element_id = self.current_element.get('id')
+            if element_id:
+                self.current_element['font_size'] = size
+                self.element_changed.emit(element_id, 'font_size', size)
+        elif hasattr(self.current_element, 'font'):
             self.current_element.font.setPointSize(size)
             self.current_element.update()
     
@@ -158,7 +187,16 @@ class PropertyPanel(QWidget):
     
     def on_text_changed(self, text):
         """Handle text content change"""
-        if self.current_element and hasattr(self.current_element, 'text'):
+        if not self.current_element:
+            return
+        
+        # Handle dict-style PDF elements
+        if isinstance(self.current_element, dict):
+            element_id = self.current_element.get('id')
+            if element_id:
+                self.current_element['text'] = text
+                self.element_changed.emit(element_id, 'text', text)
+        elif hasattr(self.current_element, 'text'):
             self.current_element.text = text
             self.current_element.update()
     
@@ -171,5 +209,13 @@ class PropertyPanel(QWidget):
         x = self.x_spin.value()
         y = self.y_spin.value()
         
-        # Set position
-        self.current_element.setPos(x, y)
+        # Handle dict-style PDF elements
+        if isinstance(self.current_element, dict):
+            element_id = self.current_element.get('id')
+            if element_id:
+                self.current_element['x'] = x
+                self.current_element['y'] = y
+                self.element_changed.emit(element_id, 'position', (x, y))
+        else:
+            # Set position for QGraphicsItem
+            self.current_element.setPos(x, y)

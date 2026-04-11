@@ -8,13 +8,25 @@ PDF canvas viewer for interactive PDF editing
 import fitz  # PyMuPDF
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QLabel, QPushButton, QHBoxLayout
 from PyQt6.QtGui import QPixmap, QPainter, QImage, QPen, QBrush, QColor, QCursor, QFont
-from PyQt6.QtCore import Qt, QSize, QRect, QRectF, QPointF
+from PyQt6.QtCore import Qt, QSize, QRect, QRectF, QPointF, pyqtSignal
+
+# Add model layer import
+try:
+    from model import PageModel, ElementModel
+except ImportError:
+    # Fallback: model layer not available
+    PageModel = None
+    ElementModel = None
 
 
 class PDFPageWidget(QWidget):
     """PDF page display widget"""
     
-    def __init__(self, pdf_doc, page_num, parent=None):
+    # Signals
+    element_selected = pyqtSignal(dict)  # Emitted when an element is selected
+    element_modified = pyqtSignal(dict)  # Emitted when an element is modified
+    
+    def __init__(self, pdf_doc, page_num, parent=None, page_model=None):
         super().__init__(parent)
         self.pdf_doc = pdf_doc
         self.page_num = page_num
@@ -34,9 +46,8 @@ class PDFPageWidget(QWidget):
         self.drag_start_pos = None
         self.selected_element = None
         self.drag_handle = None
-        
-        # Extract text elements from PDF
-        self.text_elements = self.extract_text_elements()
+        self.is_dragging_element = False  # Track if dragging entire element
+        self.element_start_pos = None  # Track element start position for move
         
         # Handle size
         self.handle_size = 8
@@ -47,9 +58,44 @@ class PDFPageWidget(QWidget):
             (0, 0.5)   # Left center
         ]
         
+        # Model layer integration
+        self.page_model = page_model
+        
+        # Extract text elements from PDF
+        self.text_elements = self.extract_text_elements()
+        
         # In-memory PDF editing
         self.memory_elements = self.text_elements.copy()  # Copy for in-memory editing
         self.is_dirty = False  # Track if changes need to be saved
+        
+        # Enable mouse tracking for hover events
+        self.setMouseTracking(True)
+        
+        # If page model is provided, use it
+        if self.page_model and PageModel:
+            self._sync_from_model()
+    
+    def _sync_from_model(self):
+        """Sync elements from PageModel to memory_elements"""
+        if not self.page_model:
+            return
+        
+        # Convert ElementModel objects to old-style elements
+        self.memory_elements = []
+        for elem in self.page_model.elements:
+            old_elem = {
+                'id': elem.id,
+                'type': elem.type,
+                'text': elem.content,
+                'x': elem.x,
+                'y': elem.y,
+                'width': elem.width,
+                'height': elem.height,
+                'font_size': elem.font_size,
+                'original_width': elem.width,
+                'original_height': elem.height
+            }
+            self.memory_elements.append(old_elem)
     
     def extract_text_elements(self):
         """Extract text elements from PDF page"""
@@ -149,9 +195,8 @@ class PDFPageWidget(QWidget):
         """Draw elements with updated sizes from memory"""
         # Draw elements with updated sizes
         for element in self.memory_elements:
-            # Skip the selected element (it will be drawn in draw_selections)
-            if self.selected_element and element['id'] == self.selected_element['id']:
-                continue
+            # Draw ALL elements including selected one (to show updated size/position)
+            # The selection highlight will be drawn on top in draw_selections
             
             # Draw element background
             painter.setBrush(QBrush(QColor(255, 255, 255, 200)))
@@ -192,8 +237,8 @@ class PDFPageWidget(QWidget):
         x = pos.x() / self.scale
         y = pos.y() / self.scale
         
-        # Check text elements
-        for element in self.text_elements:
+        # Check memory elements (use updated positions/sizes)
+        for element in self.memory_elements:
             rect = QRectF(
                 element['x'],
                 element['y'],
@@ -237,6 +282,7 @@ class PDFPageWidget(QWidget):
         if handle:
             self.drag_handle = handle
             self.drag_start_pos = event.pos()
+            self.is_dragging_element = False
             return
         
         # Check if clicking on an element
@@ -246,16 +292,27 @@ class PDFPageWidget(QWidget):
             self.selected_elements = []
             self.selected_element = element
             self.selected_elements.append(element)
+            
+            # Start dragging the element
+            self.is_dragging_element = True
+            self.drag_start_pos = event.pos()
+            self.element_start_pos = (element['x'], element['y'])
+            
+            # Emit signal for element selection
+            self.element_selected.emit(element)
+            
             self.update()
             print(f"Selected element: {element['text']}")
         else:
             # Clear selection
             self.selected_elements = []
             self.selected_element = None
+            self.is_dragging_element = False
             self.update()
     
     def mouseMoveEvent(self, event):
         """Handle mouse move"""
+        # Handle element resize via handles
         if self.drag_handle and self.selected_element and self.drag_start_pos:
             # Calculate delta
             dx = (event.pos().x() - self.drag_start_pos.x()) / self.scale
@@ -308,6 +365,104 @@ class PDFPageWidget(QWidget):
                 
                 # Print debug information
                 print(f"Resized element to: {new_width:.2f}x{new_height:.2f} at ({new_x:.2f}, {new_y:.2f})")
+        
+        # Handle element move (dragging entire element)
+        elif self.is_dragging_element and self.selected_element and self.drag_start_pos and self.element_start_pos:
+            # Calculate delta from start position
+            dx = (event.pos().x() - self.drag_start_pos.x()) / self.scale
+            dy = (event.pos().y() - self.drag_start_pos.y()) / self.scale
+            
+            element = self.selected_element
+            start_x, start_y = self.element_start_pos
+            
+            # Calculate new position
+            new_x = start_x + dx
+            new_y = start_y + dy
+            
+            # Update element position
+            element['x'] = new_x
+            element['y'] = new_y
+            
+            # Update memory elements
+            for mem_element in self.memory_elements:
+                if mem_element['id'] == element['id']:
+                    mem_element['x'] = new_x
+                    mem_element['y'] = new_y
+                    break
+            
+            # Mark as dirty
+            self.is_dirty = True
+            
+            # Update the visual representation
+            self.update()
+            
+            # Print debug information
+            print(f"Moved element to: ({new_x:.2f}, {new_y:.2f})")
+        
+        # Update cursor based on what's under the mouse
+        self.update_cursor(event.pos())
+    
+    def update_element_text(self, element_id, new_text):
+        """Update text content of an element
+        
+        Args:
+            element_id: ID of the element to update
+            new_text: New text content
+            
+        Returns:
+            bool: True if successful
+        """
+        # Update in memory elements
+        for element in self.memory_elements:
+            if element['id'] == element_id:
+                element['text'] = new_text
+                self.is_dirty = True
+                self.update()
+                print(f"Updated element text: {new_text}")
+                return True
+        
+        # Update in text elements (original PDF data)
+        for element in self.text_elements:
+            if element['id'] == element_id:
+                element['text'] = new_text
+                return True
+        
+        return False
+    
+    def update_element_font_size(self, element_id, new_font_size):
+        """Update font size of an element
+        
+        Args:
+            element_id: ID of the element to update
+            new_font_size: New font size
+            
+        Returns:
+            bool: True if successful
+        """
+        # Update in memory elements
+        for element in self.memory_elements:
+            if element['id'] == element_id:
+                element['font_size'] = new_font_size
+                self.is_dirty = True
+                self.update()
+                print(f"Updated element font size: {new_font_size}")
+                return True
+        
+        return True
+    
+    def get_element_by_id(self, element_id):
+        """Get element by ID
+        
+        Args:
+            element_id: ID of the element
+            
+        Returns:
+            dict: Element data or None
+        """
+        for element in self.memory_elements:
+            if element['id'] == element_id:
+                return element
+        return None
     
     def update_pdf_element(self, element):
         """Update element in PDF"""
@@ -317,7 +472,50 @@ class PDFPageWidget(QWidget):
         # 2. Add new text with updated size and position
         # 3. Save the PDF
         print(f"Updating PDF element: {element['text']}")
-        # TODO: Implement actual PDF text updating
+        # TODO: Implement actual PDF text updating using PyMuPDF
+    
+    def _sync_to_model(self):
+        """Sync changes from memory_elements back to PageModel"""
+        if not self.page_model or not PageModel:
+            return
+        
+        # Update existing elements or add new ones
+        for old_elem in self.memory_elements:
+            elem_id = old_elem['id']
+            
+            # Find existing element in model
+            existing_elem = None
+            for elem in self.page_model.elements:
+                if elem.id == elem_id:
+                    existing_elem = elem
+                    break
+            
+            if existing_elem:
+                # Update existing element
+                existing_elem.content = old_elem['text']
+                existing_elem.x = old_elem['x']
+                existing_elem.y = old_elem['y']
+                existing_elem.width = old_elem['width']
+                existing_elem.height = old_elem['height']
+                existing_elem.font_size = old_elem['font_size']
+                existing_elem.dirty = True
+            else:
+                # Add new element
+                new_elem = ElementModel(
+                    id=elem_id,
+                    type=old_elem['type'],
+                    content=old_elem['text'],
+                    x=old_elem['x'],
+                    y=old_elem['y'],
+                    width=old_elem['width'],
+                    height=old_elem['height'],
+                    font_size=old_elem['font_size'],
+                    dirty=True
+                )
+                self.page_model.add_element(new_elem)
+        
+        # Mark page as dirty
+        self.page_model.dirty = True
     
     def save_changes(self):
         """Save changes to PDF file"""
@@ -326,6 +524,9 @@ class PDFPageWidget(QWidget):
             return True
         
         try:
+            # Sync changes to model first
+            self._sync_to_model()
+            
             # TODO: Implement actual PDF updating
             # For now, we'll just print the changes
             print("Saving changes to PDF...")
@@ -344,11 +545,13 @@ class PDFPageWidget(QWidget):
         """Handle mouse release"""
         self.drag_handle = None
         self.drag_start_pos = None
+        self.is_dragging_element = False
+        self.element_start_pos = None
     
-    def hoverMoveEvent(self, event):
-        """Handle hover move"""
+    def update_cursor(self, pos):
+        """Update cursor based on position"""
         # Check if hovering over a handle
-        handle = self.get_handle_at(event.pos())
+        handle = self.get_handle_at(pos)
         if handle:
             if handle.startswith("resize_"):
                 handle_idx = int(handle.split("_")[1])
@@ -367,9 +570,9 @@ class PDFPageWidget(QWidget):
                     return
         
         # Check if hovering over an element
-        element = self.get_element_at(event.pos())
+        element = self.get_element_at(pos)
         if element:
-            self.setCursor(Qt.CursorShape.PointingHandCursor)
+            self.setCursor(Qt.CursorShape.OpenHandCursor)
         else:
             self.setCursor(Qt.CursorShape.ArrowCursor)
     
@@ -382,7 +585,7 @@ class PDFPageWidget(QWidget):
 class PDFCanvas(QWidget):
     """PDF canvas for interactive editing"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, document_model=None):
         super().__init__(parent)
         
         # Create layout
@@ -428,6 +631,9 @@ class PDFCanvas(QWidget):
         self.current_page = 0
         self.page_widget = None
         self.zoom_scale = 1.0
+        
+        # Document model integration
+        self.document_model = document_model
     
     def load_pdf(self, pdf_path):
         """Load PDF document"""
@@ -486,8 +692,17 @@ class PDFCanvas(QWidget):
         if not self.pdf_doc:
             return
         
-        # Create new page widget
-        self.page_widget = PDFPageWidget(self.pdf_doc, self.current_page)
+        # Get page model for current page if available
+        page_model = None
+        if self.document_model and PageModel:
+            # Try to get page model for current page
+            for page in self.document_model.pages:
+                if page.number == self.current_page:
+                    page_model = page
+                    break
+        
+        # Create new page widget with page model
+        self.page_widget = PDFPageWidget(self.pdf_doc, self.current_page, page_model=page_model)
         self.page_widget.set_scale(self.zoom_scale)
         self.scroll_area.setWidget(self.page_widget)
         

@@ -1,0 +1,6 @@
+Agent名称	角色	轮询间隔(秒)
+Manager	manager	30
+Planner	planner	60
+Builder	builder	60
+Reviewer	reviewer	60
+Documenter	documenter	120

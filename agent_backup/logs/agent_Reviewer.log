@@ -1,0 +1,4 @@
+[2026-04-04 15:58:44] [Reviewer] [INFO] Agent started role=reviewer poll=60s jitter=±10s
+[2026-04-04 16:00:51] [Reviewer] [INFO] Processing 2026-04-04T08-00-13Z_Manager_Reviewer_13638b12-24e6-48b8-95fb-2f096dc63f09.json type=REVIEW_REQUEST from=Manager
+[2026-04-04 16:00:51] [Reviewer] [INFO] Sent REVIEW to Manager (thread: test-thread-1775289527)
+[2026-04-04 16:13:09] [Reviewer] [INFO] Agent started role=reviewer poll=60s jitter=±10s

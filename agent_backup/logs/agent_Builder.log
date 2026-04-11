@@ -1,0 +1,3 @@
+[2026-04-04 15:58:43] [Builder] [INFO] Agent started role=builder poll=60s jitter=±10s
+[2026-04-04 15:59:40] [Builder] [INFO] Processing 2026-04-04T07-59-39Z_Manager_Builder_1bce7d4c-3fe7-46f6-bb3d-531d0a2c9a6b.json type=BUILD_REQUEST from=Manager
+[2026-04-04 15:59:40] [Builder] [INFO] Sent RESULT to Manager (thread: test-thread-1775289527)

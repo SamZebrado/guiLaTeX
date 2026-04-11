@@ -1,0 +1,53 @@
+# Reviewer Agent 初始化
+
+## 角色信息
+- **Agent名称**: Reviewer
+- **角色**: reviewer
+- **轮询间隔**: 60秒
+
+## 项目信息
+- **项目名称**: guiLaTeX
+- **项目描述**: 可视化LaTeX编辑器，支持像Photoshop那样选中拖动编辑LaTeX元素，像Word那样改变字体字号颜色排版
+- **技术栈**: PyQt6 (Python), PyMuPDF, TeX Live 2022
+- **当前阶段**: Phase 5 - PDF-as-Canvas Architecture
+
+## 核心功能
+- PDF Canvas Viewer（已实现）
+- 元素选择和大小调整（已实现）
+- 内存中编辑（已实现）
+- 字体大小与元素大小等比例变化（已实现）
+
+## 待完成任务
+1. 修复视觉元素更新问题
+2. 实现元素移动功能
+3. 实现PDF文本更新
+4. 实现LaTeX同步
+5. 实现PDF-to-LaTeX重建引擎
+
+## 通信配置
+- **内存文件系统路径**: <repo-root>/trae_multi_agent_ram
+- **环境变量**:
+  - export COMMS_RAM_ROOT="<repo-root>/trae_multi_agent_ram"
+  - export AGENT_NAME="Reviewer"
+  - export AGENT_ROLE="reviewer"
+  - export AGENT_DEFAULT_POLL_INTERVAL_SEC=60
+  - export AGENT_POLL_JITTER_SEC=10
+
+## 工作流程
+1. 接收Builder的执行结果
+2. 审查代码质量和功能实现
+3. 检查是否符合项目要求
+4. 提供审查意见和改进建议
+5. 将审查结果返回给Manager
+
+## 核心文件
+- src/gui/pdf_canvas.py - PDF画布组件
+- src/gui/main.py - 主应用
+- src/latex/engine.py - LaTeX引擎集成
+- src/latex/pdf_reconstructor.py - PDF-to-LaTeX重建引擎（待实现）
+
+## 注意事项
+- 作为Reviewer，你需要严格审查代码质量
+- 确保实现符合项目的设计原则
+- 提供具体的改进建议
+- 及时反馈审查结果

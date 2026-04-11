@@ -16,8 +16,18 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 # Import modules
 from latex.engine import LaTeXEngine, LaTeXGenerator
+from latex.pdf_reconstructor import PDFToLaTeXConverter
 from gui.properties import PropertyPanel
 from gui.pdf_canvas import PDFCanvas
+
+# Import model layer
+try:
+    from model import DocumentModel, PageModel, ElementModel
+except ImportError:
+    # Fallback: model layer not available
+    DocumentModel = None
+    PageModel = None
+    ElementModel = None
 
 
 class MainWindow(QMainWindow):
@@ -48,8 +58,16 @@ class MainWindow(QMainWindow):
         top_splitter = QSplitter(Qt.Orientation.Horizontal)
         main_splitter.addWidget(top_splitter)
         
+        # Create document model (source of truth)
+        self.document_model = None
+        if DocumentModel:
+            self.document_model = DocumentModel(title='guiLaTeX Document')
+            print("DocumentModel created successfully")
+        else:
+            print("Warning: DocumentModel not available, falling back to old path")
+        
         # Create PDF canvas (now the main visual editor)
-        self.pdf_canvas = PDFCanvas()
+        self.pdf_canvas = PDFCanvas(document_model=self.document_model)
         top_splitter.addWidget(self.pdf_canvas)
         
         # Create property panel
@@ -66,12 +84,13 @@ class MainWindow(QMainWindow):
         # Initialize LaTeX engine
         self.latex_engine = LaTeXEngine()
         self.latex_generator = LaTeXGenerator()
+        self.pdf_to_latex_converter = PDFToLaTeXConverter()
         
         # Create initial PDF document
         self.create_initial_pdf()
         
         # Connect PDF canvas events to property panel
-        # TODO: Implement PDF canvas selection events
+        self.connect_pdf_canvas_events()
         
     def create_menu_bar(self):
         """Create menu bar"""
@@ -195,20 +214,121 @@ This is a test document created with guiLaTeX.
             # Update LaTeX view
             self.latex_view.setText(initial_latex)
             print("Initial PDF created successfully")
+            
+            # Update document model with elements from PDF
+            if self.document_model and self.pdf_canvas.page_widget:
+                try:
+                    # Get memory elements from PDF canvas
+                    memory_elements = self.pdf_canvas.page_widget.memory_elements
+                    
+                    # Get or create page model for current page
+                    page_model = None
+                    for page in self.document_model.pages:
+                        if page.number == 0:  # First page
+                            page_model = page
+                            break
+                    
+                    if not page_model:
+                        page_model = PageModel(number=0)
+                        self.document_model.add_page(page_model)
+                    
+                    # Add elements to page model
+                    for elem in memory_elements:
+                        new_elem = ElementModel(
+                            id=elem['id'],
+                            type=elem.get('type', 'text'),
+                            content=elem['text'],
+                            x=elem['x'],
+                            y=elem['y'],
+                            width=elem['width'],
+                            height=elem['height'],
+                            font_size=elem.get('font_size', 12)
+                        )
+                        page_model.add_element(new_elem)
+                    
+                    print(f"Added {len(memory_elements)} elements to document model")
+                    
+                    # Refresh PDF canvas to use the model
+                    self.pdf_canvas.update_page_display()
+                    print("PDF canvas refreshed with document model")
+                except Exception as e:
+                    print(f"Error updating document model: {e}")
         else:
             print("Failed to create initial PDF")
     
+    def connect_pdf_canvas_events(self):
+        """Connect PDF canvas events to property panel"""
+        if self.pdf_canvas.page_widget:
+            # Connect element selection to property panel
+            self.pdf_canvas.page_widget.element_selected.connect(self.on_element_selected)
+            
+            # Connect property changes back to PDF canvas
+            self.property_panel.element_changed.connect(self.on_property_changed)
+    
+    def on_element_selected(self, element):
+        """Handle element selection from PDF canvas"""
+        self.property_panel.set_element(element)
+        print(f"Element selected: {element.get('text', 'Unknown')}")
+    
+    def on_property_changed(self, element_id, property_name, value):
+        """Handle property changes from property panel"""
+        if self.pdf_canvas.page_widget:
+            # Update text content
+            if property_name == 'text':
+                self.pdf_canvas.page_widget.update_element_text(element_id, value)
+            # Update font size
+            elif property_name == 'font_size':
+                self.pdf_canvas.page_widget.update_element_font_size(element_id, value)
+            # Update position
+            elif property_name == 'position':
+                x, y = value
+                element = self.pdf_canvas.page_widget.get_element_by_id(element_id)
+                if element:
+                    element['x'] = x
+                    element['y'] = y
+                    self.pdf_canvas.page_widget.update()
+            
+            # Sync changes to LaTeX view
+            self.sync_to_latex()
+    
+    def sync_to_latex(self):
+        """Sync PDF canvas changes to LaTeX code view"""
+        if self.pdf_canvas.page_widget and self.pdf_to_latex_converter:
+            # Get memory elements from PDF canvas
+            memory_elements = self.pdf_canvas.page_widget.memory_elements
+            
+            # Convert to LaTeX
+            latex_code = self.pdf_to_latex_converter.convert_memory_elements(memory_elements)
+            
+            # Update LaTeX view
+            self.latex_view.setText(latex_code)
+            print("Synced changes to LaTeX view")
+    
     def export_document(self):
         """Export document"""
-        # Get PDF path from PDF canvas
-        # TODO: Implement PDF to LaTeX export
-        pdf_path = "<repo-root>/temp/guiLaTeX_edit.pdf"
-        
-        if os.path.exists(pdf_path):
-            # Show success message
-            QMessageBox.information(self, "Export", f"Document exported successfully to:\n{pdf_path}")
-        else:
+        if not self.pdf_canvas.page_widget:
             QMessageBox.warning(self, "Export", "No document to export")
+            return
+        
+        # Get LaTeX code from current state
+        memory_elements = self.pdf_canvas.page_widget.memory_elements
+        latex_code = self.pdf_to_latex_converter.convert_memory_elements(memory_elements)
+        
+        # Save LaTeX code to file
+        export_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'temp')
+        os.makedirs(export_dir, exist_ok=True)
+        latex_path = os.path.join(export_dir, 'guiLaTeX_export.tex')
+        
+        try:
+            with open(latex_path, 'w', encoding='utf-8') as f:
+                f.write(latex_code)
+            
+            # Show success message
+            QMessageBox.information(self, "Export", 
+                f"Document exported successfully to:\n{latex_path}")
+            print(f"Exported LaTeX to: {latex_path}")
+        except Exception as e:
+            QMessageBox.warning(self, "Export", f"Failed to export document:\n{str(e)}")
     
     def preview_document(self):
         """Preview document as PDF"""

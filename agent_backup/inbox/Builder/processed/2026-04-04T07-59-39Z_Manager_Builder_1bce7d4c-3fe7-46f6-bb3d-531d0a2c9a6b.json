@@ -1,0 +1,12 @@
+{
+  "id": "1bce7d4c-3fe7-46f6-bb3d-531d0a2c9a6b",
+  "ts": "2026-04-04T07:59:39Z",
+  "from": "Manager",
+  "to": "Builder",
+  "type": "BUILD_REQUEST",
+  "thread_id": "test-thread-1775289527",
+  "body": "测试多Agent通信机制",
+  "meta": {
+    "script_version": "trae_cn_multi_agent_v1"
+  }
+}

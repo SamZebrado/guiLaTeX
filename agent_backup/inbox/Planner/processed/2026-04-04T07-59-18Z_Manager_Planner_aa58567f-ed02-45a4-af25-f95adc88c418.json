@@ -1,0 +1,12 @@
+{
+  "id": "aa58567f-ed02-45a4-af25-f95adc88c418",
+  "ts": "2026-04-04T07:59:18Z",
+  "from": "Manager",
+  "to": "Planner",
+  "type": "PLAN_REQUEST",
+  "thread_id": "test-thread-1775289527",
+  "body": "测试多Agent通信机制",
+  "meta": {
+    "script_version": "trae_cn_multi_agent_v1"
+  }
+}

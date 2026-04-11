@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "version": "1.0",
+    "last_updated": "INITIAL",
+    "source_of_truth": true
+  },
+  "run": {
+    "id": "INITIAL",
+    "started_at": "INITIAL",
+    "status": "idle",
+    "current_phase": "initialization"
+  },
+  "current_task": {
+    "id": null,
+    "objective": null,
+    "owner": null,
+    "status": null,
+    "started_at": null,
+    "last_activity": null
+  },
+  "agents": {
+    "Manager": {
+      "alive": false,
+      "last_heartbeat": null,
+      "pending_messages": 0,
+      "current_job": null
+    },
+    "Planner": {
+      "alive": false,
+      "last_heartbeat": null,
+      "pending_messages": 0,
+      "current_job": null
+    },
+    "Builder": {
+      "alive": false,
+      "last_heartbeat": null,
+      "pending_messages": 0,
+      "current_job": null
+    },
+    "Reviewer": {
+      "alive": false,
+      "last_heartbeat": null,
+      "pending_messages": 0,
+      "current_job": null
+    },
+    "Documenter": {
+      "alive": false,
+      "last_heartbeat": null,
+      "pending_messages": 0,
+      "current_job": null
+    }
+  },
+  "recent_results": {
+    "last_success": null,
+    "last_failure": null,
+    "test_results": null
+  },
+  "blockers": [],
+  "next_actions": [],
+  "completion_tiers": {
+    "scaffold_done": false,
+    "code_done": false,
+    "test_done": false,
+    "verified_done": false
+  }
+}

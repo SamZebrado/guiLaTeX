@@ -1,0 +1,3 @@
+[2026-04-04 15:58:42] [Planner] [INFO] Agent started role=planner poll=60s jitter=±10s
+[2026-04-04 15:59:38] [Planner] [INFO] Processing 2026-04-04T07-59-18Z_Manager_Planner_aa58567f-ed02-45a4-af25-f95adc88c418.json type=PLAN_REQUEST from=Manager
+[2026-04-04 15:59:38] [Planner] [INFO] Sent PLAN_RESULT to Manager (thread: test-thread-1775289527)

@@ -1,0 +1,50 @@
+{
+  "task_id": "TASK-XXX",
+  "thread_id": "thread-uuid",
+  "created_at": "ISO8601-timestamp",
+  "objective": "Clear statement of what needs to be achieved",
+  "scope": {
+    "in_scope_files": [
+      "path/to/file1.py",
+      "path/to/file2.py"
+    ],
+    "out_of_scope": [
+      "What should NOT be touched"
+    ]
+  },
+  "acceptance_criteria": [
+    {
+      "check": "Description of what to verify",
+      "type": "test|manual|code_review",
+      "required": true
+    }
+  ],
+  "evidence_required": [
+    {
+      "type": "file_changed|test_passed|log_output",
+      "path": "path/to/evidence",
+      "description": "What this evidence proves"
+    }
+  ],
+  "previous_result_summary": "Summary of previous task in this thread",
+  "dependencies": [
+    "TASK-XXX"
+  ],
+  "priority": "P0|P1|P2|P3",
+  "estimated_time": "X hours",
+  "completion_tiers": {
+    "scaffold_done": false,
+    "code_done": false,
+    "test_done": false,
+    "verified_done": false
+  },
+  "assigned_to": "Builder|Planner|Reviewer|Documenter",
+  "status": "pending|in_progress|blocked|completed",
+  "blockers": [
+    {
+      "description": "What is blocking progress",
+      "since": "timestamp",
+      "suggested_resolution": "How to resolve"
+    }
+  ]
+}
