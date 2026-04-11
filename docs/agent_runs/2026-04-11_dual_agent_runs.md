@@ -341,6 +341,197 @@ Qt 线现已从"旋转渲染与 IR 导出"推进到：
 
 当前 Qt 线最准确的里程碑表述：**已如实记录 duplication 解决过程（借助外部大模型分析），实施了颜色选择器黑盘问题的缓解方案，完成了旋转绘制支持、旋转入口和完整同步链路，完善了包含 rotation 字段的 Qt model -> Export IR 导出能力，复制/粘贴功能可用，字体列表安全，启动命令明确。旋转功能模型层和绘制链已验证，GUI 视觉效果仍待用户手动确认**。
 
+### Round 7: 离屏渲染验证与证据压实
+
+#### 1. 离屏渲染验证 - 已完成
+- **状态**: ✅ 已完成
+- **实现方案**: 使用 `QT_QPA_PLATFORM=offscreen` 进行离屏渲染
+- **测试文件**: [test_qt_offscreen_rotation.py](<repo-root>/temp/test_qt_offscreen_rotation.py)
+- **测试内容**:
+  - 文字对象 rotation=0 时渲染一张图
+  - 文字对象 rotation=45 时渲染一张图
+  - 图片对象（占位图）rotation=0 时渲染一张图
+  - 图片对象（占位图）rotation=30 时渲染一张图
+  - 比较像素差异，验证 rotation 是否影响绘制结果
+- **测试结果**:
+  - ✅ 文字对象不同像素数: 3335（总像素 60000）
+  - ✅ 图片对象不同像素数: 1890
+  - ✅ 检测到像素差异，证明 rotation 进入了绘制结果
+- **证据文件**:
+  - [qt_rotation_test_text_0.png](<repo-root>/docs/contest_evidence/screenshots/qt_rotation_test_text_0.png)
+  - [qt_rotation_test_text_45.png](<repo-root>/docs/contest_evidence/screenshots/qt_rotation_test_text_45.png)
+  - [qt_rotation_test_image_0.png](<repo-root>/docs/contest_evidence/screenshots/qt_rotation_test_image_0.png)
+  - [qt_rotation_test_image_30.png](<repo-root>/docs/contest_evidence/screenshots/qt_rotation_test_image_30.png)
+  - [qt_offscreen_rotation_verification.txt](<repo-root>/docs/contest_evidence/screenshots/qt_offscreen_rotation_verification.txt)
+
+#### 2. 包含 rotation 的 Qt IR 导出 - 已完成
+- **状态**: ✅ 已完成
+- **测试文件**: [test_qt_export_ir_with_rotation.py](<repo-root>/temp/test_qt_export_ir_with_rotation.py)
+- **导出内容**: 5 个对象，每个都有不同的 rotation 值（15°, 0°, -10°, 30°, 45°）
+- **证据文件**:
+  - [qt_model_with_rotation_ir.json](<repo-root>/docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json)
+  - [guiLaTeX_qt_with_rotation_export_ir.json](<repo-root>/temp/guiLaTeX_qt_with_rotation_export_ir.json)
+
+#### 3. 颜色选择器黑盘问题
+- **状态**: 🔄 已缓解（blocked）
+- **当前方案**: 使用非原生对话框模式，设置 `DontUseNativeDialog` 选项
+- **验证状态**: 等待用户手动确认
+
+#### 4. 复制/粘贴功能
+- **状态**: ✅ 已确认
+- **功能状态**: 
+  - 复制功能可用（copy_element 方法）
+  - 粘贴出的对象有新 id（使用 uuid 生成）
+  - 位置轻微偏移（x+20, y+20）
+  - 保留大部分原属性
+- **测试**: 真实路径测试继续通过
+
+#### 5. 默认字体列表
+- **状态**: ✅ 已确认
+- **默认字体列表**: Noto Sans SC, Source Han Sans SC, Inter, Noto Sans, Sans Serif
+
+#### 6. 启动命令确认
+- **状态**: ✅ 已确认
+- **启动命令**: `python src/gui/main.py`
+
+#### 7. 结论
+Qt 线现已从"旋转功能压实与验证"推进到：
+1. ✅ duplication 解决过程已如实文档化（关键：借助外部大模型分析）
+2. 🔄 颜色选择器黑盘问题已实施缓解方案
+3. ✅ 已完成离屏渲染验证，证明 rotation 进入了绘制结果
+4. ✅ 已导出包含 rotation 的 Qt IR JSON
+5. ✅ 复制/粘贴功能已确认可用
+6. ✅ 字体列表保持只包含开源/免费可商用字体
+7. ✅ 启动命令已明确确认
+
+当前 Qt 线最准确的里程碑表述：**已如实记录 duplication 解决过程（借助外部大模型分析），实施了颜色选择器黑盘问题的缓解方案，完成了离屏渲染验证证明 rotation 进入了绘制结果，导出了包含 rotation 的 Qt IR JSON，复制/粘贴功能可用，字体列表安全，启动命令明确。旋转功能证据等级从“模型已变化”推进到“绘制结果已验证”。
+
+### Round 8: Qt 对接 Core 的预接入准备
+
+#### 1. Qt -> Core 最小 Smoke Test - 已完成
+- **状态**: ✅ 已完成
+- **目标**: 把 Qt 推进到“已具备接 Core 的最小适配能力”，但不立刻替换现有正式导出按钮
+- **实现方案**:
+  - 创建了完整的 Qt -> Core 最小 smoke test 框架
+  - 真实调用了 ExportCore 的两个核心函数：
+    1. `normalize_qt_model_to_ir(qt_model)
+    2. `export_ir_to_latex(ir_data)
+  - 真实生成了 .tex 文件
+  - 保存了所有证据文件
+- **证据文件**:
+  - [qt_to_core_input_model.json](<repo-root>/docs/contest_evidence/screenshots/qt_to_core_input_model.json): Qt 输入模型 JSON
+  - [qt_to_core_ir_data.json](<repo-root>/docs/contest_evidence/screenshots/qt_to_core_ir_data.json): IR 中间数据 JSON
+  - [qt_to_core_output.tex](<repo-root>/docs/contest_evidence/screenshots/qt_to_core_output.tex): LaTeX 输出文件
+  - [qt_to_core_field_mapping.txt](<repo-root>/docs/contest_evidence/screenshots/qt_to_core_field_mapping.txt): 字段对照说明
+  - [qt_to_core_smoke_test_log.txt](<repo-root>/docs/contest_evidence/screenshots/qt_to_core_smoke_test_log.txt): 测试日志
+- **验证状态**: 所有检查通过，真实调用了 ExportCore 函数，生成了完整的证据文件
+
+#### 2. font_family_zh / font_family_en 字段准备 - 已明确
+- **状态**: ✅ 已明确
+- **当前状态**:
+  - Qt 目前只有单一的 `font_family` 字段
+  - `normalize_qt_model_to_ir` 目前使用默认值：
+    - `font_family_zh = 'SimSun'
+    - `font_family_en = 'Times New Roman'
+- **明确的映射策略（待实现）:
+  - 中文字体（包含 'SC' 或 'Han'） -> (原字体, Inter)
+  - 英文字体 -> (Noto Sans SC, 原字体)
+- **验证状态**: 策略已明确，字段对照说明已保存
+
+#### 3. 当前 Qt 还差的最小动作 - 已明确
+- **状态**: ✅ 已明确
+- **最小动作清单**:
+  1. 修改 normalize_qt_model_to_ir 中的字体映射逻辑，从 Qt 的 font_family 分离
+  2. 正式添加 font_family_zh 字段到 Qt 模型（可选）
+  3. 正式添加 font_family_en 字段到 Qt 模型（可选）
+  4. 将正式导出按钮切换到 Core 路径
+
+#### 4. 结论
+Qt 线现已从"离屏渲染验证与证据压实推进到：
+1. ✅ duplication 解决过程已如实文档化（关键：借助外部大模型分析）
+2. 🔄 颜色选择器黑盘问题已实施缓解方案
+3. ✅ 已完成离屏渲染验证证明 rotation 进入了绘制结果
+4. ✅ 已导出包含 rotation 的 Qt IR JSON
+5. ✅ 复制/粘贴功能已确认可用
+6. ✅ 字体列表保持只包含开源/免费可商用字体
+7. ✅ 启动命令已明确确认
+8. ✅ 已完成 Qt -> Core 最小 smoke test，真实调用了 ExportCore 函数
+9. ✅ font_family_zh / font_family_en 映射策略已明确
+
+当前 Qt 线最准确的里程碑表述：**已如实记录 duplication 解决过程（借助外部大模型分析），实施了颜色选择器黑盘问题的缓解方案，完成了离屏渲染验证证明 rotation 进入了绘制结果，导出了包含 rotation 的 Qt IR JSON，完成了 Qt -> Core 最小 smoke test（真实调用了 ExportCore 函数），明确了 font_family_zh / font_family_en 映射策略，复制/粘贴功能可用，字体列表安全，启动命令明确。Qt 线现已具备接 Core 的最小适配能力**。
+
+### Round 9: 测试正式化轮
+
+#### 1. Qt -> Core smoke test 正式化
+- **状态**: ✅ 已完成
+- **目标**: 把已经做出来的 Qt -> Core smoke test，从"临时脚本 + 临时结果"推进到"正式测试材料 + 正式证据链"
+- **实现方案**:
+  - 创建正式测试文件 [tests/test_qt_to_core_smoke.py](<repo-root>/tests/test_qt_to_core_smoke.py)
+  - 明确包含：输入 Qt 模型样例、调用的 Core 函数、输出 IR JSON、输出 .tex、结果日志
+  - 目标不是"再做一次"，而是把这条链变成以后还能重复复核的正式证据
+- **验证状态**: 正式测试文件已创建，可重复运行
+
+#### 2. 压实字段映射，尤其是字体
+- **状态**: ✅ 已明确
+- **重点处理**: `font_family_zh` 和 `font_family_en`
+- **实现内容**:
+  1. 明确 Qt 当前单一 `font_family` 是如何映射到中英文字体字段的
+  2. 把映射策略写成清楚的说明
+  3. 没有把"后面再拆"写成"已经完成"
+- **映射策略（已明确）**:
+  - 中文字体（包含 'SC' 或 'Han'） -> (原字体, Inter)
+  - 英文字体 -> (Noto Sans SC, 原字体)
+- **文档**: [docs/contest_evidence/screenshots/qt_to_core_field_mapping.txt](<repo-root>/docs/contest_evidence/screenshots/qt_to_core_field_mapping.txt)
+
+#### 3. 保留并整理 rotation 证据链
+- **状态**: ✅ 已整理
+- **目标**: 不要再夸大为"全部完成"，只要把证据链整理清楚
+- **整理内容**:
+  1. rotation 进入模型
+  2. rotation 进入绘制链
+  3. 离屏渲染 before / after / diff
+  4. rotation 进入 IR JSON
+- **文档**: [docs/contest_evidence/screenshots/qt_rotation_evidence_chain.txt](<repo-root>/docs/contest_evidence/screenshots/qt_rotation_evidence_chain.txt)
+- **证据清单**:
+  - 模型同步代码验证
+  - draw_memory_elements 方法验证
+  - 4 张对比图片（文字和图片对象，不同 rotation 值）
+  - 像素差异统计
+  - IR 导出文件
+
+#### 4. 文档和计划收口
+- **状态**: ✅ 已完成
+- **更新文档**:
+  - [docs/audits/2026-04-11_qt_demo_checkpoint.md](<repo-root>/docs/audits/2026-04-11_qt_demo_checkpoint.md)
+  - [docs/agent_runs/2026-04-11_dual_agent_runs.md](<repo-root>/docs/agent_runs/2026-04-11_dual_agent_runs.md)（追加 Round 9）
+  - [STATUS.md](<repo-root>/STATUS.md)
+  - [PROJECT_LOG.md](<repo-root>/PROJECT_LOG.md)
+  - [PLAN.md](<repo-root>/PLAN.md)
+- **更新原则**: 尽量少改，只追加
+
+#### 5. 本轮不再继续推进的内容
+- ✅ 没有继续扩 UI
+- ✅ 没有继续加新按钮
+- ✅ 没有去追 Web 的界面细节
+- ✅ 没有改 ExportCore
+- ✅ 没有 commit
+
+#### 6. 结论
+Qt 线现已从"Qt 对接 Core 的预接入准备"推进到：
+1. ✅ duplication 解决过程已如实文档化（借助外部大模型分析）
+2. 🔄 颜色选择器黑盘问题已实施缓解方案
+3. ✅ 已完成离屏渲染验证证明 rotation 进入了绘制结果
+4. ✅ 已导出包含 rotation 的 Qt IR JSON
+5. ✅ 已完成 Qt -> Core 最小 smoke test（真实调用了 ExportCore 函数）
+6. ✅ 明确了 font_family_zh / font_family_en 映射策略
+7. ✅ 测试已正式化（临时脚本 -> 正式测试文件）
+8. ✅ 证据链已整理（rotation 证据链、Qt -> Core 证据链）
+9. ✅ 复制/粘贴功能可用
+10. ✅ 字体列表安全（仅开源/免费可商用字体）
+11. ✅ 启动命令明确
+
+当前 Qt 线最准确的里程碑表述：**已如实记录 duplication 解决过程（借助外部大模型分析），实施了颜色选择器黑盘问题的缓解方案，完成了离屏渲染验证证明 rotation 进入了绘制结果，导出了包含 rotation 的 Qt IR JSON，完成了 Qt -> Core 最小 smoke test（真实调用了 ExportCore 函数），明确了 font_family_zh / font_family_en 映射策略，测试已正式化，证据链已完整整理，复制/粘贴功能可用，字体列表安全，启动命令明确。Qt 线现已具备接 Core 的最小适配能力，测试已正式化，证据链已完整整理，可重复复核**。
+
 ## Web 线
 
 ### Round 1: 核心问题修复
@@ -609,6 +800,78 @@ Web 线现已从"可信验证"推进到：
 
 当前 Web 线最准确的里程碑表述：**已深度修复点击瞬移问题，实现了多选旋转功能，添加了导出到共享 Export IR 格式的能力，具备完整的编辑器操作和导出能力**。
 
+### Round 7: 收口提交轮
+
+#### 1. 统一 UI 模式 v1 - 已完成
+- **状态**: ✅ 已完成
+- **UI 结构**:
+  - 顶部主工具栏（分组：文件/编辑/排列/视图）
+  - 主区：画布 + 右侧属性面板
+  - 右侧属性面板（分组：选中信息/内容/几何/旋转/图层编号/字体/对象专属属性/模型预览/调试信息）
+- **中文标签**: 所有标签已统一为中文
+- **响应式布局**: 1200px 以下切换为垂直布局，700px 以下画布缩小，窄宽度下关键按钮仍可访问
+- **修改文件**: [index.html](<repo-root>/web_prototype/index.html)
+
+#### 2. 点击瞬移问题 - 已回归通过
+- **状态**: ✅ 回归通过
+- **Playwright 验证**:
+  - 点击前位置: (152, 420)
+  - 点击对象中心后: (152, 420)
+  - 点击对象偏右下后: (152, 420)
+- **结论**: 三次点击位置完全一致，无瞬移
+- **证据文件**: [web_regression_v4_click_teleportation_result.json](<repo-root>/docs/contest_evidence/screenshots/web_regression_v4_click_teleportation_result.json), [web_regression_v4_click_teleportation.png](<repo-root>/docs/contest_evidence/screenshots/web_regression_v4_click_teleportation.png)
+
+#### 3. 多选旋转功能 - 已回归通过
+- **状态**: ✅ 回归通过
+- **Playwright 验证**:
+  - 旋转前: [ { id: '1', rotation: 0 }, { id: '2', rotation: 0 } ]
+  - 旋转后: [ { id: '1', rotation: 45 }, { id: '2', rotation: 45 } ]
+- **结论**: 两个对象都从 0° 旋转到 45°
+- **证据文件**: [web_regression_v4_multi_select_rotation_result.json](<repo-root>/docs/contest_evidence/screenshots/web_regression_v4_multi_select_rotation_result.json), [web_regression_v4_multi_select_rotation.png](<repo-root>/docs/contest_evidence/screenshots/web_regression_v4_multi_select_rotation.png)
+
+#### 4. Export IR 功能 - 已回归通过
+- **状态**: ✅ 回归通过
+- **覆盖字段**:
+  - id, type, content, page
+  - x, y, width, height, rotation, layer
+  - font_family_zh, font_family_en, font_size, color, visible
+- **结论**: 导出 IR 按钮存在，导出结果包含所有关键字段
+- **证据文件**: [web_regression_v4_export_ir_result.json](<repo-root>/docs/contest_evidence/screenshots/web_regression_v4_export_ir_result.json)
+
+#### 5. Playwright regression 固化 - 已完成
+- **测试脚本路径**: [web_prototype/playwright_regression_test.js](<repo-root>/web_prototype/playwright_regression_test.js)
+- **启动服务器方式**: 无需服务器，直接打开 index.html（使用 file:// 协议）
+- **运行命令**: `cd web_prototype && node playwright_regression_test.js`
+- **输出文件路径**: web_prototype/ 下或 docs/contest_evidence/screenshots/ 下
+- **失败日志路径**: web_prototype/regression_test_log.txt 或 docs/contest_evidence/screenshots/web_regression_v4_test_log.txt
+- **测试日志**: [web_regression_v4_test_log.txt](<repo-root>/docs/contest_evidence/screenshots/web_regression_v4_test_log.txt)
+- **初始页面截图**: [web_regression_v4_initial_page.png](<repo-root>/docs/contest_evidence/screenshots/web_regression_v4_initial_page.png)
+
+#### 6. 默认字体列表 - 已确认
+- **状态**: ✅ 已确认
+- **中文字体**: Noto Sans SC, Source Han Sans SC
+- **英文字体**: Inter, Noto Sans, Sans Serif
+- **所有字体**: 均为开源/免费可商用字体
+
+#### 7. 本轮不再继续推进的内容
+- ✅ 没有新增 UI 功能
+- ✅ 没有新增交互玩法
+- ✅ 没有修改 ExportCore
+- ✅ 没有碰 Qt 文件
+- ✅ 没有写“还可以顺手做一下……”
+
+#### 8. 结论
+Web 线现已从“功能完善与验证”推进到：
+1. ✅ 统一 UI 模式 v1 已稳定落地（顶部工具栏分组、右侧属性面板分组、响应式布局、全中文界面）
+2. ✅ Playwright regression 已固化（可重复执行、可留证、可提交）
+3. ✅ 点击瞬移问题：回归通过（三次点击位置完全一致）
+4. ✅ 多选旋转功能：回归通过（两个对象都从 0° 旋转到 45°）
+5. ✅ Export IR 功能：回归通过（包含所有关键字段）
+6. ✅ 证据文件已保存到 docs/contest_evidence/screenshots/
+7. ✅ 默认字体列表只保留开源/免费可商用字体
+
+当前 Web 线最准确的里程碑表述：**已稳定落实统一 UI 模式 v1，固化了 Playwright 回归测试（点击瞬移、多选旋转、Export IR 都通过），证据文件已完整保存，达到可提交的稳定基线**。
+
 ## ExportCore
 
 ### Round 1
@@ -647,6 +910,44 @@ Web 线现已从"可信验证"推进到：
   - 运行了导出验证，确保所有样例都能正确生成 LaTeX
 
 ### Round 4
+- 任务：推进 ExportCore 的工程化接入能力，重新校准几何保真表述
+- 完成情况：已完成
+- 具体内容：
+  - 重新校准了几何保真表述，明确区分已验证内容和设计目标
+  - 新增了 3 个 regression sample：
+    - regression_sample_3_same_layer：多对象同一 layer 的样例
+    - regression_sample_4_fonts：中英文字体分离的样例
+    - regression_sample_5_rotation_layer：rotation + layer 同时存在的样例
+  - 增强了工程化接入说明，提供了详细的接入步骤、输入输出示例和最小 smoke test
+  - 新增了接入缺口排序，明确了对“几何一比一”影响最大的缺口和责任分配
+  - 运行了导出验证，确保所有新样例都能正确生成 LaTeX
+
+### Round 5: 收口整理模式 - 接入资料整理
+- 任务：将 ExportCore 现有成果整理成更容易被接入的资料包，不扩功能、不改接口、不改字段、不改 sample 结构
+- 完成情况：✅ 已完成
+- 具体内容：
+  - 创建了接入速查表（docs/export_core_quickstart.md）
+    - 明确 Web 和 Qt 应调用的函数
+    - 提供输入输出样例文件路径
+    - 提供最小 smoke test 代码
+    - 列出当前最关键的字段缺口
+  - 整理了 sample 索引（docs/export_core_sample_index.md）
+    - 逐条列出 golden sample 和 5 个 regression sample
+    - 每个样例包含文件名、作用、重点验证、适合参考
+  - 澄清了验证状态（docs/export_core_validation_status.md）
+    - 明确区分已真实验证、设计上支持但未最终视觉实证、当前仍有缺口
+    - 特别强调不要把"tex 已生成"写成"几何一比一已验证"
+  - 轻微整理了现有设计文档（docs/export_core_design.md）
+- 本轮遵守：
+  - 未修改 Web 文件
+  - 未修改 Qt 文件
+  - 未修改 ExportCore API 名称
+  - 未新增字段
+  - 未改 sample 结构
+  - 未 commit
+  - 未把"文档整理"写成"功能升级"
+
+### Round 6: 完善 ExportCore 功能，支持 Web 和 Qt 的实际接入
 - 任务：完善 ExportCore 功能，支持 Web 和 Qt 的实际接入
 - 完成情况：待开始
 - 具体内容：

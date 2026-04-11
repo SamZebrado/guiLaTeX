@@ -1,0 +1,59 @@
+{
+  "test": "多选旋转功能回归测试",
+  "timestamp": "2026-04-11T21:23:51.436Z",
+  "passed": true,
+  "steps": [
+    {
+      "step": "启用多选模式"
+    },
+    {
+      "step": "记录旋转前 rotation",
+      "rotations": [
+        {
+          "id": "1",
+          "rotation": 0
+        },
+        {
+          "id": "2",
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "step": "记录旋转后 rotation",
+      "rotations": [
+        {
+          "id": "1",
+          "rotation": 45
+        },
+        {
+          "id": "2",
+          "rotation": 45
+        }
+      ]
+    }
+  ],
+  "allRotated": true,
+  "onlyOneRotated": false,
+  "noneRotated": false,
+  "beforeRotations": [
+    {
+      "id": "1",
+      "rotation": 0
+    },
+    {
+      "id": "2",
+      "rotation": 0
+    }
+  ],
+  "afterRotations": [
+    {
+      "id": "1",
+      "rotation": 45
+    },
+    {
+      "id": "2",
+      "rotation": 45
+    }
+  ]
+}

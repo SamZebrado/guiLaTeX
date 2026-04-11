@@ -1,0 +1,43 @@
+{
+  "test": "点击瞬移问题回归测试",
+  "timestamp": "2026-04-11T21:23:48.605Z",
+  "passed": true,
+  "steps": [
+    {
+      "step": "记录点击前位置",
+      "position": {
+        "x": 152,
+        "y": 419.5,
+        "width": 162,
+        "height": 52
+      }
+    },
+    {
+      "step": "点击对象中心后",
+      "position": {
+        "x": 152,
+        "y": 419.5,
+        "width": 162,
+        "height": 52
+      }
+    },
+    {
+      "step": "点击对象右下区域后",
+      "position": {
+        "x": 152,
+        "y": 419.5,
+        "width": 162,
+        "height": 52
+      }
+    }
+  ],
+  "centerDelta": {
+    "x": 0,
+    "y": 0
+  },
+  "bottomRightDelta": {
+    "x": 0,
+    "y": 0
+  },
+  "teleportDetected": false
+}
