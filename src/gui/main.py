@@ -11,7 +11,8 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QMe
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
 
-# Add src directory to Python path
+# Add project root and src directory to Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import modules
@@ -121,6 +122,11 @@ class MainWindow(QMainWindow):
         export_action.triggered.connect(self.export_document)
         file_menu.addAction(export_action)
         
+        export_ir_action = QAction("Export IR", self)
+        export_ir_action.setShortcut("Ctrl+Shift+E")
+        export_ir_action.triggered.connect(self.export_ir)
+        file_menu.addAction(export_ir_action)
+        
         preview_action = QAction("Preview PDF", self)
         preview_action.setShortcut("F5")
         preview_action.triggered.connect(self.preview_document)
@@ -152,10 +158,12 @@ class MainWindow(QMainWindow):
         
         copy_action = QAction("Copy", self)
         copy_action.setShortcut("Ctrl+C")
+        copy_action.triggered.connect(self.copy_element)
         edit_menu.addAction(copy_action)
         
         paste_action = QAction("Paste", self)
         paste_action.setShortcut("Ctrl+V")
+        paste_action.triggered.connect(self.paste_element)
         edit_menu.addAction(paste_action)
         
         # View menu
@@ -200,11 +208,24 @@ class MainWindow(QMainWindow):
 \author{User}
 \maketitle
 
-Hello World!
+\section{Introduction}
+
+This is a test document created with guiLaTeX.
+
+You can select this text and edit it in the property panel.
+
+\section{Math Example}
 
 $E = mc^2$
 
-This is a test document created with guiLaTeX.
+This is another paragraph that you can edit.
+
+\section{Instructions}
+
+1. Click on any text to select it
+2. Edit the text in the property panel
+3. Watch the changes update immediately
+4. The changes are synchronized to the model
 \end{document}
 """
         
@@ -214,45 +235,8 @@ This is a test document created with guiLaTeX.
             # Update LaTeX view
             self.latex_view.setText(initial_latex)
             print("Initial PDF created successfully")
-            
-            # Update document model with elements from PDF
-            if self.document_model and self.pdf_canvas.page_widget:
-                try:
-                    # Get memory elements from PDF canvas
-                    memory_elements = self.pdf_canvas.page_widget.memory_elements
-                    
-                    # Get or create page model for current page
-                    page_model = None
-                    for page in self.document_model.pages:
-                        if page.number == 0:  # First page
-                            page_model = page
-                            break
-                    
-                    if not page_model:
-                        page_model = PageModel(number=0)
-                        self.document_model.add_page(page_model)
-                    
-                    # Add elements to page model
-                    for elem in memory_elements:
-                        new_elem = ElementModel(
-                            id=elem['id'],
-                            type=elem.get('type', 'text'),
-                            content=elem['text'],
-                            x=elem['x'],
-                            y=elem['y'],
-                            width=elem['width'],
-                            height=elem['height'],
-                            font_size=elem.get('font_size', 12)
-                        )
-                        page_model.add_element(new_elem)
-                    
-                    print(f"Added {len(memory_elements)} elements to document model")
-                    
-                    # Refresh PDF canvas to use the model
-                    self.pdf_canvas.update_page_display()
-                    print("PDF canvas refreshed with document model")
-                except Exception as e:
-                    print(f"Error updating document model: {e}")
+            # 模型同步已在 pdf_canvas.create_pdf -> update_page_display -> PDFPageWidget.__init__ 中完成
+            # 不再需要手动添加元素，避免 duplication 问题
         else:
             print("Failed to create initial PDF")
     
@@ -279,6 +263,15 @@ This is a test document created with guiLaTeX.
             # Update font size
             elif property_name == 'font_size':
                 self.pdf_canvas.page_widget.update_element_font_size(element_id, value)
+            # Update font family
+            elif property_name == 'font_family':
+                element = self.pdf_canvas.page_widget.get_element_by_id(element_id)
+                if element:
+                    element['font_family'] = value
+                    self.pdf_canvas.page_widget.is_dirty = True
+                    self.pdf_canvas.page_widget.update()
+                    self.pdf_canvas.page_widget._sync_to_model()
+                    print(f"Updated element font family: {value}")
             # Update position
             elif property_name == 'position':
                 x, y = value
@@ -287,6 +280,15 @@ This is a test document created with guiLaTeX.
                     element['x'] = x
                     element['y'] = y
                     self.pdf_canvas.page_widget.update()
+            # Update rotation
+            elif property_name == 'rotation':
+                element = self.pdf_canvas.page_widget.get_element_by_id(element_id)
+                if element:
+                    element['rotation'] = value
+                    self.pdf_canvas.page_widget.is_dirty = True
+                    self.pdf_canvas.page_widget.update()
+                    self.pdf_canvas.page_widget._sync_to_model()
+                    print(f"Updated element rotation: {value}")
             
             # Sync changes to LaTeX view
             self.sync_to_latex()
@@ -337,8 +339,9 @@ This is a test document created with guiLaTeX.
             QMessageBox.warning(self, "Preview", "LaTeX engine not found")
             return
         
-        # Get PDF path from PDF canvas
-        pdf_path = "<repo-root>/temp/guiLaTeX_edit.pdf"
+        # Get PDF path from PDF canvas (使用相对路径)
+        pdf_path = os.path.join(os.path.dirname(__file__), '..', '..', 'temp', 'guiLaTeX_edit.pdf')
+        pdf_path = os.path.abspath(pdf_path)
         
         if os.path.exists(pdf_path):
             # View PDF
@@ -349,6 +352,34 @@ This is a test document created with guiLaTeX.
                 QMessageBox.warning(self, "Preview", "Failed to open PDF viewer")
         else:
             QMessageBox.warning(self, "Preview", "No document to preview")
+    
+    def copy_element(self):
+        """Copy selected element"""
+        if self.pdf_canvas:
+            self.copied_element = self.pdf_canvas.copy_element()
+            print("元素已复制到剪贴板")
+    
+    def paste_element(self):
+        """Paste copied element"""
+        if self.pdf_canvas and hasattr(self, 'copied_element') and self.copied_element:
+            self.pdf_canvas.paste_element(self.copied_element)
+            print("元素已粘贴到文档")
+    
+    def export_ir(self):
+        """Export model to Export IR format"""
+        if self.pdf_canvas:
+            ir_data = self.pdf_canvas.export_model_to_ir()
+            if ir_data:
+                from PyQt6.QtWidgets import QMessageBox
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Icon.Information)
+                msg.setText("导出 IR 成功")
+                msg.setInformativeText("模型已成功导出为 Export IR 格式")
+                msg.setWindowTitle("导出成功")
+                msg.exec()
+            else:
+                from PyQt6.QtWidgets import QMessageBox
+                QMessageBox.warning(self, "导出 IR", "导出 IR 失败")
 
 
 def main():

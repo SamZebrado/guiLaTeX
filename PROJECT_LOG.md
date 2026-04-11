@@ -28,6 +28,22 @@
 - Files / commands: .trae/skills/dev-workflow/SKILL.md
 - Follow-up: Apply workflow to guiLaTeX development
 
+# PROJECT_LOG
+
+## 2026-04-11 - Qt 线核心功能验证
+- What changed: 完成 Qt 线核心功能的真实路径测试验证，更新 dev-workflow 文档
+- Why: 用户要求压实旋转功能，不要把"有控件/分支"写成"功能已完成"；要求优先加强单元测试和真实路径测试
+- Verified by: 运行 temp/test_qt_real_path.py，所有 5 项测试通过
+- Files / commands: temp/test_qt_real_path.py, STATUS.md, PROJECT_LOG.md
+- Follow-up: 准备 git 提交，仅提交 Qt 相关文件
+
+### 验证结果
+1. ✅ 初始化元素数量: 保持为 5 个对象，无重复
+2. ✅ rotation 字段: 已正确进入模型并保存
+3. ✅ 旋转绘制链: 绘制函数正确读取 rotation 字段
+4. ✅ copy/paste: 生成新 UUID 且位置轻微偏移 (20, 20)
+5. ✅ 字体安全: 只保留开源/免费可商用字体
+
 ## 2026-04-03 15:00 - Technology Stack Decision
 - What changed: Chose Qt 6 (Python/PyQt6) for MVP development
 - Why: Balance of rapid development and performance

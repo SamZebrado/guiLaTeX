@@ -4,13 +4,28 @@
 - **项目名称**: guiLaTeX
 - **项目描述**: 可视化LaTeX编辑器，支持像Photoshop那样选中拖动编辑LaTeX元素，像Word那样改变字体字号颜色排版
 - **技术栈**: PyQt6 (Python), PyMuPDF, TeX Live 2022
-- **当前阶段**: Phase 5 - 内部模型驱动架构重构
+- **当前阶段**: Qt 线完善 - 验证核心功能并准备提交
 
 ## 当前状态
 
-### 已实现功能 ✅
+### Qt 线已验证功能 ✅
 
-#### 模型层 (Model Layer) - 已完成 ✅
+#### 核心功能验证 (真实路径测试通过)
+- **初始化元素数量**: 保持为 5 个对象，无重复
+- **rotation 字段**: 已正确进入模型并保存
+- **旋转绘制链**: 绘制函数正确读取 rotation 字段
+- **copy/paste**: 生成新 UUID 且位置轻微偏移 (20, 20)
+- **字体安全**: 只保留开源/免费可商用字体 (Noto Sans SC, Source Han Sans SC, Inter, Noto Sans, Sans Serif)
+
+| 验证项 | 状态 | 说明 |
+|------|------|------|
+| 初始化元素数量 | ✅ 验证通过 | 5个对象，无重复 |
+| rotation 字段 | ✅ 验证通过 | 已进入模型 |
+| 旋转绘制 | ✅ 验证通过 | 绘制链读取 rotation |
+| copy/paste | ✅ 验证通过 | 新ID + 偏移 |
+| 字体安全 | ✅ 验证通过 | 仅开源字体 |
+
+### 模型层 (Model Layer) - 已完成 ✅
 - **ElementModel**: 元素模型，包含唯一ID、类型、内容、几何属性、字体属性、dirty标记
 - **PageModel**: 页面模型，管理元素集合，支持增删改查
 - **DocumentModel**: 文档模型，根模型，管理多页面
@@ -25,15 +40,6 @@
 | PageModel | ✅ 完成 | 页面模型，元素管理 |
 | DocumentModel | ✅ 完成 | 文档模型，多页面管理 |
 | 模型层测试 | ✅ 完成 | 100%测试通过 |
-
-#### UI层 (旧架构，待重构)
-- PDF Canvas Viewer | ⚠️ 待重构 | 当前基于PDF直接编辑，需改为模型驱动
-- 元素选择 | ⚠️ 待重构 | 需要适配新模型
-- 大小调整 | ⚠️ 待重构 | 需要适配新模型
-- 内存中编辑 | ⚠️ 待重构 | 将被模型层替代
-- 字体等比例变化 | ⚠️ 待重构 | 需要适配新模型
-- 缩放控制 | ⚠️ 待重构 | 需要适配新模型
-- 页面导航 | ⚠️ 待重构 | 需要适配新模型
 
 ### 待完成任务 📋
 
@@ -159,9 +165,11 @@ python src/gui/main.py
 - **开发环境**: Python 3.10+, PyQt6, PyMuPDF, TeX Live
 - **测试环境**: macOS (当前), 需要扩展到 Windows/Linux
 - **文档**: 需要补充架构文档和用户手册
+- **Playwright 插件**: 详见 [playwright-plugins.md](<repo-root>/docs/research/playwright-plugins.md)
+- **版本信息**: 详见 [version_info.md](<repo-root>/docs/version_info.md)
 
 ---
 
-**最后更新**: 2026-04-04  
-**更新者**: Builder Agent  
-**版本**: 2.0 (架构重构中)
+**最后更新**: 2026-04-11  
+**更新者**: Qt Agent  
+**版本**: 2.1 (Qt 线验证阶段)

@@ -41,11 +41,14 @@ class PropertyPanel(QWidget):
         font_group = QGroupBox("Font")
         font_layout = QFormLayout()
         
-        # Font family
+        # Font family - 只保留开源/免费可商用字体
         self.font_family_combo = QComboBox()
         self.font_family_combo.addItems([
-            "Arial", "Helvetica", "Times New Roman", 
-            "Georgia", "Courier New", "Cambria Math"
+            "Noto Sans SC",      # Google Noto Sans 简体中文（开源，可商用）
+            "Source Han Sans SC", # Adobe 思源黑体（开源，可商用）
+            "Inter",            # Inter 字体（开源，可商用）
+            "Noto Sans",        # Google Noto Sans（开源，可商用）
+            "Sans Serif"        # 系统无衬线字体（安全备选）
         ])
         self.font_family_combo.currentTextChanged.connect(self.on_font_family_changed)
         font_layout.addRow("Family:", self.font_family_combo)
@@ -94,6 +97,13 @@ class PropertyPanel(QWidget):
         self.y_spin.valueChanged.connect(self.on_position_changed)
         position_layout.addRow("Y:", self.y_spin)
         
+        # Rotation angle
+        self.rotation_spin = QSpinBox()
+        self.rotation_spin.setRange(-360, 360)
+        self.rotation_spin.setSuffix("°")
+        self.rotation_spin.valueChanged.connect(self.on_rotation_changed)
+        position_layout.addRow("Rotation:", self.rotation_spin)
+        
         position_group.setLayout(position_layout)
         self.layout.addWidget(position_group)
     
@@ -110,11 +120,12 @@ class PropertyPanel(QWidget):
         """Update property fields based on current element"""
         if not self.current_element:
             # Clear fields if no element selected
-            self.font_family_combo.setCurrentText("Arial")
+            self.font_family_combo.setCurrentText("Noto Sans SC")
             self.font_size_spin.setValue(12)
             self.text_edit.setText("")
             self.x_spin.setValue(0)
             self.y_spin.setValue(0)
+            self.rotation_spin.setValue(0)
             return
         
         # Handle dict-style PDF elements
@@ -122,6 +133,16 @@ class PropertyPanel(QWidget):
             # Update font properties
             font_size = self.current_element.get('font_size', 12)
             self.font_size_spin.setValue(int(font_size))
+            
+            # Update font family
+            font_family = self.current_element.get('font_family', 'Noto Sans SC')
+            # Find the index of the font family in the combo box
+            index = self.font_family_combo.findText(font_family)
+            if index != -1:
+                self.font_family_combo.setCurrentIndex(index)
+            else:
+                # If font family not found, set to first item
+                self.font_family_combo.setCurrentIndex(0)
             
             # Update text content
             text = self.current_element.get('text', '')
@@ -132,6 +153,10 @@ class PropertyPanel(QWidget):
             y = self.current_element.get('y', 0)
             self.x_spin.setValue(int(x))
             self.y_spin.setValue(int(y))
+            
+            # Update rotation
+            rotation = self.current_element.get('rotation', 0)
+            self.rotation_spin.setValue(int(rotation))
         else:
             # Handle QGraphicsItem-style elements (legacy)
             # Update font properties
@@ -149,10 +174,27 @@ class PropertyPanel(QWidget):
             pos = self.current_element.pos()
             self.x_spin.setValue(int(pos.x()))
             self.y_spin.setValue(int(pos.y()))
+            
+            # Update rotation
+            if hasattr(self.current_element, 'rotation'):
+                rotation = self.current_element.rotation()
+                self.rotation_spin.setValue(int(rotation))
+            else:
+                self.rotation_spin.setValue(0)
     
     def on_font_family_changed(self, family):
         """Handle font family change"""
-        if self.current_element and hasattr(self.current_element, 'font'):
+        if not self.current_element:
+            return
+        
+        # Handle dict-style PDF elements
+        if isinstance(self.current_element, dict):
+            element_id = self.current_element.get('id')
+            if element_id:
+                # Add font family to element data
+                self.current_element['font_family'] = family
+                self.element_changed.emit(element_id, 'font_family', family)
+        elif hasattr(self.current_element, 'font'):
             self.current_element.font.setFamily(family)
             self.current_element.update()
     
@@ -177,13 +219,22 @@ class PropertyPanel(QWidget):
             return
         
         # Get current color
-        current_color = self.current_element.color if hasattr(self.current_element, 'color') else QColor(0, 0, 0)
+        if isinstance(self.current_element, dict):
+            current_color = QColor(0, 0, 0)
+        else:
+            current_color = self.current_element.color if hasattr(self.current_element, 'color') else QColor(0, 0, 0)
         
-        # Show color dialog
-        color = QColorDialog.getColor(current_color, self, "Select Color")
-        if color.isValid():
-            self.current_element.color = color
-            self.current_element.update()
+        # Use non-native dialog to avoid initialization issues on macOS
+        color_dialog = QColorDialog(current_color, self)
+        color_dialog.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
+        color_dialog.setWindowTitle("Select Color")
+        
+        if color_dialog.exec() == QColorDialog.DialogCode.Accepted:
+            color = color_dialog.selectedColor()
+            if color.isValid():
+                if not isinstance(self.current_element, dict):
+                    self.current_element.color = color
+                    self.current_element.update()
     
     def on_text_changed(self, text):
         """Handle text content change"""
@@ -219,3 +270,19 @@ class PropertyPanel(QWidget):
         else:
             # Set position for QGraphicsItem
             self.current_element.setPos(x, y)
+    
+    def on_rotation_changed(self, value):
+        """Handle rotation change"""
+        if not self.current_element:
+            return
+        
+        # Handle dict-style PDF elements
+        if isinstance(self.current_element, dict):
+            element_id = self.current_element.get('id')
+            if element_id:
+                self.current_element['rotation'] = value
+                self.element_changed.emit(element_id, 'rotation', value)
+        else:
+            # Set rotation for QGraphicsItem if available
+            if hasattr(self.current_element, 'setRotation'):
+                self.current_element.setRotation(value)
