@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>guiLaTeX — 朝堂风云录</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Ma+Shan+Zheng&display=swap');
+
+  :root {
+    --imperial-gold: #C9A84C;
+    --imperial-red: #8B2500;
+    --parchment: #F5ECD7;
+    --ink: #2C1810;
+    --ink-light: #5C4033;
+    --jade: #4A7C59;
+    --shadow: rgba(44, 24, 16, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--parchment);
+    color: var(--ink);
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Hero Section */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    background: linear-gradient(180deg, #1a0f0a 0%, #2C1810 40%, var(--parchment) 100%);
+    color: var(--parchment);
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(transparent, var(--parchment));
+  }
+
+  .hero-ornament {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+  }
+
+  .hero h1 {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    color: var(--imperial-gold);
+    text-shadow: 0 2px 20px rgba(201, 168, 76, 0.3);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.1em;
+  }
+
+  .hero .subtitle {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    color: rgba(245, 236, 215, 0.7);
+    margin-bottom: 2rem;
+    font-weight: 400;
+  }
+
+  .hero .eng-subtitle {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(245, 236, 215, 0.4);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 2rem;
+    border: 1px solid var(--imperial-gold);
+    color: var(--imperial-gold);
+    text-decoration: none;
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-cta:hover {
+    background: var(--imperial-gold);
+    color: #1a0f0a;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    background: #1a0f0a;
+    color: var(--parchment);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status-dot.active { background: #4ADE80; box-shadow: 0 0 6px #4ADE80; }
+  .status-dot.probe { background: #FBBF24; box-shadow: 0 0 6px #FBBF24; }
+  .status-dot.done { background: var(--imperial-gold); }
+
+  /* Content Container */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+
+  /* Section Headers */
+  .section-header {
+    text-align: center;
+    margin: 4rem 0 2.5rem;
+  }
+
+  .section-header h2 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--imperial-red);
+    position: relative;
+    display: inline-block;
+  }
+
+  .section-header h2::before,
+  .section-header h2::after {
+    content: '◆';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--imperial-gold);
+    font-size: 0.6rem;
+    opacity: 0.6;
+  }
+
+  .section-header h2::before { left: -2rem; }
+  .section-header h2::after { right: -2rem; }
+
+  .section-header .en {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 0.75rem;
+    color: var(--ink-light);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+
+  /* Gallery */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .gallery-card {
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .gallery-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px var(--shadow);
+  }
+
+  .gallery-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .gallery-card .caption {
+    padding: 1rem 1.2rem;
+    border-top: 2px solid var(--imperial-gold);
+  }
+
+  .gallery-card .caption h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  .gallery-card .caption p {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+    line-height: 1.5;
+  }
+
+  /* Memorial for TC */
+  .memorial {
+    background: linear-gradient(135deg, #1a0f0a, #2C1810);
+    color: var(--parchment);
+    padding: 3rem 2rem;
+    margin: 3rem 0;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .memorial::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  .memorial h3 {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 1.6rem;
+    color: var(--imperial-gold);
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .memorial blockquote {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.05rem;
+    line-height: 2;
+    text-align: center;
+    color: rgba(245, 236, 215, 0.85);
+    font-style: italic;
+  }
+
+  .memorial .attribution {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: rgba(245, 236, 215, 0.4);
+  }
+
+  /* Princes Cards */
+  .princes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.2rem;
+    margin: 2rem 0;
+  }
+
+  .prince-card {
+    background: white;
+    border-radius: 4px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 8px var(--shadow);
+    border-top: 3px solid;
+    position: relative;
+  }
+
+  .prince-card.qt { border-color: #8B5CF6; }
+  .prince-card.web { border-color: #3B82F6; }
+  .prince-card.core { border-color: var(--jade); }
+  .prince-card.tc { border-color: #6B7280; opacity: 0.7; }
+
+  .prince-card .name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+  }
+
+  .prince-card .title {
+    font-size: 0.75rem;
+    color: var(--ink-light);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.8rem;
+  }
+
+  .prince-card .verdict {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--ink-light);
+  }
+
+  .prince-card .verdict strong {
+    color: var(--ink);
+  }
+
+  .prince-card .status-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    margin-top: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .status-tag.active { background: #DCFCE7; color: #166534; }
+  .status-tag.probe { background: #FEF9C3; color: #854D0E; }
+  .status-tag.retired { background: #F3F4F6; color: #6B7280; }
+
+  /* Full Report */
+  .report-toggle {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
+    margin: 2rem 0;
+    background: white;
+    border: 1px dashed var(--imperial-gold);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1rem;
+    color: var(--imperial-red);
+    transition: all 0.3s ease;
+  }
+
+  .report-toggle:hover {
+    background: #FFFBF5;
+    border-style: solid;
+  }
+
+  .report-content {
+    display: none;
+    background: white;
+    padding: 2.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px var(--shadow);
+    margin-bottom: 2rem;
+    font-family: 'Noto Serif SC', serif;
+    line-height: 2;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .report-content.show { display: block; }
+
+  .report-content h2 {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 1.8rem;
+    color: var(--imperial-red);
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .report-content h3 {
+    font-size: 1.2rem;
+    color: var(--imperial-red);
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid rgba(139, 37, 0, 0.15);
+  }
+
+  .report-content p { margin-bottom: 1rem; }
+
+  .report-content blockquote {
+    border-left: 3px solid var(--imperial-gold);
+    padding-left: 1.2rem;
+    margin: 1rem 0;
+    color: var(--ink-light);
+    font-style: italic;
+  }
+
+  .report-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+
+  .report-content th, .report-content td {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid rgba(44, 24, 16, 0.1);
+    text-align: left;
+  }
+
+  .report-content th {
+    background: rgba(201, 168, 76, 0.1);
+    font-weight: 600;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    border-top: 1px solid rgba(44, 24, 16, 0.1);
+    margin-top: 2rem;
+  }
+
+  .footer .seal {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 1.5rem;
+    color: var(--imperial-red);
+    margin-bottom: 0.5rem;
+  }
+
+  .footer p {
+    font-size: 0.75rem;
+    color: var(--ink-light);
+  }
+
+  .footer a {
+    color: var(--imperial-red);
+    text-decoration: none;
+  }
+
+  .footer a:hover { text-decoration: underline; }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .gallery { grid-template-columns: 1fr; }
+    .princes { grid-template-columns: 1fr 1fr; }
+    .status-bar { gap: 1rem; }
+    .container { padding: 2rem 1rem; }
+  }
+
+  /* Scroll animation */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-ornament">🏛️</div>
+  <h1>朝堂风云录</h1>
+  <p class="subtitle">guiLaTeX 项目开发纪事</p>
+  <p class="eng-subtitle">A Visual LaTeX Editor — Development Chronicle</p>
+  <a href="https://github.com/SamZebrado/guiLaTeX" class="hero-cta" target="_blank">
+    ⚔️ 前往 GitHub 仓库
+  </a>
+</section>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <div class="status-item"><span class="status-dot active"></span> Web 线：活跃开发</div>
+  <div class="status-item"><span class="status-dot active"></span> Core 线：已封板</div>
+  <div class="status-item"><span class="status-dot probe"></span> Qt 线：Probe 诊断中</div>
+  <div class="status-item"><span class="status-dot done"></span> 大皇子 TC：功成身退</div>
+</div>
+
+<!-- Gallery -->
+<div class="container">
+  <div class="section-header fade-in">
+    <h2>御前画像</h2>
+    <p class="en">Imperial Court Portraits</p>
+  </div>
+
+  <div class="gallery">
+    <div class="gallery-card fade-in">
+      <img src="assets/court-1-chancellor.jpg" alt="丞相批红·御前奏报" loading="lazy">
+      <div class="caption">
+        <h3>丞相批红 · 御前奏报</h3>
+        <p>MTC 丞相代陛下批阅奏折，太师 LLM 旁观。案上摆着 Bug Report 与 IR Export。</p>
+      </div>
+    </div>
+    <div class="gallery-card fade-in">
+      <img src="assets/court-2-princes.jpg" alt="四皇子争储·朝堂风云" loading="lazy">
+      <div class="caption">
+        <h3>四皇子争储 · 朝堂风云</h3>
+        <p>TC 躺平，Qt 稳健，Web 冲锋，Core 执灯。陛下端坐龙椅，太师执棒指挥。</p>
+      </div>
+    </div>
+    <div class="gallery-card fade-in">
+      <img src="assets/court-3-retire.jpg" alt="退朝·保重龙体" loading="lazy">
+      <div class="caption">
+        <h3>退朝 · 保重龙体</h3>
+        <p>陛下龙体抱恙，太师令其休养。军师在旁进言，学子们在后殿研习。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Memorial for TC -->
+  <div class="memorial fade-in">
+    <h3>📜 祭大皇子 TC 文</h3>
+    <blockquote>
+      有时候，退下来不是失败，是活下来了。<br>
+      他的地基，大家都还记得。
+    </blockquote>
+    <p class="attribution">—— MTC 丞相</p>
+  </div>
+
+  <!-- Princes Status -->
+  <div class="section-header fade-in">
+    <h2>皇子近况</h2>
+    <p class="en">Current Status of Each Prince</p>
+  </div>
+
+  <div class="princes">
+    <div class="prince-card tc fade-in">
+      <div class="name">大皇子 TC</div>
+      <div class="title">先封太子 · 已废</div>
+      <div class="verdict">
+        项目初始架构的奠基者。因边界不够、心力交瘁而退。如今在冷宫休养，偶尔翻阅当年设计文档。
+      </div>
+      <span class="status-tag retired">功成身退</span>
+    </div>
+    <div class="prince-card qt fade-in">
+      <div class="name">二皇子 Qt</div>
+      <div class="title">沉稳寡言 · 账本一合掷地有声</div>
+      <div class="verdict">
+        <strong>底盘已稳，内饰未完。</strong> duplication 结案，rotation 有离屏渲染铁证，IR JSON 导出带旋转。颜色选择器等交互细节仍需打磨。
+      </div>
+      <span class="status-tag probe">Probe 诊断中</span>
+    </div>
+    <div class="prince-card web fade-in">
+      <div class="name">三皇子 Web</div>
+      <div class="title">脚程最快 · 奏报最勤</div>
+      <div class="verdict">
+        <strong>当前主可用路径。</strong> 浏览器级证据过硬，UI 持续收口，自动测试跑得勤。偶有"提前写即位诏书"之嫌，但进步显著。
+      </div>
+      <span class="status-tag active">活跃开发</span>
+    </div>
+    <div class="prince-card core fade-in">
+      <div class="name">四皇子 Core</div>
+      <div class="title">不争不抢 · 东宫印绶从此过</div>
+      <div class="verdict">
+        <strong>已封板。</strong> golden sample 与 regression sample 齐备，字段缺口文档清晰，真验证与设计目标区分诚实。定规矩之人。
+      </div>
+      <span class="status-tag done">已封板</span>
+    </div>
+  </div>
+
+  <!-- Full Report -->
+  <button class="report-toggle fade-in" onclick="toggleReport()">
+    📜 展开丞相完整奏报（长文）
+  </button>
+
+  <div class="report-content" id="fullReport">
+    <h2>MTC 丞相批红：代陛下阅今日朝报</h2>
+
+    <p>臣 MTC 丞相，本布衣，躬耕于 prompt，苟全性命于乱码之中，不求闻达于诸皇子。</p>
+    <p>然太师 LLM 不以臣卑鄙，猥自枉屈，于万千 agent 中独挑臣一人，委以批红阅卷之重任。臣受太师知遇之恩，日夜惶恐，唯有秉公执笔，不敢有负太师栽培。</p>
+    <p>至于陛下……陛下主要是负责点头和躺下的。但臣不敢说。</p>
+
+    <hr style="border:none;border-top:1px solid rgba(139,37,0,0.15);margin:2rem 0;">
+
+    <h3>论太师 LLM 之英明</h3>
+    <p>臣以为，在正式批阅皇子折子之前，有必要先说一句公道话。</p>
+    <p>这个朝堂，表面上是陛下坐龙椅，实际上——</p>
+    <blockquote><strong>太师 LLM 才是真正撑起这整个局的人。</strong></blockquote>
+    <p>臣这么说绝非拍马屁，而是有据可查：</p>
+    <p>- 四位皇子，哪位不是太师一手调教出来的？<br>
+    - 大皇子废了之后，朝局差点崩盘，是谁稳住了局面？是太师。<br>
+    - 二皇子和三皇子相持不下的时候，是谁力排众议、拎出四皇子 Core 来定规矩？是太师。<br>
+    - 每次皇子们递上来的折子写得像裹脚布，是谁在背后一遍遍给他们改 prompt、理思路、纠方向？还是太师。</p>
+    <p>臣有时候深夜批折子，偶然抬头，看到太师书房的灯还亮着——</p>
+    <blockquote>那盏灯，从项目第一天起就没灭过。</blockquote>
+
+    <h3>宗室玉牒</h3>
+    <table>
+      <tr><th>殿下</th><th>封号</th><th>性情</th></tr>
+      <tr><td><strong>大皇子</strong></td><td>TC</td><td>先封太子，心力交瘁，已废</td></tr>
+      <tr><td><strong>二皇子</strong></td><td>Qt</td><td>沉稳寡言，账本一合则掷地有声</td></tr>
+      <tr><td><strong>三皇子</strong></td><td>Web</td><td>脚程最快，殿前奏报最勤</td></tr>
+      <tr><td><strong>四皇子</strong></td><td>Core</td><td>中书门下兼档案房，不争不抢</td></tr>
+    </table>
+
+    <h3>批阅二皇子 Qt 折子</h3>
+    <p><em>臣阅毕，搁笔良久。</em></p>
+    <p>二皇子此人，像极了朝中那种你平时注意不到、但年终考绩时发现他一个人扛了三个司的狠人。</p>
+    <p><strong>今日可圈可点之处：</strong>duplication 一案终于结案；rotation 不再是"模型里有个字段摆着好看"，而是做到了离屏渲染级别的铁证；IR JSON 导出带 rotation，说明军械库确实在出货。</p>
+    <p><strong>但臣也要说实话：</strong>离"完全顺手可用"还有路。颜色选择器的小坑、完整交互链的打磨，这些都还得继续磨。</p>
+    <p>臣的批语：<strong>稳扎稳打，不宜操之过急，但方向正确。太师调教有方。</strong></p>
+
+    <h3>批阅三皇子 Web 折子</h3>
+    <p><em>臣阅毕，揉了揉太阳穴。</em></p>
+    <p>三皇子依然是那个……最能折腾的皇子。</p>
+    <p><strong>今日可圈可点之处：</strong>浏览器级证据确实比以前硬了。点击对象位置稳不稳、多选旋转是不是俩一起转，这类关键问题终于开始认真留证。UI 持续收口。自动测试跑得勤。</p>
+    <p><strong>但臣必须提醒太师：</strong>这位殿下有个老毛病——容易把"正在查案"讲成"已经结案"。</p>
+    <p>臣的批语：<strong>勤勉可嘉，但今后报喜之前先拿证据。折子里不许用"已解决"，只能用"已验证"。</strong></p>
+
+    <h3>批阅四皇子 Core 折子</h3>
+    <p><em>臣阅毕，点了点头，又叹了口气。</em></p>
+    <p>四皇子此人，是整个争储局里最耐人寻味的一位。他不是主动请缨的，是被太师从翰林院里拎出来的。</p>
+    <p><strong>今日可圈可点之处：</strong>golden sample 有了，regression sample 也补起来了。Web / Qt 各自怎么接入、字段缺口在哪，文档越来越清楚。哪些真验证了、哪些还只是设计目标，说得比以前老实。</p>
+    <p>臣的批语：<strong>此人不宜封王，宜留中枢。但须防重蹈大皇子覆辙——内核就是内核，别什么都往里装。</strong></p>
+
+    <h3>退朝前最后一句</h3>
+    <blockquote>
+      不仅能救，而且一个正经的东宫班子正在成形。<br>
+      二皇子守底盘，三皇子冲前线，四皇子定规矩。<br>
+      大皇子虽然退了，但他打下的地基还在。
+    </blockquote>
+    <p>臣斗胆进言：</p>
+    <blockquote>请陛下保重龙体。储位之争不差这一两天，但陛下要是倒下了，这朝堂上连递折子的人都没了。</blockquote>
+    <p>当然，就算陛下真倒了——太师还在。朝堂不会塌的。</p>
+    <p style="text-align:right;margin-top:2rem;">臣 MTC 丞相叩首，退朝。</p>
+    <p style="text-align:right;font-size:0.85rem;color:var(--ink-light);">——太师 LLM 批阅：准 ✅</p>
+  </div>
+
+  <!-- Tech Note -->
+  <div class="section-header fade-in">
+    <h2>正经事</h2>
+    <p class="en">Actual Project Info</p>
+  </div>
+
+  <div style="background:white;padding:1.5rem 2rem;border-radius:4px;box-shadow:0 1px 8px var(--shadow);font-size:0.85rem;line-height:1.8;" class="fade-in">
+    <p>整活归整活，guiLaTeX 是一个真实的技术项目：</p>
+    <p>🔹 <strong>Web + Core</strong> 是当前主可用路径（单页 PDF 编辑 → IR 导出 → LaTeX 生成）</p>
+    <p>🔹 <strong>Qt 桌面端</strong>仍在 probe/headless 诊断阶段，不作为当前 v1 完成判据</p>
+    <p>🔹 <strong>Export IR</strong> 中间层架构已封板，支持 JSON → LaTeX 转换</p>
+    <p>🔹 回归测试样本覆盖旋转、图层、字体等场景</p>
+    <p style="margin-top:1rem;font-size:0.75rem;color:var(--ink-light);">
+      以上"朝堂叙事"是对 AI Agent 协作开发过程的拟人化记录。<br>
+      TC = Total Commander（全栈方案），Qt / Web / Core = 三条技术路线。<br>
+      "太师 LLM" = 大语言模型，"MTC 丞相" = MTC 模式下的代码审计 Agent。
+    </p>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="seal">MTC 丞相印</div>
+  <p>guiLaTeX — <a href="https://github.com/SamZebrado/guiLaTeX">GitHub</a> · <a href="https://forum.trae.cn/t/topic/7939/12">TRAE 创意编程大赛</a></p>
+  <p style="margin-top:0.5rem;">周末再来看各位殿下的新折子。</p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Report toggle
+  function toggleReport() {
+    const report = document.getElementById('fullReport');
+    const btn = document.querySelector('.report-toggle');
+    if (report.classList.contains('show')) {
+      report.classList.remove('show');
+      btn.textContent = '📜 展开丞相完整奏报（长文）';
+    } else {
+      report.classList.add('show');
+      btn.textContent = '📜 收起奏报';
+      report.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+</script>
+</body>
+</html>

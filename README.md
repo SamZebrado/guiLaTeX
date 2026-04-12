@@ -6,6 +6,10 @@
 > 🏆 This project is a submission for the [TRAE Creative Coding Contest](https://forum.trae.cn/t/topic/7939/12) and is still under active development.
 > If you find this project interesting, please visit the [forum post](https://forum.trae.cn/t/topic/7939/12) to vote and cheer us on! ❤️
 
+> 🎭 想看 AI Agent 协作开发的"宫廷风"全记录？→ [朝堂风云录 · 开发展示页](showcase/)
+>
+> 🎭 Want to see the full "Imperial Court" chronicle of AI agent-assisted development? → [Court Chronicles · Showcase](showcase/)
+
 ## 关于本项目 / About
 
 guiLaTeX 是一个可视化 LaTeX 编辑器，支持 PDF 文档的加载、元素级编辑和 LaTeX 代码导出。
