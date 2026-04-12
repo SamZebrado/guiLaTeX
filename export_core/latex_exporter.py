@@ -153,7 +153,7 @@ class LatexExporter:
         # Font command
         if font_size is None:
             font_size = 12  # 默认字体大小
-        font_cmd = f"\fontsize{{{font_size}}}{{{font_size * 1.2}}}\selectfont"
+        font_cmd = f"\\fontsize{{{font_size}}}{{{font_size * 1.2}}}\\selectfont"
         node_attrs.append(f"font={font_cmd}")
         
         # Color
@@ -182,14 +182,14 @@ class LatexExporter:
             # For images, use \includegraphics
             width = element["width"]
             height = element["height"]
-            content = f"\includegraphics[width={width}mm, height={height}mm]{{{sanitized_content}}}"
+            content = f"\\includegraphics[width={width}mm, height={height}mm]{{{sanitized_content}}}"
         else:
             content = sanitized_content
         
         # Build node
         node_attrs_str = ", ".join(node_attrs)
         lines.append(f"  % Layer {layer}: {element_id}")
-        lines.append(f"  \node[{node_attrs_str}]")
+        lines.append(f"  \\node[{node_attrs_str}]")
         lines.append(f"    {position} {{{content}}};")
         
         return lines
