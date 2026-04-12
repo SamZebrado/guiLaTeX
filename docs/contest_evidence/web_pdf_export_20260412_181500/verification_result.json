@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-04-12T20:45:17.009603",
+  "has_export_pdf_button": true,
+  "has_window_print": true,
+  "has_media_print": true,
+  "status": "success",
+  "description": "PDF export via browser print path implemented"
+}

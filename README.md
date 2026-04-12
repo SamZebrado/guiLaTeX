@@ -63,6 +63,27 @@ guiLaTeX fills the gap by providing:
 
 See [STATUS.md](STATUS.md) for current state, [PLAN.md](PLAN.md) for development roadmap, and [PROJECT_LOG.md](PROJECT_LOG.md) for development history.
 
+### Web Version Status
+
+#### Currently Supported
+- ✅ Export to IR/JSON format
+- ✅ Export to LaTeX source code
+- ✅ Export to PDF via browser print
+
+#### Implementation Note
+- PDF export is implemented via browser print path (not native PDF generation)
+
+#### Usage Positioning
+- Single-page优先
+- 内部闭环优先
+- Web-first 中间版 / v1 里程碑版
+
+#### Notes
+- PDF can be obtained indirectly through:
+  1. Generate LaTeX first, then compile to PDF using external LaTeX compiler
+  2. Use browser print function (Ctrl+P or Cmd+P) to export to PDF
+- Qt version status is not a completion criterion for this version
+
 ## Development
 
 This project uses a structured development workflow with STATUS + LOG + PLAN pattern. See [dev-workflow skill](../.trae/skills/dev-workflow/SKILL.md) for details.

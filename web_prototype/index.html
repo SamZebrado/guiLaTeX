@@ -325,6 +325,56 @@
                 flex-wrap: wrap;
             }
         }
+
+        @media print {
+            .toolbar,
+            .properties-panel,
+            .debug-info,
+            .selection-box,
+            .resize-handle,
+            .rotate-handle {
+                display: none !important;
+            }
+
+            .main-container {
+                padding: 0;
+                margin: 0;
+            }
+
+            .canvas-container {
+                padding: 0;
+            }
+
+            .paper {
+                width: 8.5in;
+                height: 11in;
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                position: absolute;
+                top: 0;
+                left: 0;
+                transform: none !important;
+            }
+
+            .text-element {
+                cursor: default;
+                outline: none !important;
+            }
+
+            .text-element.dragging {
+                cursor: default;
+            }
+
+            body {
+                background-color: white;
+            }
+
+            @page {
+                margin: 0;
+                size: letter;
+            }
+        }
     </style>
 </head>
 <body>
@@ -335,6 +385,7 @@
             <button id="save-button">保存项目</button>
             <button id="export-screenshot-button">导出截图</button>
             <button id="export-ir-button">导出 IR</button>
+            <button id="export-pdf-button">导出 PDF</button>
         </div>
         
         <div class="toolbar-group">
@@ -581,6 +632,7 @@
         const saveButton = document.getElementById('save-button');
         const exportScreenshotButton = document.getElementById('export-screenshot-button');
         const exportIRButton = document.getElementById('export-ir-button');
+        const exportPdfButton = document.getElementById('export-pdf-button');
         const fileInput = document.getElementById('file-input');
         const copyButton = document.getElementById('copy-button');
         const pasteButton = document.getElementById('paste-button');
@@ -1447,6 +1499,10 @@
         
         exportScreenshotButton.addEventListener('click', () => {
             alert('请使用浏览器截图功能手动截图。\n\n快捷键：\n- Mac: Cmd+Shift+4\n- Windows: Win+Shift+S');
+        });
+
+        exportPdfButton.addEventListener('click', () => {
+            window.print();
         });
         
         // Export to IR
