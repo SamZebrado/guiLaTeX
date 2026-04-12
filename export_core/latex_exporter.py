@@ -151,6 +151,8 @@ class LatexExporter:
         font_family_en = element.get("font_family_en", "Times New Roman")
         
         # Font command
+        if font_size is None:
+            font_size = 12  # 默认字体大小
         font_cmd = f"\fontsize{{{font_size}}}{{{font_size * 1.2}}}\selectfont"
         node_attrs.append(f"font={font_cmd}")
         
