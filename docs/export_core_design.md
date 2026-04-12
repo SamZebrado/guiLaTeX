@@ -289,54 +289,57 @@ Qt 模型需要将其内部表示映射到 Export IR 格式。具体映射规则
 | visible | visible | 直接映射 | true |
 | page | page | 直接映射 | 1 |
 
-## 8. 几何保真声明（细化）
+## 8. 几何保真声明（重新校准）
 
-### 8.1 位置保真
+### 8.1 已真实验证的内容
 
-- **描述**：元素左上角位置（x, y）
-- **承诺精度**：误差 < 1mm
-- **实现方式**：直接使用 IR 中的 x, y 坐标，单位为 mm，转换为 LaTeX 的绝对坐标系统
-- **注意事项**：LaTeX 坐标原点在左下角，IR 坐标原点在左上角，需要转换为已正确转换
-- **当前状态**：✅ 完全实现并验证
+- **字段导出**：✅ 已验证
+  - 所有 IR 字段都能正确导出到 LaTeX
+  - 字段类型和值的转换正确
 
-### 8.2 尺寸保真
+- **TeX 文件生成**：✅ 已验证
+  - 成功生成可编译的 LaTeX 文件
+  - 生成的文件结构完整，包含 preamble、metadata、semantic summary 和绝对定位对象区
 
-- **描述**：元素宽度和高度（width, height）
-- **承诺精度**：误差 < 1mm
-- **实现方式**：直接使用 IR 中的 width, height，单位为 mm
-- **当前状态**：✅ 完全实现并验证
+- **样例输出**：✅ 已验证
+  - golden sample 成功生成
+  - regression sample 1（带 rotation 的文本/图片）成功生成
+  - regression sample 2（带 layer 差异）成功生成
 
-### 8.3 旋转保真
+- **图层顺序**：✅ 已验证
+  - 按 layer 值升序渲染，数值越大层级越高
+  - 图层顺序在生成的 LaTeX 中正确体现
 
-- **描述**：元素旋转角度（rotation）
-- **承诺精度**：误差 < 1度
-- **实现方式**：直接使用 IR 中的 rotation，单位为度，正方向为顺时针
-- **当前状态**：✅ 完全实现并验证
+### 8.2 设计目标 / 理想目标（尚未最终视觉验证）
 
-### 8.4 图层顺序保真
+- **位置保真**：
+  - **目标**：元素左上角位置（x, y）误差 < 1mm
+  - **实现方式**：直接使用 IR 中的 x, y 坐标，单位为 mm，转换为 LaTeX 的绝对坐标系统
+  - **当前状态**：设计已实现，需要最终 PDF 视觉验证
 
-- **描述**：元素层叠顺序（layer）
-- **承诺精度**：完全保真
-- **实现方式**：按 layer 值升序渲染，数值越大层级越高，越在上面
-- **当前状态**：✅ 完全实现并验证
+- **尺寸保真**：
+  - **目标**：元素宽度和高度（width, height）误差 < 1mm
+  - **实现方式**：直接使用 IR 中的 width, height，单位为 mm
+  - **当前状态**：设计已实现，需要最终 PDF 视觉验证
 
-### 8.5 文本框与文本内容的关系
+- **旋转保真**：
+  - **目标**：元素旋转角度（rotation）误差 < 1度
+  - **实现方式**：直接使用 IR 中的 rotation，单位为度，正方向为顺时针
+  - **当前状态**：设计已实现，需要最终 PDF 视觉验证
 
-- **描述**：文本在文本框内的布局
-- **当前状态**：⚠️ 部分实现
-- **已知问题**：
-  - 文本换行可能与原设计有差异
-  - 行间距和字间距由 LaTeX 自动控制
-  - 文本超出文本框时不会自动裁剪
+- **文本框与文本内容的关系**：
+  - **目标**：文本在文本框内正确布局
+  - **当前状态**：部分实现，存在以下限制：
+    - 文本换行可能与原设计有差异
+    - 行间距和字间距由 LaTeX 自动控制
+    - 文本超出文本框时不会自动裁剪
 
-### 8.6 字体 fallback 后的差异风险
-
-- **描述**：指定字体不可用时的 fallback 行为
-- **当前状态**：⚠️ 需要注意
-- **风险**：
-  - 字体 fallback 后可能导致文本尺寸变化
-  - 不同字体的字符宽度不同，可能影响整体布局
-  - 建议**：尽量使用跨平台通用字体
+- **字体 fallback 后的差异风险**：
+  - **目标**：最小化字体 fallback 带来的布局差异
+  - **当前状态**：需要注意以下风险：
+    - 字体 fallback 后可能导致文本尺寸变化
+    - 不同字体的字符宽度不同，可能影响整体布局
+    - 建议：尽量使用跨平台通用字体
 
 ## 9. 接入缺口表
 
@@ -370,48 +373,187 @@ Qt 模型需要将其内部表示映射到 Export IR 格式。具体映射规则
 1. **font_family_zh / font_family_en**：将现有 font_family 字段拆分为中英文分离的两个字段
 2. **确保所有字段都正确传递给 normalize_qt_model_to_ir 函数能正确处理
 
-## 10. 接入 API
+## 10. 工程化接入说明
 
-### 10.1 Web 接入函数
+### 10.1 Web 接入
 
+**调用函数**：
 ```python
 from export_core import normalize_web_model_to_ir, export_ir_to_latex
-
-# 1. 准备 Web 模型标准化为 IR
-ir_data = normalize_web_model_to_ir(web_model)
-
-# 2. 导出 IR 为 LaTeX
-latex_content = export_ir_to_latex(ir_data)
-
-# 3. 保存或显示 LaTeX
 ```
 
-### 10.2 Qt 接入函数
+**接入步骤**：
+1. **准备 Web 模型**：确保 Web 模型包含所有必要字段
+2. **转换为 IR**：调用 `normalize_web_model_to_ir(web_model)`
+3. **导出为 LaTeX**：调用 `export_ir_to_latex(ir_data)`
+4. **保存结果**：将 LaTeX 内容保存为 .tex 文件
 
+**输入示例路径**：
+- Web 模型 JSON 文件：`web_model.json`
+- 转换后的 IR JSON 文件：`export_core/samples/golden_sample_ir.json`
+
+**输出示例路径**：
+- 生成的 LaTeX 文件：`export_core/samples/golden_sample_ir.tex`
+
+**最小 Smoke Test**：
+```python
+# 1. 导入函数
+from export_core import normalize_web_model_to_ir, export_ir_to_latex
+
+# 2. 准备测试数据
+web_model = {
+    "elements": [
+        {
+            "id": "test-1",
+            "type": "textbox",
+            "text": "测试文本",
+            "x": 50,
+            "y": 50,
+            "width": 100,
+            "height": 30,
+            "rotation": 0,
+            "layerId": 1,
+            "fontSize": 12,
+            "color": "#000000",
+            "textAlign": "left",
+            "visible": true
+        }
+    ]
+}
+
+# 3. 转换并导出
+try:
+    ir_data = normalize_web_model_to_ir(web_model)
+    latex_content = export_ir_to_latex(ir_data)
+    print("✓ 成功生成 LaTeX")
+    print("前 100 字符:", latex_content[:100] + "...")
+except Exception as e:
+    print("✗ 失败:", e)
+```
+
+### 10.2 Qt 接入
+
+**调用函数**：
 ```python
 from export_core import normalize_qt_model_to_ir, export_ir_to_latex
+```
 
-# 1. 准备 Qt 模型标准化为 IR
-ir_data = normalize_qt_model_to_ir(qt_model)
+**接入步骤**：
+1. **准备 Qt 模型**：确保 Qt 模型包含所有必要字段
+2. **转换为 IR**：调用 `normalize_qt_model_to_ir(qt_model)`
+3. **导出为 LaTeX**：调用 `export_ir_to_latex(ir_data)`
+4. **保存结果**：将 LaTeX 内容保存为 .tex 文件
 
-# 2. 导出 IR 为 LaTeX
-latex_content = export_ir_to_latex(ir_data)
+**输入示例路径**：
+- Qt 模型 JSON 文件：`qt_model.json`
+- 转换后的 IR JSON 文件：`export_core/samples/golden_sample_ir.json`
 
-# 3. 保存或显示 LaTeX
+**输出示例路径**：
+- 生成的 LaTeX 文件：`export_core/samples/golden_sample_ir.tex`
+
+**最小 Smoke Test**：
+```python
+# 1. 导入函数
+from export_core import normalize_qt_model_to_ir, export_ir_to_latex
+
+# 2. 准备测试数据
+qt_model = {
+    "elements": [
+        {
+            "id": "test-1",
+            "type": "文本",
+            "text": "测试文本",
+            "x": 50,
+            "y": 50,
+            "width": 100,
+            "height": 30,
+            "rotation": 0,
+            "layer": 1,
+            "font_size": 12,
+            "color": "#000000",
+            "alignment": "left",
+            "visible": true,
+            "page": 1
+        }
+    ]
+}
+
+# 3. 转换并导出
+try:
+    ir_data = normalize_qt_model_to_ir(qt_model)
+    latex_content = export_ir_to_latex(ir_data)
+    print("✓ 成功生成 LaTeX")
+    print("前 100 字符:", latex_content[:100] + "...")
+except Exception as e:
+    print("✗ 失败:", e)
 ```
 
 ### 10.3 直接导出 IR 为 LaTeX
 
+**调用函数**：
 ```python
 from export_core import export_ir_to_latex
-
-# 如果你已经有标准 IR 数据
-latex_content = export_ir_to_latex(ir_data)
 ```
 
-## 11. 差异原因分析
+**接入步骤**：
+1. **准备 IR 数据**：确保 IR 数据符合格式要求
+2. **导出为 LaTeX**：调用 `export_ir_to_latex(ir_data)`
+3. **保存结果**：将 LaTeX 内容保存为 .tex 文件
 
-### 11.1 LaTeX backend 本身导致
+**输入示例路径**：
+- IR JSON 文件：`export_core/samples/golden_sample_ir.json`
+
+**输出示例路径**：
+- 生成的 LaTeX 文件：`export_core/samples/golden_sample_ir.tex`
+
+## 11. 接入缺口排序
+
+### 11.1 对“几何一比一”影响最大的 3-5 个缺口
+
+1. **文本布局差异**：
+   - **影响**：文本换行、行间距、字间距与原设计有差异
+   - **原因**：LaTeX 文本布局算法与 GUI 不同
+   - **优先级**：高
+
+2. **字体 fallback 风险**：
+   - **影响**：字体不可用时导致文本尺寸和布局变化
+   - **原因**：不同字体的字符宽度和渲染方式不同
+   - **优先级**：高
+
+3. **旋转精度**：
+   - **影响**：旋转角度可能存在微小误差
+   - **原因**：LaTeX 旋转实现与 GUI 实现的差异
+   - **优先级**：中
+
+4. **文本框边界处理**：
+   - **影响**：文本超出文本框时不会自动裁剪
+   - **原因**：LaTeX 文本框处理机制限制
+   - **优先级**：中
+
+5. **页面边距处理**：
+   - **影响**：页面边距可能与原设计有差异
+   - **原因**：LaTeX 页面布局机制与 GUI 不同
+   - **优先级**：低
+
+### 11.2 责任分配
+
+**应由 Web 先补的缺口**：
+- `font_family_zh` 和 `font_family_en` 字段分离
+- `page` 字段支持
+
+**应由 Qt 先补的缺口**：
+- `font_family_zh` 和 `font_family_en` 字段分离
+
+**应由 ExportCore 自己继续补的缺口**：
+- 文本布局优化
+- 字体 fallback 处理
+- 旋转精度优化
+- 文本框边界处理
+- 页面边距处理
+
+## 12. 差异原因分析
+
+### 12.1 LaTeX backend 本身导致
 
 - LaTeX 的文本布局算法与 GUI 不同
 - LaTeX 的字体渲染机制与 GUI 不同

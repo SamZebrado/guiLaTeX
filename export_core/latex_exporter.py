@@ -153,7 +153,10 @@ class LatexExporter:
         # Font command
         if font_size is None:
             font_size = 12  # 默认字体大小
-        font_cmd = f"\\fontsize{{{font_size}}}{{{font_size * 1.2}}}\\selectfont"
+        # 格式化字体大小，避免浮点脏值
+        font_size_int = int(font_size)
+        line_spacing = round(font_size * 1.2, 1)
+        font_cmd = f"\\fontsize{{{font_size_int}}}{{{line_spacing}}}\\selectfont"
         node_attrs.append(f"font={font_cmd}")
         
         # Color
