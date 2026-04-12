@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>几何验证测试</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Inter', 'Noto Sans', sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .test-element {
+            width: 200px;
+            height: 100px;
+            background-color: #0066ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            margin: 20px 0;
+        }
+        .multi-test-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .multi-test-element {
+            width: 150px;
+            height: 80px;
+            background-color: #0066ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid transparent;
+        }
+        .multi-test-element.selected {
+            border-color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>几何验证测试</h1>
+    
+    <div class="test-section">
+        <h2>测试 1: 点击瞬移问题</h2>
+        <p>测试场景：点击未旋转对象的不同位置，观察位置是否变化</p>
+        <div id="test-element-1" class="test-element" style="left: 100px; top: 100px;">测试元素</div>
+        <button onclick="testClickCenter()">点击中心</button>
+        <button onclick="testClickBottomRight()">点击右下</button>
+        <button onclick="testClickAndDrag()">点击后立即拖动</button>
+        <div id="click-test-result" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试 2: 多选旋转功能</h2>
+        <p>测试场景：选择多个对象后执行旋转，观察是否所有对象都旋转</p>
+        <div class="multi-test-container">
+            <div class="multi-test-element" data-id="1">元素 1</div>
+            <div class="multi-test-element" data-id="2">元素 2</div>
+        </div>
+        <button onclick="selectAllElements()">选择所有元素</button>
+        <button onclick="rotateSelectedElements()">旋转选中元素</button>
+        <div id="rotation-test-result" class="test-result"></div>
+    </div>
+
+    <script>
+        // 测试数据
+        const testData = {
+            element1: {
+                x: 100,
+                y: 100,
+                width: 200,
+                height: 100,
+                rotation: 0
+            },
+            elements: [
+                {
+                    id: '1',
+                    x: 100,
+                    y: 250,
+                    width: 150,
+                    height: 80,
+                    rotation: 0,
+                    selected: false
+                },
+                {
+                    id: '2',
+                    x: 300,
+                    y: 250,
+                    width: 150,
+                    height: 80,
+                    rotation: 0,
+                    selected: false
+                }
+            ]
+        };
+        
+        // 点击中心测试
+        function testClickCenter() {
+            const element = testData.element1;
+            const centerX = element.x + element.width / 2;
+            const centerY = element.y + element.height / 2;
+            
+            // 模拟点击中心
+            const beforeX = element.x;
+            const beforeY = element.y;
+            
+            // 计算偏移量（模拟 startDrag 中的逻辑）
+            const offsetX = element.x - centerX;
+            const offsetY = element.y - centerY;
+            
+            // 模拟点击后的位置（应该不变）
+            const afterX = centerX + offsetX;
+            const afterY = centerY + offsetY;
+            
+            const result = {
+                test: "点击中心测试",
+                before: { x: beforeX, y: beforeY },
+                clickPosition: { x: centerX, y: centerY },
+                offset: { x: offsetX, y: offsetY },
+                after: { x: afterX, y: afterY },
+                positionChanged: afterX !== beforeX || afterY !== beforeY,
+                passed: afterX === beforeX && afterY === beforeY
+            };
+            
+            document.getElementById('click-test-result').textContent = JSON.stringify(result, null, 2);
+            saveTestResult('click_center_test', result);
+        }
+        
+        // 点击右下测试
+        function testClickBottomRight() {
+            const element = testData.element1;
+            const bottomRightX = element.x + element.width - 10;
+            const bottomRightY = element.y + element.height - 10;
+            
+            // 模拟点击右下
+            const beforeX = element.x;
+            const beforeY = element.y;
+            
+            // 计算偏移量（模拟 startDrag 中的逻辑）
+            const offsetX = element.x - bottomRightX;
+            const offsetY = element.y - bottomRightY;
+            
+            // 模拟点击后的位置（应该不变）
+            const afterX = bottomRightX + offsetX;
+            const afterY = bottomRightY + offsetY;
+            
+            const result = {
+                test: "点击右下测试",
+                before: { x: beforeX, y: beforeY },
+                clickPosition: { x: bottomRightX, y: bottomRightY },
+                offset: { x: offsetX, y: offsetY },
+                after: { x: afterX, y: afterY },
+                positionChanged: afterX !== beforeX || afterY !== beforeY,
+                passed: afterX === beforeX && afterY === beforeY
+            };
+            
+            document.getElementById('click-test-result').textContent = JSON.stringify(result, null, 2);
+            saveTestResult('click_bottom_right_test', result);
+        }
+        
+        // 点击后立即拖动测试
+        function testClickAndDrag() {
+            const element = testData.element1;
+            const centerX = element.x + element.width / 2;
+            const centerY = element.y + element.height / 2;
+            
+            // 模拟点击中心
+            const beforeX = element.x;
+            const beforeY = element.y;
+            
+            // 计算偏移量（模拟 startDrag 中的逻辑）
+            const offsetX = element.x - centerX;
+            const offsetY = element.y - centerY;
+            
+            // 模拟拖动到新位置
+            const newMouseX = centerX + 50;
+            const newMouseY = centerY + 50;
+            const afterX = newMouseX + offsetX;
+            const afterY = newMouseY + offsetY;
+            
+            const result = {
+                test: "点击后立即拖动测试",
+                before: { x: beforeX, y: beforeY },
+                clickPosition: { x: centerX, y: centerY },
+                offset: { x: offsetX, y: offsetY },
+                newMousePosition: { x: newMouseX, y: newMouseY },
+                after: { x: afterX, y: afterY },
+                expectedAfter: { x: beforeX + 50, y: beforeY + 50 },
+                positionCorrect: afterX === beforeX + 50 && afterY === beforeY + 50,
+                passed: afterX === beforeX + 50 && afterY === beforeY + 50
+            };
+            
+            document.getElementById('click-test-result').textContent = JSON.stringify(result, null, 2);
+            saveTestResult('click_and_drag_test', result);
+        }
+        
+        // 选择所有元素
+        function selectAllElements() {
+            testData.elements.forEach(element => {
+                element.selected = true;
+            });
+            
+            // 更新 UI
+            document.querySelectorAll('.multi-test-element').forEach(el => {
+                el.classList.add('selected');
+            });
+            
+            const result = {
+                test: "选择元素测试",
+                selectedElements: testData.elements.filter(el => el.selected).map(el => el.id),
+                passed: testData.elements.every(el => el.selected)
+            };
+            
+            document.getElementById('rotation-test-result').textContent = JSON.stringify(result, null, 2);
+            saveTestResult('select_elements_test', result);
+        }
+        
+        // 旋转选中元素
+        function rotateSelectedElements() {
+            const selectedElements = testData.elements.filter(el => el.selected);
+            const rotationAngle = 45;
+            
+            selectedElements.forEach(element => {
+                element.rotation += rotationAngle;
+            });
+            
+            // 更新 UI
+            document.querySelectorAll('.multi-test-element.selected').forEach(el => {
+                const id = el.dataset.id;
+                const element = testData.elements.find(e => e.id === id);
+                if (element) {
+                    el.style.transform = `rotate(${element.rotation}deg)`;
+                }
+            });
+            
+            const result = {
+                test: "多选旋转测试",
+                rotationAngle: rotationAngle,
+                elements: testData.elements.map(el => ({
+                    id: el.id,
+                    rotation: el.rotation,
+                    selected: el.selected
+                })),
+                allRotated: selectedElements.every(el => el.rotation === rotationAngle),
+                passed: selectedElements.every(el => el.rotation === rotationAngle)
+            };
+            
+            document.getElementById('rotation-test-result').textContent = JSON.stringify(result, null, 2);
+            saveTestResult('multi_select_rotation_test', result);
+        }
+        
+        // 保存测试结果
+        function saveTestResult(testName, result) {
+            const dataStr = JSON.stringify(result, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `test_${testName}_result.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // 运行所有测试
+        function runAllTests() {
+            testClickCenter();
+            setTimeout(() => testClickBottomRight(), 500);
+            setTimeout(() => testClickAndDrag(), 1000);
+            setTimeout(() => selectAllElements(), 1500);
+            setTimeout(() => rotateSelectedElements(), 2000);
+        }
+        
+        // 初始化
+        console.log('几何验证测试页面已加载');
+    </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{
+  "elements": [
+    {
+      "id": "same-layer-1",
+      "type": "textbox",
+      "content": "同一图层元素 1",
+      "page": 1,
+      "x": 30,
+      "y": 30,
+      "width": 100,
+      "height": 30,
+      "rotation": 0,
+      "layer": 5,
+      "font_family_zh": "SimSun",
+      "font_family_en": "Times New Roman",
+      "font_size": 14,
+      "color": "#000000",
+      "alignment": "left",
+      "visible": true
+    },
+    {
+      "id": "same-layer-2",
+      "type": "textbox",
+      "content": "同一图层元素 2",
+      "page": 1,
+      "x": 40,
+      "y": 70,
+      "width": 100,
+      "height": 30,
+      "rotation": 0,
+      "layer": 5,
+      "font_family_zh": "SimSun",
+      "font_family_en": "Times New Roman",
+      "font_size": 14,
+      "color": "#ff0000",
+      "alignment": "center",
+      "visible": true
+    },
+    {
+      "id": "same-layer-3",
+      "type": "textbox",
+      "content": "同一图层元素 3",
+      "page": 1,
+      "x": 50,
+      "y": 110,
+      "width": 100,
+      "height": 30,
+      "rotation": 0,
+      "layer": 5,
+      "font_family_zh": "SimSun",
+      "font_family_en": "Times New Roman",
+      "font_size": 14,
+      "color": "#00ff00",
+      "alignment": "right",
+      "visible": true
+    }
+  ]
+}

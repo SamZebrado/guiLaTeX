@@ -1,0 +1,82 @@
+[
+  {
+    "id": "demo_title",
+    "content": "\u53ef\u89c6\u5316\u7f16\u8f91 LaTeX \u6587\u6863",
+    "x": 100,
+    "y": 50,
+    "fontSize": 24,
+    "selected": false
+  },
+  {
+    "id": "demo_author",
+    "content": "\u4f5c\u8005\uff1a\u67d0\u67d0 / \u535a\u58eb\u751f\u539f\u578b\u6d4b\u8bd5",
+    "x": 100,
+    "y": 100,
+    "fontSize": 14,
+    "selected": false
+  },
+  {
+    "id": "demo_body",
+    "content": "\u8fd9\u662f\u4e00\u6bb5\u7528\u4e8e\u6f14\u793a\u6b63\u6587\u5bf9\u8c61\u7684\u5185\u5bb9\uff0c\u53ef\u7528\u4e8e\u6d4b\u8bd5\u62d6\u52a8\u3001\u9009\u62e9\u548c\u540e\u7eed\u9009\u62e9\u6846\u80fd\u529b\u3002",
+    "x": 291.0,
+    "y": 140.0,
+    "fontSize": 12,
+    "selected": false
+  },
+  {
+    "id": "demo_formula",
+    "content": "E = mc\u00b2",
+    "x": 335.0,
+    "y": 209.0,
+    "fontSize": 16,
+    "selected": false
+  },
+  {
+    "id": "demo_image",
+    "content": "\u56fe\u7247\u793a\u4f8b / \u5360\u4f4d\u56fe",
+    "x": 100,
+    "y": 280,
+    "fontSize": 12,
+    "selected": false
+  },
+  {
+    "id": "demo_title",
+    "content": "\u53ef\u89c6\u5316\u7f16\u8f91 LaTeX \u6587\u6863",
+    "x": 100,
+    "y": 50,
+    "fontSize": 24,
+    "selected": false
+  },
+  {
+    "id": "demo_author",
+    "content": "\u4f5c\u8005\uff1a\u67d0\u67d0 / \u535a\u58eb\u751f\u539f\u578b\u6d4b\u8bd5",
+    "x": 100,
+    "y": 100,
+    "fontSize": 14,
+    "selected": false
+  },
+  {
+    "id": "demo_body",
+    "content": "\u8fd9\u662f\u4e00\u6bb5\u7528\u4e8e\u6f14\u793a\u6b63\u6587\u5bf9\u8c61\u7684\u5185\u5bb9\uff0c\u53ef\u7528\u4e8e\u6d4b\u8bd5\u62d6\u52a8\u3001\u9009\u62e9\u548c\u540e\u7eed\u9009\u62e9\u6846\u80fd\u529b\u3002",
+    "x": 100,
+    "y": 150,
+    "fontSize": 12,
+    "selected": false
+  },
+  {
+    "id": "demo_formula",
+    "content": "E = mc\u00b2",
+    "x": 100,
+    "y": 240,
+    "fontSize": 16,
+    "selected": false
+  },
+  {
+    "id": "demo_image",
+    "content": "\u56fe\u7247\u793a\u4f8b / \u5360\u4f4d\u56fe",
+    "x": 100,
+    "y": 280,
+    "fontSize": 12,
+    "selected": false
+  }
+]

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多选旋转测试</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Inter', 'Noto Sans', sans-serif;
+            margin: 20px;
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .result {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #paper {
+            width: 800px;
+            height: 600px;
+            background-color: white;
+            border: 1px solid #ccc;
+            position: relative;
+            margin: 20px 0;
+        }
+        .test-element {
+            position: absolute;
+            width: 100px;
+            height: 50px;
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .selected {
+            outline: 2px solid #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>多选旋转测试</h1>
+    
+    <div class="test-section">
+        <h2>测试: 多选旋转</h2>
+        <button onclick="selectElements()">选择元素</button>
+        <button onclick="runRotationTest()">运行旋转测试</button>
+        <div class="result" id="result"></div>
+    </div>
+    
+    <div id="paper">
+        <div class="test-element" id="element1" style="left: 100px; top: 100px;">元素 1</div>
+        <div class="test-element" id="element2" style="left: 300px; top: 200px;">元素 2</div>
+        <div class="test-element" id="element3" style="left: 500px; top: 300px;">元素 3</div>
+    </div>
+    
+    <script>
+        let elements = [
+            document.getElementById('element1'),
+            document.getElementById('element2'),
+            document.getElementById('element3')
+        ];
+        
+        function selectElements() {
+            elements.forEach(el => el.classList.add('selected'));
+        }
+        
+        function getRotation(element) {
+            const transform = element.style.transform;
+            if (transform) {
+                const match = transform.match(/rotate\(([^)]+)\)/);
+                if (match) {
+                    return parseFloat(match[1]);
+                }
+            }
+            return 0;
+        }
+        
+        function runRotationTest() {
+            const resultDiv = document.getElementById('result');
+            
+            // 记录初始旋转角度
+            const initialRotations = elements.map(el => getRotation(el));
+            
+            // 模拟旋转操作（这里只是简单设置旋转角度）
+            elements.forEach((el, index) => {
+                el.style.transform = `rotate(${initialRotations[index] + 45}deg)`;
+            });
+            
+            // 记录旋转后角度
+            const finalRotations = elements.map(el => getRotation(el));
+            
+            let results = '';
+            elements.forEach((el, index) => {
+                const rotated = Math.abs(finalRotations[index] - initialRotations[index]) > 1;
+                results += `元素 ${index + 1}: 初始角度 ${initialRotations[index]}° -> 最终角度 ${finalRotations[index]}° -> ${rotated ? '已旋转' : '未旋转'}<br>`;
+            });
+            
+            const allRotated = elements.every((el, index) => {
+                return Math.abs(finalRotations[index] - initialRotations[index]) > 1;
+            });
+            
+            results += `<br>所有元素是否都旋转: ${allRotated ? '是' : '否'}`;
+            
+            resultDiv.innerHTML = results;
+        }
+    </script>
+</body>
+</html>

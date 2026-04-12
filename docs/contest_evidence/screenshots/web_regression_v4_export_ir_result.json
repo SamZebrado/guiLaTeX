@@ -1,0 +1,65 @@
+{
+  "test": "Export IR 功能检查",
+  "timestamp": "2026-04-11T21:23:53.890Z",
+  "passed": true,
+  "steps": [
+    {
+      "step": "检查导出 IR 按钮",
+      "buttonExists": true
+    },
+    {
+      "step": "检查 exportToIR 函数",
+      "hasExportFunction": true
+    },
+    {
+      "step": "检查 IR 字段",
+      "fields": [
+        "id",
+        "type",
+        "content",
+        "page",
+        "x",
+        "y",
+        "width",
+        "height",
+        "rotation",
+        "layer",
+        "font_family_zh",
+        "font_family_en",
+        "font_size",
+        "color",
+        "visible"
+      ]
+    }
+  ],
+  "hasRequiredFields": true,
+  "requiredFields": [
+    "id",
+    "type",
+    "content",
+    "page",
+    "x",
+    "y",
+    "width",
+    "height",
+    "rotation",
+    "layer"
+  ],
+  "actualFields": [
+    "id",
+    "type",
+    "content",
+    "page",
+    "x",
+    "y",
+    "width",
+    "height",
+    "rotation",
+    "layer",
+    "font_family_zh",
+    "font_family_en",
+    "font_size",
+    "color",
+    "visible"
+  ]
+}

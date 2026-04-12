@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点击瞬移测试</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Inter', 'Noto Sans', sans-serif;
+            margin: 20px;
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .result {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #paper {
+            width: 800px;
+            height: 600px;
+            background-color: white;
+            border: 1px solid #ccc;
+            position: relative;
+            margin: 20px 0;
+        }
+        .test-element {
+            position: absolute;
+            width: 100px;
+            height: 50px;
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>点击瞬移测试</h1>
+    
+    <div class="test-section">
+        <h2>测试 1: 未旋转对象点击</h2>
+        <button onclick="runTest1()">运行测试 1</button>
+        <div class="result" id="result1"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试 2: 旋转对象点击</h2>
+        <button onclick="runTest2()">运行测试 2</button>
+        <div class="result" id="result2"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试 3: 点击对象不同位置</h2>
+        <button onclick="runTest3()">运行测试 3</button>
+        <div class="result" id="result3"></div>
+    </div>
+    
+    <div id="paper">
+        <div class="test-element" id="element1" style="left: 100px; top: 100px;">元素 1</div>
+        <div class="test-element" id="element2" style="left: 300px; top: 200px; transform: rotate(45deg);">元素 2</div>
+    </div>
+    
+    <script>
+        let element1 = document.getElementById('element1');
+        let element2 = document.getElementById('element2');
+        
+        function getPosition(element) {
+            const rect = element.getBoundingClientRect();
+            const paperRect = document.getElementById('paper').getBoundingClientRect();
+            return {
+                x: rect.left - paperRect.left,
+                y: rect.top - paperRect.top,
+                width: rect.width,
+                height: rect.height
+            };
+        }
+        
+        function runTest1() {
+            const resultDiv = document.getElementById('result1');
+            
+            // 记录初始位置
+            const initialPos = getPosition(element1);
+            
+            // 模拟点击
+            const clickEvent = new MouseEvent('click', {
+                clientX: initialPos.x + initialPos.width / 2 + 10, // 点击中心
+                clientY: initialPos.y + initialPos.height / 2 + 10,
+                bubbles: true,
+                cancelable: true
+            });
+            
+            element1.dispatchEvent(clickEvent);
+            
+            // 记录点击后位置
+            const finalPos = getPosition(element1);
+            
+            const isMoved = Math.abs(initialPos.x - finalPos.x) > 1 || Math.abs(initialPos.y - finalPos.y) > 1;
+            
+            resultDiv.innerHTML = `
+                初始位置: (${initialPos.x.toFixed(2)}, ${initialPos.y.toFixed(2)})<br>
+                点击后位置: (${finalPos.x.toFixed(2)}, ${finalPos.y.toFixed(2)})<br>
+                位置变化: ${isMoved ? '是 (可能有瞬移)' : '否 (无瞬移)'}
+            `;
+        }
+        
+        function runTest2() {
+            const resultDiv = document.getElementById('result2');
+            
+            // 记录初始位置
+            const initialPos = getPosition(element2);
+            
+            // 模拟点击
+            const clickEvent = new MouseEvent('click', {
+                clientX: initialPos.x + initialPos.width / 2 + 10,
+                clientY: initialPos.y + initialPos.height / 2 + 10,
+                bubbles: true,
+                cancelable: true
+            });
+            
+            element2.dispatchEvent(clickEvent);
+            
+            // 记录点击后位置
+            const finalPos = getPosition(element2);
+            
+            const isMoved = Math.abs(initialPos.x - finalPos.x) > 1 || Math.abs(initialPos.y - finalPos.y) > 1;
+            
+            resultDiv.innerHTML = `
+                初始位置: (${initialPos.x.toFixed(2)}, ${initialPos.y.toFixed(2)})<br>
+                点击后位置: (${finalPos.x.toFixed(2)}, ${finalPos.y.toFixed(2)})<br>
+                位置变化: ${isMoved ? '是 (可能有瞬移)' : '否 (无瞬移)'}
+            `;
+        }
+        
+        function runTest3() {
+            const resultDiv = document.getElementById('result3');
+            const positions = ['中心', '左上角', '右下角', '边缘'];
+            const clicks = [
+                { x: 50, y: 25 },      // 中心
+                { x: 5, y: 5 },         // 左上角
+                { x: 95, y: 45 },       // 右下角
+                { x: 50, y: 2 }          // 边缘
+            ];
+            
+            let results = '';
+            
+            clicks.forEach((click, index) => {
+                // 记录初始位置
+                const initialPos = getPosition(element1);
+                
+                // 模拟点击不同位置
+                const clickEvent = new MouseEvent('click', {
+                    clientX: initialPos.x + click.x + 10,
+                    clientY: initialPos.y + click.y + 10,
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                element1.dispatchEvent(clickEvent);
+                
+                // 记录点击后位置
+                const finalPos = getPosition(element1);
+                
+                const isMoved = Math.abs(initialPos.x - finalPos.x) > 1 || Math.abs(initialPos.y - finalPos.y) > 1;
+                
+                results += `${positions[index]}: ${isMoved ? '有瞬移' : '无瞬移'}<br>`;
+            });
+            
+            resultDiv.innerHTML = results;
+        }
+    </script>
+</body>
+</html>

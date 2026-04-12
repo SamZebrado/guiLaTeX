@@ -1,0 +1,58 @@
+{
+  "elements": [
+    {
+      "id": "chinese-font",
+      "type": "textbox",
+      "content": "中文文本测试",
+      "page": 1,
+      "x": 30,
+      "y": 30,
+      "width": 100,
+      "height": 30,
+      "rotation": 0,
+      "layer": 1,
+      "font_family_zh": "SimSun",
+      "font_family_en": "Times New Roman",
+      "font_size": 16,
+      "color": "#000000",
+      "alignment": "left",
+      "visible": true
+    },
+    {
+      "id": "english-font",
+      "type": "textbox",
+      "content": "English Text Test",
+      "page": 1,
+      "x": 30,
+      "y": 70,
+      "width": 100,
+      "height": 30,
+      "rotation": 0,
+      "layer": 2,
+      "font_family_zh": "SimSun",
+      "font_family_en": "Arial",
+      "font_size": 16,
+      "color": "#ff0000",
+      "alignment": "left",
+      "visible": true
+    },
+    {
+      "id": "mixed-font",
+      "type": "textbox",
+      "content": "中文 English 混合文本",
+      "page": 1,
+      "x": 30,
+      "y": 110,
+      "width": 150,
+      "height": 30,
+      "rotation": 0,
+      "layer": 3,
+      "font_family_zh": "SimHei",
+      "font_family_en": "Helvetica",
+      "font_size": 16,
+      "color": "#0000ff",
+      "alignment": "left",
+      "visible": true
+    }
+  ]
+}

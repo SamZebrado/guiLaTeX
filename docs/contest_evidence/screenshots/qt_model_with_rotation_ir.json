@@ -1,0 +1,64 @@
+{
+  "elements": [
+    {
+      "id": "demo_title",
+      "type": "text",
+      "text": "可视化编辑 LaTeX 文档",
+      "x": 100,
+      "y": 50,
+      "width": 400,
+      "height": 40,
+      "font_size": 24,
+      "font_family": "Noto Sans SC",
+      "rotation": 15
+    },
+    {
+      "id": "demo_author",
+      "type": "text",
+      "text": "作者：某某 / 博士生原型测试",
+      "x": 100,
+      "y": 100,
+      "width": 300,
+      "height": 25,
+      "font_size": 14,
+      "font_family": "Noto Sans SC",
+      "rotation": 0
+    },
+    {
+      "id": "demo_body",
+      "type": "text",
+      "text": "这是一段用于演示正文对象的内容，可用于测试拖动、选择和后续选择框能力。",
+      "x": 100,
+      "y": 150,
+      "width": 400,
+      "height": 80,
+      "font_size": 12,
+      "font_family": "Noto Sans SC",
+      "rotation": -10
+    },
+    {
+      "id": "demo_formula",
+      "type": "text",
+      "text": "E = mc²",
+      "x": 100,
+      "y": 240,
+      "width": 200,
+      "height": 30,
+      "font_size": 16,
+      "font_family": "Noto Sans SC",
+      "rotation": 30
+    },
+    {
+      "id": "demo_image",
+      "type": "text",
+      "text": "图片示例 / 占位图",
+      "x": 100,
+      "y": 280,
+      "width": 300,
+      "height": 200,
+      "font_size": 12,
+      "font_family": "Noto Sans SC",
+      "rotation": 45
+    }
+  ]
+}

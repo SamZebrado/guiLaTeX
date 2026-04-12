@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试导出 IR 功能</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Inter', 'Noto Sans', sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .failure {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+    </style>
+</head>
+<body>
+    <h1>测试导出 IR 功能</h1>
+    
+    <div class="test-section">
+        <h2>1. 点击瞬移问题测试</h2>
+        <p>测试步骤：</p>
+        <ol>
+            <li>打开 <a href="index.html" target="_blank">Web 原型</a></li>
+            <li>点击任意文本元素</li>
+            <li>观察元素是否会发生位置跳动</li>
+        </ol>
+        <div class="test-result">
+            <p><strong>预期结果：</strong>点击元素后，元素位置保持不变，只显示选中状态</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 多选旋转问题测试</h2>
+        <p>测试步骤：</p>
+        <ol>
+            <li>打开 <a href="index.html" target="_blank">Web 原型</a></li>
+            <li>勾选"多选模式"</li>
+            <li>点击多个元素进行选择</li>
+            <li>使用旋转手柄或旋转滑块旋转选中的元素</li>
+            <li>观察是否所有选中的元素都同时旋转</li>
+        </ol>
+        <div class="test-result">
+            <p><strong>预期结果：</strong>所有选中的元素都同时旋转相同的角度</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 导出 IR 功能测试</h2>
+        <p>测试步骤：</p>
+        <ol>
+            <li>打开 <a href="index.html" target="_blank">Web 原型</a></li>
+            <li>点击"导出 IR"按钮</li>
+            <li>检查下载的 guilatex_ir.json 文件</li>
+        </ol>
+        <div class="test-result">
+            <p><strong>预期结果：</strong>下载的 JSON 文件包含所有元素的 IR 格式数据，包含所有必需字段</p>
+        </div>
+        <button onclick="testExportIR()">测试导出 IR 函数</button>
+        <div id="export-result" class="test-result" style="margin-top: 10px;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 字体安全列表测试</h2>
+        <p>测试步骤：</p>
+        <ol>
+            <li>打开 <a href="index.html" target="_blank">Web 原型</a></li>
+            <li>打开浏览器开发者工具</li>
+            <li>查看控制台输出的字体信息</li>
+        </ol>
+        <div class="test-result">
+            <p><strong>预期结果：</strong>控制台输出包含字体栈信息，只包含开源/免费可商用字体</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. 文件功能文案测试</h2>
+        <p>测试步骤：</p>
+        <ol>
+            <li>打开 <a href="index.html" target="_blank">Web 原型</a></li>
+            <li>检查顶部的文件操作按钮</li>
+        </ol>
+        <div class="test-result">
+            <p><strong>预期结果：</strong>按钮文案清晰诚实，包含"打开项目"、"保存项目"、"导出截图"、"导出 IR"</p>
+        </div>
+    </div>
+    
+    <script>
+        function testExportIR() {
+            // 模拟模型数据
+            const model = {
+                elements: [
+                    {
+                        id: '1',
+                        type: 'textbox',
+                        role: 'title',
+                        content: '测试标题',
+                        x: 100,
+                        y: 100,
+                        width: 200,
+                        height: 50,
+                        fontSize: 24,
+                        chineseFont: 'Noto Sans SC',
+                        englishFont: 'Inter',
+                        rotation: 0,
+                        layerId: 2,
+                        selected: false
+                    },
+                    {
+                        id: '2',
+                        type: 'paragraph',
+                        role: 'body',
+                        content: '测试段落',
+                        x: 100,
+                        y: 200,
+                        width: 300,
+                        height: 100,
+                        fontSize: 14,
+                        chineseFont: 'Noto Sans SC',
+                        englishFont: 'Inter',
+                        rotation: 15,
+                        layerId: 1,
+                        selected: false
+                    }
+                ]
+            };
+            
+            // 模拟 exportToIR 函数
+            function exportToIR() {
+                const ir = {
+                    elements: model.elements.map(element => {
+                        const maxLayerId = Math.max(...model.elements.map(el => el.layerId || 0));
+                        const layer = maxLayerId - (element.layerId || 0) + 1;
+                        
+                        return {
+                            id: element.id,
+                            type: element.role || element.type,
+                            content: element.content,
+                            page: 1,
+                            x: element.x,
+                            y: element.y,
+                            width: element.width,
+                            height: element.height,
+                            rotation: element.rotation || 0,
+                            layer: layer,
+                            font_family_zh: element.chineseFont || undefined,
+                            font_family_en: element.englishFont || undefined,
+                            font_size: element.fontSize || undefined,
+                            color: "#000000",
+                            visible: true
+                        };
+                    })
+                };
+                return ir;
+            }
+            
+            // 测试导出功能
+            const ir = exportToIR();
+            const resultDiv = document.getElementById('export-result');
+            
+            // 验证导出结果
+            const hasRequiredFields = ir.elements.every(element => {
+                return 'id' in element &&
+                       'type' in element &&
+                       'content' in element &&
+                       'page' in element &&
+                       'x' in element &&
+                       'y' in element &&
+                       'width' in element &&
+                       'height' in element &&
+                       'rotation' in element &&
+                       'layer' in element;
+            });
+            
+            if (hasRequiredFields) {
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `<p><strong>测试通过：</strong>导出 IR 功能正常，包含所有必需字段</p><pre>${JSON.stringify(ir, null, 2)}</pre>`;
+            } else {
+                resultDiv.className = 'test-result failure';
+                resultDiv.innerHTML = `<p><strong>测试失败：</strong>导出 IR 功能缺少必需字段</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

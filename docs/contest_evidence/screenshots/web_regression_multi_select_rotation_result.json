@@ -1,0 +1,97 @@
+{
+  "test": "多选旋转测试",
+  "timestamp": "2026-04-11T20:52:07.283Z",
+  "steps": [
+    {
+      "step": "启用多选模式"
+    },
+    {
+      "step": "选择两个元素",
+      "selectionCheck": {
+        "selected": [
+          {
+            "id": "1",
+            "selected": true
+          },
+          {
+            "id": "2",
+            "selected": true
+          }
+        ],
+        "all": [
+          {
+            "id": "1",
+            "selected": true
+          },
+          {
+            "id": "2",
+            "selected": true
+          },
+          {
+            "id": "3",
+            "selected": false
+          },
+          {
+            "id": "4",
+            "selected": false
+          },
+          {
+            "id": "5",
+            "selected": false
+          }
+        ]
+      }
+    },
+    {
+      "step": "记录旋转前的 rotation 值",
+      "rotations": [
+        {
+          "id": "1",
+          "rotation": 0
+        },
+        {
+          "id": "2",
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "step": "执行旋转操作"
+    },
+    {
+      "step": "记录旋转后的 rotation 值",
+      "rotations": [
+        {
+          "id": "1",
+          "rotation": 45
+        },
+        {
+          "id": "2",
+          "rotation": 45
+        }
+      ]
+    }
+  ],
+  "allRotated": true,
+  "onlyOneRotated": false,
+  "beforeRotations": [
+    {
+      "id": "1",
+      "rotation": 0
+    },
+    {
+      "id": "2",
+      "rotation": 0
+    }
+  ],
+  "afterRotations": [
+    {
+      "id": "1",
+      "rotation": 45
+    },
+    {
+      "id": "2",
+      "rotation": 45
+    }
+  ]
+}

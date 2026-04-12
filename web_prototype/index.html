@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>guiLaTeX Web 原型</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Inter', 'Noto Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .toolbar {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .toolbar-group label {
+            font-size: 12px;
+            margin-right: 5px;
+            color: #aaa;
+        }
+
+        .toolbar button {
+            padding: 6px 12px;
+            background-color: #555;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .toolbar button:hover {
+            background-color: #666;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 20px;
+        }
+        
+        .paper {
+            width: 8.5in;
+            height: 11in;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .text-element {
+            position: absolute;
+            cursor: pointer;
+            padding: 5px;
+            transform-origin: center center;
+        }
+        
+        .text-element.dragging {
+            cursor: grabbing;
+        }
+        
+        .selection-box {
+            position: absolute;
+            border: 2px solid blue;
+            background-color: rgba(0,0,255,0.1);
+            cursor: move;
+            transform-origin: center center;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: blue;
+            border: 1px solid white;
+            cursor: nwse-resize;
+        }
+        
+        .resize-handle.top-left {
+            top: -4px;
+            left: -4px;
+        }
+        
+        .resize-handle.top-right {
+            top: -4px;
+            right: -4px;
+        }
+        
+        .resize-handle.bottom-left {
+            bottom: -4px;
+            left: -4px;
+        }
+        
+        .resize-handle.bottom-right {
+            bottom: -4px;
+            right: -4px;
+        }
+        
+        .rotate-handle {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 16px;
+            background-color: #0066ff;
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .rotate-handle:active {
+            cursor: grabbing;
+            background-color: #0044cc;
+        }
+        
+        .properties-panel {
+            width: 300px;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+        
+        .debug-info {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .debug-info h3 {
+            margin-top: 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .debug-item {
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .properties-panel h2 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+        
+        .property-group {
+            margin-bottom: 20px;
+        }
+        
+        .property-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .property-group input,
+        .property-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .property-group input[type="range"] {
+            width: 80%;
+        }
+        
+        .font-size-value {
+            display: inline-block;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .model-preview {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .model-preview h3 {
+            margin-top: 0;
+            font-size: 16px;
+        }
+        
+        .model-json {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .z-order-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+        
+        .z-order-buttons button {
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .file-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .file-buttons button {
+            padding: 8px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .copy-paste-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+        
+        .copy-paste-buttons button {
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .multi-select-mode {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .multi-select-mode label {
+            font-size: 12px;
+        }
+        
+        .properties-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .canvas-container {
+                padding: 10px;
+            }
+            
+            .paper {
+                max-width: 100%;
+                transform-origin: top left;
+            }
+            
+            .properties-panel {
+                width: 100% !important;
+                box-sizing: border-box;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+        }
+        
+        @media (max-width: 700px) {
+            .paper {
+                transform: scale(0.7);
+                transform-origin: top left;
+                margin-left: -15%;
+            }
+            
+            .main-container {
+                padding: 10px;
+            }
+
+            .toolbar {
+                padding: 8px 10px;
+                gap: 15px;
+            }
+
+            .toolbar-group {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <label>文件</label>
+            <button id="open-button">打开项目</button>
+            <button id="save-button">保存项目</button>
+            <button id="export-screenshot-button">导出截图</button>
+            <button id="export-ir-button">导出 IR</button>
+        </div>
+        
+        <div class="toolbar-group">
+            <label>编辑</label>
+            <button id="copy-button">复制</button>
+            <button id="paste-button">粘贴</button>
+            <button id="delete-button">删除</button>
+        </div>
+        
+        <div class="toolbar-group">
+            <label>排列</label>
+            <button id="move-to-top">移到顶部</button>
+            <button id="move-to-bottom">移到底部</button>
+            <button id="move-up">上移</button>
+            <button id="move-down">下移</button>
+            <button id="layer-to-integer">图层编号变整数</button>
+        </div>
+        
+        <div class="toolbar-group">
+            <label>视图</label>
+            <button id="reset-button">重置演示</button>
+            <button id="toggle-debug">显示调试</button>
+        </div>
+        
+        <div class="toolbar-group">
+            <input type="checkbox" id="multi-select-checkbox">
+            <label for="multi-select-checkbox">多选模式</label>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="canvas-container">
+            <div class="paper" id="paper">
+                <!-- Text elements will be rendered here -->
+            </div>
+        </div>
+        
+        <div class="properties-panel">
+            <h2>属性面板</h2>
+            
+            <div class="property-group">
+                <h3>选中信息</h3>
+                <div id="selection-info" style="font-size: 12px; color: #666;">未选中任何对象</div>
+            </div>
+            
+            <div class="property-group">
+                <h3>内容</h3>
+                <label for="content-input">文本内容</label>
+                <input type="text" id="content-input" placeholder="输入文本（仅单选时可编辑）">
+            </div>
+            
+            <div class="property-group">
+                <h3>几何</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label for="x-input" style="font-size: 12px;">X</label>
+                        <input type="number" id="x-input" step="1" placeholder="X" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label for="y-input" style="font-size: 12px;">Y</label>
+                        <input type="number" id="y-input" step="1" placeholder="Y" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label for="width-input" style="font-size: 12px;">宽</label>
+                        <input type="number" id="width-input" step="1" placeholder="宽" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label for="height-input" style="font-size: 12px;">高</label>
+                        <input type="number" id="height-input" step="1" placeholder="高" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="property-group">
+                <label for="rotation-slider">旋转角度</label>
+                <input type="range" id="rotation-slider" min="-180" max="180" value="0">
+                <span class="font-size-value" id="rotation-value">0</span>°
+            </div>
+            
+            <div class="property-group">
+                <label for="layer-input">图层编号</label>
+                <input type="number" id="layer-input" step="0.1" placeholder="图层编号">
+            </div>
+            
+            <div class="property-group">
+                <h3>字体</h3>
+                <label for="chinese-font-select">中文字体</label>
+                <select id="chinese-font-select">
+                    <option value="Noto Sans SC">Noto Sans SC (开源)</option>
+                    <option value="Source Han Sans SC">Source Han Sans SC (开源)</option>
+                </select>
+                <small style="display: block; margin-top: 5px; font-size: 10px; color: #666;">默认只包含开源/免费可商用字体</small>
+            </div>
+            
+            <div class="property-group">
+                <label for="english-font-select">英文字体</label>
+                <select id="english-font-select">
+                    <option value="Inter">Inter (开源)</option>
+                    <option value="Noto Sans">Noto Sans (开源)</option>
+                    <option value="sans-serif">Sans Serif (系统默认)</option>
+                </select>
+                <small style="display: block; margin-top: 5px; font-size: 10px; color: #666;">默认只包含开源/免费可商用字体</small>
+            </div>
+            
+            <div class="property-group">
+                <label for="font-size-slider">字体大小</label>
+                <input type="range" id="font-size-slider" min="10" max="48" value="16">
+                <span class="font-size-value" id="font-size-value">16</span>px
+            </div>
+            
+            <div class="property-group">
+                <h3>对象专属属性</h3>
+                <div id="object-specific-properties" style="font-size: 12px; color: #666;">根据对象类型显示</div>
+            </div>
+            
+            <div class="model-preview">
+                <h3>模型预览</h3>
+                <div class="model-json" id="model-json"></div>
+            </div>
+            
+            <div class="debug-info" id="debug-info" style="display: none;">
+                <h3>调试信息</h3>
+                <div class="debug-item" id="debug-offset">偏移: (0, 0)</div>
+                <div class="debug-item" id="debug-element-pos">元素位置: (0, 0)</div>
+                <div class="debug-item" id="debug-is-dragging">拖动中: false</div>
+                <div class="debug-item" id="debug-rotation">旋转角度: 0°</div>
+                <div class="debug-item" id="debug-z-index">层级: 0</div>
+                <div class="debug-item" id="debug-font-stack">字体栈: Noto Sans SC, Source Han Sans SC, Inter, Noto Sans, sans-serif</div>
+                <div class="debug-item" id="debug-computed-font">计算字体: 系统默认</div>
+            </div>
+        </div>
+    </div>
+    
+    <input type="file" id="file-input" accept=".json" style="display: none;">
+    </div>
+
+    <script>
+        // Internal model as source of truth
+        let model = {
+            elements: [
+                {
+                    id: '1',
+                    type: 'textbox',
+                    role: 'title',
+                    content: '标题：可视化编辑 LaTeX 文档 (文本框)',
+                    x: 100,
+                    y: 100,
+                    width: 400,
+                    height: 50,
+                    fontSize: 24,
+                    chineseFont: 'Noto Sans SC',
+                    englishFont: 'Inter',
+                    rotation: 0,
+                    zIndex: 4,
+                    layerId: 4,
+                    selected: false
+                },
+                {
+                    id: '2',
+                    type: 'textbox',
+                    role: 'author',
+                    content: '作者：某某 / 博士生原型测试 (文本框)',
+                    x: 100,
+                    y: 150,
+                    width: 200,
+                    height: 30,
+                    fontSize: 16,
+                    chineseFont: 'Noto Sans SC',
+                    englishFont: 'Inter',
+                    rotation: 0,
+                    zIndex: 3,
+                    layerId: 3,
+                    selected: false
+                },
+                {
+                    id: '3',
+                    type: 'paragraph',
+                    role: 'body',
+                    content: '这是一段用于演示段落对象的正文内容，可用于测试拖动、缩放与排版差异。(段落)',
+                    x: 100,
+                    y: 200,
+                    width: 400,
+                    height: 80,
+                    fontSize: 14,
+                    chineseFont: 'Noto Sans SC',
+                    englishFont: 'Inter',
+                    rotation: 0,
+                    zIndex: 2,
+                    layerId: 2,
+                    selected: false
+                },
+                {
+                    id: '4',
+                    type: 'textbox',
+                    role: 'formula',
+                    content: 'E = mc² (文本框)',
+                    x: 100,
+                    y: 280,
+                    width: 150,
+                    height: 40,
+                    fontSize: 18,
+                    chineseFont: 'Noto Sans SC',
+                    englishFont: 'Inter',
+                    rotation: 0,
+                    zIndex: 1,
+                    layerId: 1,
+                    selected: false
+                },
+                {
+                    id: '5',
+                    type: 'image',
+                    content: '图片示例 / 占位图',
+                    x: 100,
+                    y: 330,
+                    width: 200,
+                    height: 150,
+                    rotation: 0,
+                    zIndex: 0,
+                    layerId: 0,
+                    selected: false
+                }
+            ]
+        };
+        
+        // Selection box element
+        let selectionBox = null;
+        
+        // DOM elements
+        const paper = document.getElementById('paper');
+        const contentInput = document.getElementById('content-input');
+        const chineseFontSelect = document.getElementById('chinese-font-select');
+        const englishFontSelect = document.getElementById('english-font-select');
+        const fontSizeSlider = document.getElementById('font-size-slider');
+        const fontSizeValue = document.getElementById('font-size-value');
+        const rotationSlider = document.getElementById('rotation-slider');
+        const rotationValue = document.getElementById('rotation-value');
+        const layerInput = document.getElementById('layer-input');
+        const layerToIntegerBtn = document.getElementById('layer-to-integer');
+        const moveToTopBtn = document.getElementById('move-to-top');
+        const moveToBottomBtn = document.getElementById('move-to-bottom');
+        const moveUpBtn = document.getElementById('move-up');
+        const moveDownBtn = document.getElementById('move-down');
+        const openButton = document.getElementById('open-button');
+        const saveButton = document.getElementById('save-button');
+        const exportScreenshotButton = document.getElementById('export-screenshot-button');
+        const exportIRButton = document.getElementById('export-ir-button');
+        const fileInput = document.getElementById('file-input');
+        const copyButton = document.getElementById('copy-button');
+        const pasteButton = document.getElementById('paste-button');
+        const deleteButton = document.getElementById('delete-button');
+        const multiSelectCheckbox = document.getElementById('multi-select-checkbox');
+        const modelJson = document.getElementById('model-json');
+        const resetButton = document.getElementById('reset-button');
+        const toggleDebugButton = document.getElementById('toggle-debug');
+        const debugInfo = document.getElementById('debug-info');
+        const debugOffset = document.getElementById('debug-offset');
+        const debugElementPos = document.getElementById('debug-element-pos');
+        const debugIsDragging = document.getElementById('debug-is-dragging');
+        const debugRotation = document.getElementById('debug-rotation');
+        const debugZIndex = document.getElementById('debug-z-index');
+        const selectionInfo = document.getElementById('selection-info');
+        const objectSpecificProperties = document.getElementById('object-specific-properties');
+        const xInput = document.getElementById('x-input');
+        const yInput = document.getElementById('y-input');
+        const widthInput = document.getElementById('width-input');
+        const heightInput = document.getElementById('height-input');
+        
+        // Drag and drop variables
+        let draggedElements = null;
+        let offsetX = 0;
+        let offsetY = 0;
+        
+        // Rotate variables
+        let rotatingElements = null;
+        let initialRotations = [];
+        let initialMouseAngle = 0;
+        
+        // Multi-select variables
+        let multiSelectMode = false;
+        let clipboard = null;
+        
+        // Create selection box
+        function createSelectionBox(element) {
+            // Remove existing selection box
+            if (selectionBox) {
+                paper.removeChild(selectionBox);
+            }
+            
+            // Create new selection box
+            selectionBox = document.createElement('div');
+            selectionBox.className = 'selection-box';
+            
+            // Calculate element dimensions
+            const elementDiv = document.getElementById(element.id);
+            if (elementDiv) {
+                // Use element's actual computed style for position
+                const computedStyle = window.getComputedStyle(elementDiv);
+                
+                selectionBox.style.left = computedStyle.left;
+                selectionBox.style.top = computedStyle.top;
+                selectionBox.style.width = `${elementDiv.offsetWidth}px`;
+                selectionBox.style.height = `${elementDiv.offsetHeight}px`;
+                selectionBox.style.transform = `rotate(${element.rotation || 0}deg)`;
+                
+                // Add resize handles
+                const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+                handles.forEach(position => {
+                    const handle = document.createElement('div');
+                    handle.className = `resize-handle ${position}`;
+                    handle.dataset.position = position;
+                    handle.addEventListener('mousedown', startResize);
+                    selectionBox.appendChild(handle);
+                });
+                
+                // Add rotate handle
+                const rotateHandle = document.createElement('div');
+                rotateHandle.className = 'rotate-handle';
+                rotateHandle.addEventListener('mousedown', startRotate);
+                selectionBox.appendChild(rotateHandle);
+                
+                // Add event listeners for selection box
+                selectionBox.addEventListener('mousedown', startSelectionBoxDrag);
+                
+                paper.appendChild(selectionBox);
+            }
+        }
+        
+        // Update selection box
+        function updateSelectionBox() {
+            const selectedElement = model.elements.find(el => el.selected);
+            if (selectedElement) {
+                createSelectionBox(selectedElement);
+            } else if (selectionBox) {
+                paper.removeChild(selectionBox);
+                selectionBox = null;
+            }
+        }
+        
+        // Render elements from model
+        function renderElements() {
+            // Clear existing elements
+            paper.innerHTML = '';
+            selectionBox = null;
+            
+            // Sort elements by layerId (smaller number is on top)
+            const sortedElements = [...model.elements].sort((a, b) => (a.layerId || 0) - (b.layerId || 0));
+            
+            // Render each element from the model
+            sortedElements.forEach(element => {
+                const div = document.createElement('div');
+                div.className = 'text-element';
+                div.id = element.id;
+                div.style.left = `${element.x}px`;
+                div.style.top = `${element.y}px`;
+                div.style.transform = `rotate(${element.rotation || 0}deg)`;
+                div.style.zIndex = element.layerId || 0;
+                
+                // Add selected outline if element is selected
+                if (element.selected) {
+                    div.style.outline = '2px solid #ff0000';
+                    div.style.outlineOffset = '2px';
+                }
+                
+                // Set element-specific styles
+                if (element.type === 'image') {
+                    // Image element
+                    div.style.width = `${element.width}px`;
+                    div.style.height = `${element.height}px`;
+                    div.style.border = '1px solid #ccc';
+                    div.style.backgroundColor = '#f0f0f0';
+                    div.style.display = 'flex';
+                    div.style.alignItems = 'center';
+                    div.style.justifyContent = 'center';
+                    div.textContent = element.content;
+                } else if (element.type === 'textbox') {
+                    // Textbox element
+                    div.style.width = `${element.width}px`;
+                    div.style.minHeight = `${element.height}px`;
+                    div.style.border = '1px dashed #999';
+                    div.style.padding = '5px';
+                    div.style.fontSize = `${element.fontSize}px`;
+                    div.style.fontFamily = `'${element.chineseFont || 'Noto Sans SC'}', '${element.englishFont || 'Inter'}', sans-serif`;
+                    div.textContent = element.content;
+                } else if (element.type === 'paragraph') {
+                    // Paragraph element
+                    div.style.width = `${element.width}px`;
+                    div.style.minHeight = `${element.height}px`;
+                    div.style.fontSize = `${element.fontSize}px`;
+                    div.style.fontFamily = `'${element.chineseFont || 'Noto Sans SC'}', '${element.englishFont || 'Inter'}', sans-serif`;
+                    div.textContent = element.content;
+                }
+                
+                // Add event listeners
+                div.addEventListener('mousedown', startDrag);
+                div.addEventListener('click', selectElement);
+                
+                paper.appendChild(div);
+            });
+            
+            // Update selection box
+            updateSelectionBox();
+        }
+        
+        // Update model JSON preview
+        function updateModelPreview() {
+            modelJson.textContent = JSON.stringify(model, null, 2);
+        }
+        
+        // Update debug info
+        function updateSelectionInfo() {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length === 0) {
+                selectionInfo.textContent = '未选中任何对象';
+                xInput.value = '';
+                yInput.value = '';
+                widthInput.value = '';
+                heightInput.value = '';
+                objectSpecificProperties.textContent = '根据对象类型显示';
+            } else if (selectedElements.length === 1) {
+                const el = selectedElements[0];
+                selectionInfo.textContent = `选中: ${el.type} (ID: ${el.id})`;
+                xInput.value = el.x || '';
+                yInput.value = el.y || '';
+                widthInput.value = el.width || '';
+                heightInput.value = el.height || '';
+                objectSpecificProperties.textContent = `类型: ${el.type}, 角色: ${el.role || 'N/A'}`;
+            } else {
+                selectionInfo.textContent = `选中 ${selectedElements.length} 个对象`;
+                xInput.value = '';
+                yInput.value = '';
+                widthInput.value = '';
+                heightInput.value = '';
+                objectSpecificProperties.textContent = '多选模式';
+            }
+        }
+
+        function updateDebugInfo() {
+            debugOffset.textContent = `偏移: (${Math.round(offsetX)}, ${Math.round(offsetY)})`;
+            if (draggedElements && draggedElements.length > 0) {
+                debugElementPos.textContent = `元素位置: (${Math.round(draggedElements[0].element.x)}, ${Math.round(draggedElements[0].element.y)})`;
+            }
+            debugIsDragging.textContent = `拖动中: ${draggedElements !== null}`;
+            
+            const selectedElement = model.elements.find(el => el.selected);
+            if (selectedElement) {
+                debugRotation.textContent = `旋转角度: ${selectedElement.rotation || 0}°`;
+                debugZIndex.textContent = `图层编号: ${selectedElement.layerId !== undefined ? selectedElement.layerId : 0}`;
+            }
+        }
+        
+        // Select an element
+        function selectElement(e) {
+            e.stopPropagation();
+            
+            const elementId = e.target.id;
+            const element = model.elements.find(el => el.id === elementId);
+            
+            if (element) {
+                // 防止点击时的位置跳动，确保模型位置与视觉位置一致
+                // 不依赖 getBoundingClientRect，直接使用模型中的 x/y
+                
+                if (multiSelectMode) {
+                    // Toggle selection in multi-select mode
+                    element.selected = !element.selected;
+                } else {
+                    // Single select mode
+                    model.elements.forEach(el => {
+                        el.selected = false;
+                    });
+                    element.selected = true;
+                }
+                
+                // Update properties panel for single selection
+                const selectedElements = model.elements.filter(el => el.selected);
+                if (selectedElements.length === 1) {
+                    const el = selectedElements[0];
+                    contentInput.value = el.content || '';
+                    if (el.type !== 'image') {
+                        fontSizeSlider.value = el.fontSize || 16;
+                        fontSizeValue.textContent = el.fontSize || 16;
+                        chineseFontSelect.value = el.chineseFont || 'Noto Sans SC';
+                        englishFontSelect.value = el.englishFont || 'Inter';
+                    }
+                    rotationSlider.value = el.rotation || 0;
+                    rotationValue.textContent = el.rotation || 0;
+                    layerInput.value = el.layerId !== undefined ? el.layerId : '';
+                } else if (selectedElements.length > 1) {
+                    // For multiple selections, clear content input but keep other controls
+                    contentInput.value = '';
+                } else {
+                    // No selection
+                    contentInput.value = '';
+                }
+            }
+            
+            // 只更新选择状态，不重新渲染整个元素，避免位置跳动
+            updateSelectionBox();
+            updateModelPreview();
+            updateDebugInfo();
+            updateSelectionInfo();
+        }
+        
+        // Start dragging
+        function startDrag(e) {
+            e.stopPropagation();
+            
+            const elementId = e.target.id;
+            const clickedElement = model.elements.find(el => el.id === elementId);
+            
+            if (clickedElement) {
+                const paperRect = paper.getBoundingClientRect();
+                const mouseX = e.clientX - paperRect.left;
+                const mouseY = e.clientY - paperRect.top;
+                
+                // 确保多选模式正确工作
+                let elementsToDrag = [];
+                const selectedElements = model.elements.filter(el => el.selected);
+                
+                if (multiSelectMode) {
+                    // 多选模式：如果点击的元素未选中，则添加到选择中
+                    if (!clickedElement.selected) {
+                        clickedElement.selected = true;
+                        elementsToDrag = model.elements.filter(el => el.selected);
+                    } else {
+                        // 点击已选中的元素，拖动所有选中元素
+                        elementsToDrag = selectedElements;
+                    }
+                } else {
+                    // 单选模式：只拖动点击的元素
+                    model.elements.forEach(el => el.selected = false);
+                    clickedElement.selected = true;
+                    elementsToDrag = [clickedElement];
+                }
+                
+                // 计算所有要拖动的元素的偏移量
+                draggedElements = elementsToDrag.map(el => {
+                    // 对于每个元素，计算相对于鼠标位置的偏移
+                    // 直接使用模型位置，不考虑旋转，避免位置跳动
+                    return {
+                        element: el,
+                        offsetX: el.x - mouseX,
+                        offsetY: el.y - mouseY
+                    };
+                });
+                
+                // Update debug info
+                updateDebugInfo();
+                
+                // Add event listeners for drag
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+                
+                // Add dragging class
+                e.target.classList.add('dragging');
+            }
+        }
+        
+        // Drag element
+        function drag(e) {
+            if (draggedElements) {
+                const paperRect = paper.getBoundingClientRect();
+                const mouseX = e.clientX - paperRect.left;
+                const mouseY = e.clientY - paperRect.top;
+                
+                draggedElements.forEach(({ element, offsetX, offsetY }) => {
+                    // 统一使用简单的偏移计算，避免旋转校正导致的位置跳动
+                    element.x = mouseX + offsetX;
+                    element.y = mouseY + offsetY;
+                    
+                    // Ensure element stays within paper bounds
+                    element.x = Math.max(0, Math.min(element.x, paperRect.width - 50));
+                    element.y = Math.max(0, Math.min(element.y, paperRect.height - 50));
+                    
+                    // Update DOM element directly
+                    const elementDiv = document.getElementById(element.id);
+                    if (elementDiv) {
+                        elementDiv.style.left = `${element.x}px`;
+                        elementDiv.style.top = `${element.y}px`;
+                    }
+                });
+                
+                // Update debug info
+                updateDebugInfo();
+                updateModelPreview();
+            }
+        }
+        
+        // Start selection box drag
+        function startSelectionBoxDrag(e) {
+            e.stopPropagation();
+            
+            const selectedElement = model.elements.find(el => el.selected);
+            if (selectedElement) {
+                const paperRect = paper.getBoundingClientRect();
+                const mouseX = e.clientX - paperRect.left;
+                const mouseY = e.clientY - paperRect.top;
+                
+                // 使用与 startDrag 相同的方式计算偏移量
+                draggedElements = [{
+                    element: selectedElement,
+                    offsetX: selectedElement.x - mouseX,
+                    offsetY: selectedElement.y - mouseY
+                }];
+                
+                // Add event listeners for drag
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+            }
+        }
+        
+        // Stop dragging
+        function stopDrag() {
+            draggedElements = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+            
+            // Remove dragging class from all elements
+            document.querySelectorAll('.text-element').forEach(el => {
+                el.classList.remove('dragging');
+            });
+            
+            // Re-render to update all elements properly
+            renderElements();
+            
+            // Update debug info
+            updateDebugInfo();
+        }
+        
+        // Resize variables
+        let resizingElement = null;
+        let resizePosition = '';
+        
+        // Start resizing
+        function startResize(e) {
+            e.stopPropagation();
+            
+            const selectedElement = model.elements.find(el => el.selected);
+            if (selectedElement && (selectedElement.type === 'image' || selectedElement.type === 'textbox')) {
+                resizingElement = selectedElement;
+                resizePosition = e.target.dataset.position;
+                
+                // Add event listeners for resize
+                document.addEventListener('mousemove', resize);
+                document.addEventListener('mouseup', stopResize);
+            }
+        }
+        
+        // Resize element
+        function resize(e) {
+            if (resizingElement) {
+                const paperRect = paper.getBoundingClientRect();
+                const mouseX = e.clientX - paperRect.left;
+                const mouseY = e.clientY - paperRect.top;
+                
+                // Calculate new dimensions based on resize position
+                switch (resizePosition) {
+                    case 'bottom-right':
+                        resizingElement.width = Math.max(50, mouseX - resizingElement.x);
+                        resizingElement.height = Math.max(50, mouseY - resizingElement.y);
+                        break;
+                    case 'bottom-left':
+                        resizingElement.width = Math.max(50, resizingElement.x + resizingElement.width - mouseX);
+                        resizingElement.height = Math.max(50, mouseY - resizingElement.y);
+                        resizingElement.x = Math.min(resizingElement.x, mouseX);
+                        break;
+                    case 'top-right':
+                        resizingElement.width = Math.max(50, mouseX - resizingElement.x);
+                        resizingElement.height = Math.max(50, resizingElement.y + resizingElement.height - mouseY);
+                        resizingElement.y = Math.min(resizingElement.y, mouseY);
+                        break;
+                    case 'top-left':
+                        resizingElement.width = Math.max(50, resizingElement.x + resizingElement.width - mouseX);
+                        resizingElement.height = Math.max(50, resizingElement.y + resizingElement.height - mouseY);
+                        resizingElement.x = Math.min(resizingElement.x, mouseX);
+                        resizingElement.y = Math.min(resizingElement.y, mouseY);
+                        break;
+                }
+                
+                // Update DOM element directly
+                const elementDiv = document.getElementById(resizingElement.id);
+                if (elementDiv) {
+                    elementDiv.style.left = `${resizingElement.x}px`;
+                    elementDiv.style.top = `${resizingElement.y}px`;
+                    elementDiv.style.width = `${resizingElement.width}px`;
+                    elementDiv.style.height = `${resizingElement.height}px`;
+                }
+                
+                // Also update selection box
+                if (selectionBox) {
+                    selectionBox.style.left = `${resizingElement.x}px`;
+                    selectionBox.style.top = `${resizingElement.y}px`;
+                    selectionBox.style.width = `${resizingElement.width}px`;
+                    selectionBox.style.height = `${resizingElement.height}px`;
+                }
+                
+                // Update debug info
+                updateDebugInfo();
+                updateModelPreview();
+            }
+        }
+        
+        // Stop resizing
+        function stopResize() {
+            resizingElement = null;
+            resizePosition = '';
+            document.removeEventListener('mousemove', resize);
+            document.removeEventListener('mouseup', stopResize);
+            
+            // Update debug info
+            updateDebugInfo();
+        }
+        
+        // Start rotating
+        function startRotate(e) {
+            e.stopPropagation();
+            
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                rotatingElements = selectedElements;
+                initialRotations = selectedElements.map(el => el.rotation || 0);
+                
+                // Calculate initial mouse angle based on first selected element
+                const firstElement = selectedElements[0];
+                const elementDiv = document.getElementById(firstElement.id);
+                if (elementDiv) {
+                    const rect = elementDiv.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    initialMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+                }
+                
+                // Add event listeners for rotate
+                document.addEventListener('mousemove', rotate);
+                document.addEventListener('mouseup', stopRotate);
+            }
+        }
+        
+        // Rotate element
+        function rotate(e) {
+            if (rotatingElements) {
+                // Calculate angle based on first element
+                const firstElement = rotatingElements[0];
+                const elementDiv = document.getElementById(firstElement.id);
+                if (elementDiv) {
+                    const rect = elementDiv.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    const currentMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+                    
+                    // Calculate rotation change
+                    let rotationChange = (currentMouseAngle - initialMouseAngle);
+                    
+                    // Apply rotation to all selected elements
+                    rotatingElements.forEach((element, index) => {
+                        let newRotation = initialRotations[index] + rotationChange;
+                        // Keep rotation within -180 to 180
+                        while (newRotation > 180) newRotation -= 360;
+                        while (newRotation < -180) newRotation += 360;
+                        
+                        element.rotation = Math.round(newRotation);
+                        
+                        // Update DOM element directly
+                        const elDiv = document.getElementById(element.id);
+                        if (elDiv) {
+                            elDiv.style.transform = `rotate(${element.rotation}deg)`;
+                        }
+                    });
+                    
+                    // Also update selection box
+                    if (selectionBox) {
+                        selectionBox.style.transform = `rotate(${firstElement.rotation}deg)`;
+                    }
+                    
+                    // Update rotation slider
+                    rotationSlider.value = firstElement.rotation;
+                    rotationValue.textContent = firstElement.rotation;
+                    
+                    // Update debug info
+                    updateDebugInfo();
+                    updateModelPreview();
+                }
+            }
+        }
+        
+        // Stop rotating
+        function stopRotate() {
+            rotatingElements = null;
+            initialRotations = [];
+            document.removeEventListener('mousemove', rotate);
+            document.removeEventListener('mouseup', stopRotate);
+        }
+        
+
+        
+        // Z-order functions (using layerId, smaller number on top)
+        function moveToTop() {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                const minLayerId = Math.min(...model.elements.map(el => el.layerId || 0));
+                selectedElements.forEach(el => {
+                    el.layerId = minLayerId - 1;
+                });
+                renderElements();
+                updateModelPreview();
+                updateDebugInfo();
+            }
+        }
+        
+        function moveToBottom() {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                const maxLayerId = Math.max(...model.elements.map(el => el.layerId || 0));
+                selectedElements.forEach(el => {
+                    el.layerId = maxLayerId + 1;
+                });
+                renderElements();
+                updateModelPreview();
+                updateDebugInfo();
+            }
+        }
+        
+        function moveUp() {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                selectedElements.forEach(el => {
+                    el.layerId = (el.layerId || 0) - 1;
+                });
+                renderElements();
+                updateModelPreview();
+                updateDebugInfo();
+            }
+        }
+        
+        function moveDown() {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                selectedElements.forEach(el => {
+                    el.layerId = (el.layerId || 0) + 1;
+                });
+                renderElements();
+                updateModelPreview();
+                updateDebugInfo();
+            }
+        }
+        
+        // Add z-order event listeners
+        moveToTopBtn.addEventListener('click', moveToTop);
+        moveToBottomBtn.addEventListener('click', moveToBottom);
+        moveUpBtn.addEventListener('click', moveUp);
+        moveDownBtn.addEventListener('click', moveDown);
+        
+        // Click on paper to deselect all
+        paper.addEventListener('click', () => {
+            model.elements.forEach(element => {
+                element.selected = false;
+            });
+            renderElements();
+            updateModelPreview();
+            updateDebugInfo();
+        });
+        
+        // Reset demo button
+        resetButton.addEventListener('click', () => {
+            // Reset model to initial state
+            model = {
+                elements: [
+                    {
+                        id: '1',
+                        type: 'textbox',
+                        role: 'title',
+                        content: '标题：可视化编辑 LaTeX 文档 (文本框)',
+                        x: 100,
+                        y: 100,
+                        width: 400,
+                        height: 50,
+                        fontSize: 24,
+                        chineseFont: 'Noto Sans SC',
+                        englishFont: 'Inter',
+                        rotation: 0,
+                        zIndex: 4,
+                        layerId: 4,
+                        selected: false
+                    },
+                    {
+                        id: '2',
+                        type: 'textbox',
+                        role: 'author',
+                        content: '作者：某某 / 博士生原型测试 (文本框)',
+                        x: 100,
+                        y: 150,
+                        width: 200,
+                        height: 30,
+                        fontSize: 16,
+                        chineseFont: 'Noto Sans SC',
+                        englishFont: 'Inter',
+                        rotation: 0,
+                        zIndex: 3,
+                        layerId: 3,
+                        selected: false
+                    },
+                    {
+                        id: '3',
+                        type: 'paragraph',
+                        role: 'body',
+                        content: '这是一段用于演示段落对象的正文内容，可用于测试拖动、缩放与排版差异。(段落)',
+                        x: 100,
+                        y: 200,
+                        width: 400,
+                        height: 80,
+                        fontSize: 14,
+                        chineseFont: 'Noto Sans SC',
+                        englishFont: 'Inter',
+                        rotation: 0,
+                        zIndex: 2,
+                        layerId: 2,
+                        selected: false
+                    },
+                    {
+                        id: '4',
+                        type: 'textbox',
+                        role: 'formula',
+                        content: 'E = mc² (文本框)',
+                        x: 100,
+                        y: 280,
+                        width: 150,
+                        height: 40,
+                        fontSize: 18,
+                        chineseFont: 'Noto Sans SC',
+                        englishFont: 'Inter',
+                        rotation: 0,
+                        zIndex: 1,
+                        layerId: 1,
+                        selected: false
+                    },
+                    {
+                        id: '5',
+                        type: 'image',
+                        content: '图片示例 / 占位图',
+                        x: 100,
+                        y: 330,
+                        width: 200,
+                        height: 150,
+                        rotation: 0,
+                        zIndex: 0,
+                        layerId: 0,
+                        selected: false
+                    }
+                ]
+            };
+            
+            // Reset properties panel
+            contentInput.value = '';
+            fontSizeSlider.value = 16;
+            fontSizeValue.textContent = '16';
+            rotationSlider.value = 0;
+            rotationValue.textContent = '0';
+            
+            // Re-render
+            renderElements();
+            updateModelPreview();
+            updateDebugInfo();
+        });
+        
+        // Toggle debug info
+        toggleDebugButton.addEventListener('click', () => {
+            if (debugInfo.style.display === 'none') {
+                debugInfo.style.display = 'block';
+                toggleDebugButton.textContent = '隐藏调试';
+            } else {
+                debugInfo.style.display = 'none';
+                toggleDebugButton.textContent = '显示调试';
+            }
+        });
+        
+        // Multi-select checkbox
+        multiSelectCheckbox.addEventListener('change', () => {
+            multiSelectMode = multiSelectCheckbox.checked;
+        });
+        
+        // Layer input change
+        layerInput.addEventListener('input', () => {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                const layerValue = parseFloat(layerInput.value);
+                if (!isNaN(layerValue)) {
+                    selectedElements.forEach(el => {
+                        el.layerId = layerValue;
+                    });
+                    renderElements();
+                    updateModelPreview();
+                }
+            }
+        });
+        
+        // Handle rotation slider change - support multiple elements
+        rotationSlider.addEventListener('input', () => {
+            const rotation = parseInt(rotationSlider.value);
+            rotationValue.textContent = rotation;
+            
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                selectedElements.forEach(el => {
+                    el.rotation = rotation;
+                });
+                renderElements();
+                updateModelPreview();
+                updateDebugInfo();
+            }
+        });
+        
+        // Handle content input change - only for single selection
+        contentInput.addEventListener('input', () => {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length === 1) {
+                selectedElements[0].content = contentInput.value;
+                renderElements();
+                updateModelPreview();
+            }
+        });
+        
+        // Handle font size change - support multiple elements
+        fontSizeSlider.addEventListener('input', () => {
+            const fontSize = parseInt(fontSizeSlider.value);
+            fontSizeValue.textContent = fontSize;
+            
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                selectedElements.forEach(el => {
+                    if (el.type !== 'image') {
+                        el.fontSize = fontSize;
+                    }
+                });
+                renderElements();
+                updateModelPreview();
+            }
+        });
+        
+        // Handle Chinese font change - support multiple elements
+        chineseFontSelect.addEventListener('change', () => {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                selectedElements.forEach(el => {
+                    if (el.type !== 'image') {
+                        el.chineseFont = chineseFontSelect.value;
+                    }
+                });
+                renderElements();
+                updateModelPreview();
+            }
+        });
+        
+        // Handle English font change - support multiple elements
+        englishFontSelect.addEventListener('change', () => {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                selectedElements.forEach(el => {
+                    if (el.type !== 'image') {
+                        el.englishFont = englishFontSelect.value;
+                    }
+                });
+                renderElements();
+                updateModelPreview();
+            }
+        });
+        
+        // Layer to integer button
+        layerToIntegerBtn.addEventListener('click', () => {
+            const sortedElements = [...model.elements].sort((a, b) => (a.layerId || 0) - (b.layerId || 0));
+            sortedElements.forEach((element, index) => {
+                element.layerId = index;
+            });
+            renderElements();
+            updateModelPreview();
+        });
+        
+        // File operations
+        saveButton.addEventListener('click', () => {
+            const dataStr = JSON.stringify(model, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'guilatex_project.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+        
+        openButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        model = JSON.parse(e.target.result);
+                        renderElements();
+                        updateModelPreview();
+                        updateDebugInfo();
+                    } catch (err) {
+                        alert('无法打开文件：' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+            fileInput.value = '';
+        });
+        
+        exportScreenshotButton.addEventListener('click', () => {
+            alert('请使用浏览器截图功能手动截图。\n\n快捷键：\n- Mac: Cmd+Shift+4\n- Windows: Win+Shift+S');
+        });
+        
+        // Export to IR
+        exportIRButton.addEventListener('click', () => {
+            const ir = exportToIR();
+            const dataStr = JSON.stringify(ir, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'guilatex_ir.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+        
+        // Copy and paste
+        copyButton.addEventListener('click', () => {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                clipboard = JSON.parse(JSON.stringify(selectedElements));
+            }
+        });
+        
+        pasteButton.addEventListener('click', () => {
+            if (clipboard) {
+                clipboard.forEach((element, index) => {
+                    const newElement = JSON.parse(JSON.stringify(element));
+                    newElement.id = Date.now().toString() + index;
+                    newElement.x = newElement.x + 20;
+                    newElement.y = newElement.y + 20;
+                    newElement.selected = true;
+                    model.elements.forEach(el => el.selected = false);
+                    model.elements.push(newElement);
+                });
+                renderElements();
+                updateModelPreview();
+                updateSelectionInfo();
+            }
+        });
+
+        deleteButton.addEventListener('click', () => {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                model.elements = model.elements.filter(el => !el.selected);
+                renderElements();
+                updateModelPreview();
+                updateSelectionInfo();
+            }
+        });
+        
+        // Export to IR function
+        function exportToIR() {
+            const ir = {
+                elements: model.elements.map(element => {
+                    // 计算 layer 值：Web 模型中 layerId 越小层级越高，Export IR 中 layer 越大层级越高
+                    const maxLayerId = Math.max(...model.elements.map(el => el.layerId || 0));
+                    const layer = maxLayerId - (element.layerId || 0) + 1;
+                    
+                    return {
+                        id: element.id,
+                        type: element.role || element.type,
+                        content: element.content,
+                        page: 1,
+                        x: element.x,
+                        y: element.y,
+                        width: element.width,
+                        height: element.height,
+                        rotation: element.rotation || 0,
+                        layer: layer,
+                        font_family_zh: element.chineseFont || undefined,
+                        font_family_en: element.englishFont || undefined,
+                        font_size: element.fontSize || undefined,
+                        color: "#000000",
+                        visible: true
+                    };
+                })
+            };
+            return ir;
+        }
+        
+        // Initialize
+        renderElements();
+        updateModelPreview();
+        updateDebugInfo();
+        updateSelectionInfo();
+        
+        // Expose to window for Playwright testing
+        window.model = model;
+        window.renderElements = renderElements;
+        
+        // Output font information
+        const requestedFontStack = "'Noto Sans SC', 'Source Han Sans SC', 'Inter', 'Noto Sans', sans-serif";
+        const computedFontFamily = window.getComputedStyle(document.body).fontFamily;
+        
+        console.log('=== 字体信息 ===');
+        console.log('Requested font stack:', requestedFontStack);
+        console.log('Computed font family:', computedFontFamily);
+        
+        // Add font info to debug section
+        const fontInfo = document.createElement('div');
+        fontInfo.className = 'debug-item';
+        fontInfo.id = 'debug-font-info';
+        fontInfo.textContent = `字体: ${computedFontFamily}`;
+        debugInfo.appendChild(fontInfo);
+    </script>
+</body>
+</html>

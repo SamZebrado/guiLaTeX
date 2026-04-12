@@ -1,0 +1,54 @@
+{
+  "test": "点击瞬移测试",
+  "timestamp": "2026-04-11T21:05:23.865Z",
+  "steps": [
+    {
+      "step": "记录点击前位置",
+      "position": {
+        "x": 152,
+        "y": 419.5,
+        "width": 162,
+        "height": 52
+      }
+    },
+    {
+      "step": "点击元素中心后",
+      "position": {
+        "x": 152,
+        "y": 419.5,
+        "width": 162,
+        "height": 52
+      }
+    },
+    {
+      "step": "点击元素右下区域后",
+      "position": {
+        "x": 152,
+        "y": 419.5,
+        "width": 162,
+        "height": 52
+      }
+    }
+  ],
+  "teleportationDetected": false,
+  "positionChangedAfterCenter": false,
+  "positionChangedAfterBottomRight": false,
+  "beforePosition": {
+    "x": 152,
+    "y": 419.5,
+    "width": 162,
+    "height": 52
+  },
+  "afterClickCenterPosition": {
+    "x": 152,
+    "y": 419.5,
+    "width": 162,
+    "height": 52
+  },
+  "afterClickBottomRightPosition": {
+    "x": 152,
+    "y": 419.5,
+    "width": 162,
+    "height": 52
+  }
+}
