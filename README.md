@@ -1,106 +1,56 @@
 # guiLaTeX
 
-A visual LaTeX editor with drag-and-drop functionality, enabling users to visually manipulate LaTeX elements without writing code.
+> 🏆 本项目为 [TRAE 创意编程大赛](https://forum.trae.cn/t/topic/7939/12) 参赛作品，目前仍在活跃开发中。
+> 如果你觉得这个项目有意思，欢迎去[论坛帖子](https://forum.trae.cn/t/topic/7939/12)投票加油！❤️
+>
+> 🏆 This project is a submission for the [TRAE Creative Coding Contest](https://forum.trae.cn/t/topic/7939/12) and is still under active development.
+> If you find this project interesting, please visit the [forum post](https://forum.trae.cn/t/topic/7939/12) to vote and cheer us on! ❤️
 
-## Vision
+## 关于本项目 / About
 
-guiLaTeX aims to be:
-- A visual LaTeX editor with true WYSIWYG experience
-- Support drag-and-drop editing of LaTeX elements (like Photoshop)
-- Allow direct formatting changes (font, size, color, layout) like Word
-- Generate high-quality LaTeX output in the background
-- Cross-platform (Windows, macOS, Linux)
+guiLaTeX 是一个可视化 LaTeX 编辑器，支持 PDF 文档的加载、元素级编辑和 LaTeX 代码导出。
 
-## Why guiLaTeX?
+guiLaTeX is a visual LaTeX editor that supports PDF document loading, element-level editing, and LaTeX code export.
 
-Existing LaTeX editors fall into two categories:
-1. **Code editors** (TeXstudio, Texmaker): Require knowledge of LaTeX syntax
-2. **Structure editors** (LyX): Focus on document structure, not visual manipulation
+项目采用 Python + PyQt6 构建 GUI，使用 PyMuPDF 进行 PDF 渲染，并通过 Export IR 中间层实现 LaTeX 代码生成。
 
-guiLaTeX fills the gap by providing:
-- **True visual editing**: Drag and drop elements like in Photoshop
-- **Direct formatting**: Change fonts, colors, sizes like in Word
-- **LaTeX quality**: Professional output powered by LaTeX engine
-- **No code required**: Users don't need to write LaTeX code
+Built with Python + PyQt6 for the GUI, PyMuPDF for PDF rendering, and an Export IR intermediate layer for LaTeX code generation.
 
-## Features (Planned)
+## 界面预览 / Screenshots
 
-### Core Features
-- Visual canvas with drag-and-drop support
-- Element selection and manipulation
-- Property panel for formatting (font, size, color, alignment)
-- Real-time PDF preview
-- Math formula visual editor
-- Table and figure support
+### Qt 桌面端 / Qt Desktop
 
-### Advanced Features
-- Import existing LaTeX documents
-- Export to LaTeX source code
-- Template library
-- Custom themes
-- Plugin system (future)
+![Qt Desktop Screenshot](assets/qt_screenshot.png)
 
-## Technology Stack
+基于 PyQt6 的桌面应用，支持 PDF 可视化编辑、属性面板、LaTeX 源码预览。
 
-### Under Evaluation
-- **Option 1**: Qt 6 (C++ or Python)
-  - Pros: Native performance, cross-platform, mature
-  - Cons: Steeper learning curve, larger binaries
+A PyQt6 desktop application supporting visual PDF editing, property panels, and LaTeX source preview.
 
-- **Option 2**: Electron + React/Vue
-  - Pros: Web technologies, rapid development, large ecosystem
-  - Cons: Larger memory footprint, performance overhead
+### Web 端原型 / Web Prototype
 
-### Core Components
-1. **Visual Editor Canvas**: Element rendering and manipulation
-2. **Property Editor**: Formatting controls
-3. **LaTeX Bridge**: Visual ↔ LaTeX conversion
-4. **Preview System**: Real-time PDF rendering
+![Web Prototype Screenshot](assets/web_screenshot.png)
 
-## Project Status
+基于 HTML/JS 的浏览器端原型，支持元素拖拽、多选旋转、IR 导出。
 
-**Current Phase**: Initialization and Planning
+An HTML/JS browser prototype supporting element dragging, multi-select rotation, and IR export.
 
-See [STATUS.md](STATUS.md) for current state, [PLAN.md](PLAN.md) for development roadmap, and [PROJECT_LOG.md](PROJECT_LOG.md) for development history.
+## 项目结构 / Project Structure
 
-## Development
+- **核心源代码 / Core source**: `src/`（GUI、LaTeX 引擎、数据模型 / GUI, LaTeX engine, data model）
+- **导出核心 / Export core**: `export_core/`（IR Schema、LaTeX 导出器、回归测试样本 / IR Schema, LaTeX exporter, regression samples）
+- **测试套件 / Test suite**: `tests/`（模型层测试、集成测试、smoke test）
+- **Web 原型 / Web prototype**: `web_prototype/`（浏览器端 PDF 编辑原型 / Browser-based PDF editing prototype）
+- **技术文档 / Documentation**: `docs/`（架构设计、API 文档、用户指南 / Architecture, API docs, user guide）
+- **开发经验 / Dev experience**: 多 Agent 协作经验、审计记录、教训总结 / Multi-agent collaboration lessons, audit records
 
-This project uses a structured development workflow with STATUS + LOG + PLAN pattern. See [dev-workflow skill](../.trae/skills/dev-workflow/SKILL.md) for details.
+## 技术栈 / Tech Stack
 
-### Getting Started
+- Python 3.10+
+- PyQt6 — GUI 框架 / GUI framework
+- PyMuPDF (fitz) — PDF 渲染 / PDF rendering
+- LaTeX — 文档编译 / Document compilation
+- Playwright — Web 端自动化测试 / Web automation testing
 
-1. Read [STATUS.md](STATUS.md) to understand current state
-2. Read [PLAN.md](PLAN.md) to see active tasks
-3. Review recent [PROJECT_LOG.md](PROJECT_LOG.md) entries
-4. Choose a task from PLAN.md
-5. Implement with verification
-6. Update STATUS.md and PROJECT_LOG.md
+## 许可 / License
 
-## Requirements
-
-### System Requirements
-- TeX Live 2022 or later (or MiKTeX)
-- C++17 compiler (if using Qt/C++)
-- Python 3.8+ (if using Qt/Python)
-- Node.js 16+ (if using Electron)
-
-### Platform Support
-- macOS 10.15+ (Intel and Apple Silicon)
-- Windows 10+
-- Linux (Ubuntu 20.04+, Fedora, etc.)
-
-## License
-
-To be determined (considering MIT, Apache 2.0, or GPL v3)
-
-## Contributing
-
-Contributions are welcome! Please read the development workflow documentation before contributing.
-
-## Contact
-
-Project repository: `guiLaTeX/`
-
----
-
-**Note**: This project is in early development phase. Features and architecture are subject to change.
+[Apache License 2.0](LICENSE)
