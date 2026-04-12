@@ -11,7 +11,8 @@ __all__ = [
     'LatexExporter',
     'normalize_web_model_to_ir',
     'normalize_qt_model_to_ir',
-    'export_ir_to_latex'
+    'export_ir_to_latex',
+    'validate_ir_roundtripability'
 ]
 
 def normalize_web_model_to_ir(web_model: dict) -> dict:
@@ -40,9 +41,18 @@ def _convert_web_element(web_element: dict) -> dict:
     """
     将单个 Web 元素转换为 IR 元素
     """
+    # 类型映射：Web 类型 -> Core canonical 类型
+    type_mapping = {
+        'body': 'paragraph',
+        'formula': 'equation'
+    }
+    
+    element_type = web_element.get('type', 'textbox')
+    canonical_type = type_mapping.get(element_type, element_type)
+    
     return {
         'id': web_element.get('id', ''),
-        'type': web_element.get('type', 'textbox'),
+        'type': canonical_type,
         'content': web_element.get('text', web_element.get('content', '')),
         'page': 1,
         'x': web_element.get('x', 0),
@@ -141,3 +151,166 @@ def export_ir_to_latex(ir: dict) -> str:
     """
     exporter = LatexExporter()
     return exporter.export(ir)
+
+def validate_ir_roundtripability(ir_data: dict) -> dict:
+    """
+    验证 IR 的 roundtripability（往返能力）
+    
+    Args:
+        ir_data: Export IR 格式数据
+    
+    Returns:
+        验证结果字典，包含 ok / supported / issues / severity / message
+    """
+    result = {
+        "ok": True,
+        "supported": "full",
+        "issues": [],
+        "severity": "low",
+        "message": "IR 验证通过"
+    }
+    
+    # 必需字段检查
+    required_root_fields = ["elements"]
+    for field in required_root_fields:
+        if field not in ir_data:
+            result["ok"] = False
+            result["supported"] = "unsupported"
+            result["issues"].append({
+                "field": field,
+                "severity": "critical",
+                "message": f"缺少必需的根字段: {field}"
+            })
+            result["severity"] = "critical"
+            result["message"] = "IR 缺少必需字段"
+            return result
+    
+    elements = ir_data.get("elements", [])
+    
+    if not elements:
+        result["ok"] = False
+        result["supported"] = "partial"
+        result["issues"].append({
+            "field": "elements",
+            "severity": "warning",
+            "message": "elements 列表为空"
+        })
+        result["severity"] = "warning"
+        result["message"] = "IR 包含空元素列表"
+        return result
+    
+    # 支持的元素类型
+    supported_types = {"title", "author", "paragraph", "textbox", "equation", "image"}
+    
+    # 每个元素的必需字段
+    required_element_fields = [
+        "id", "type", "content", "page", 
+        "x", "y", "width", "height", 
+        "rotation", "layer", "visible"
+    ]
+    
+    for idx, element in enumerate(elements):
+        element_id = element.get("id", f"element_{idx}")
+        
+        # 检查必需字段
+        for field in required_element_fields:
+            if field not in element:
+                result["ok"] = False
+                result["supported"] = "partial"
+                result["issues"].append({
+                    "element": element_id,
+                    "field": field,
+                    "severity": "error",
+                    "message": f"元素 {element_id} 缺少必需字段: {field}"
+                })
+                if result["severity"] != "critical":
+                    result["severity"] = "error"
+        
+        # 检查字段值的有效性
+        # font_size 不能为 None
+        if "font_size" in element and element["font_size"] is None:
+            result["ok"] = False
+            result["supported"] = "partial"
+            result["issues"].append({
+                "element": element_id,
+                "field": "font_size",
+                "severity": "error",
+                "message": f"元素 {element_id} 的 font_size 不能为 None"
+            })
+            if result["severity"] != "critical":
+                result["severity"] = "error"
+        
+        # 数值字段必须是数字
+        numeric_fields = ["page", "x", "y", "width", "height", "rotation", "layer", "font_size"]
+        for field in numeric_fields:
+            if field in element and element[field] is not None:
+                if not isinstance(element[field], (int, float)):
+                    result["ok"] = False
+                    result["supported"] = "partial"
+                    result["issues"].append({
+                        "element": element_id,
+                        "field": field,
+                        "severity": "error",
+                        "message": f"元素 {element_id} 的 {field} 必须是数字"
+                    })
+                    if result["severity"] != "critical":
+                        result["severity"] = "error"
+        
+        # 检查元素类型是否支持
+        element_type = element.get("type")
+        if element_type and element_type not in supported_types:
+            result["ok"] = False
+            result["supported"] = "partial"
+            result["issues"].append({
+                "element": element_id,
+                "field": "type",
+                "severity": "warning",
+                "message": f"元素 {element_id} 使用了不支持的类型: {element_type}"
+            })
+            if result["severity"] not in ["critical", "error"]:
+                result["severity"] = "warning"
+        
+        # 检查 group transform 语义相关的不支持字段
+        unsupported_group_fields = ["group_id", "group_rotation", "pivot", "transform_matrix", "scale", "skew"]
+        for field in unsupported_group_fields:
+            if field in element:
+                result["ok"] = False
+                result["supported"] = "unsupported"
+                result["issues"].append({
+                    "element": element_id,
+                    "field": field,
+                    "severity": "critical",
+                    "message": f"元素 {element_id} 包含不支持的 group transform 字段: {field}"
+                })
+                result["severity"] = "critical"
+                result["message"] = "IR 包含不支持的 group transform 语义"
+                return result
+    
+    # 检查是否有多页
+    pages = set()
+    for element in elements:
+        page = element.get("page", 1)
+        pages.add(page)
+    
+    if len(pages) > 1:
+        result["ok"] = False
+        result["supported"] = "partial"
+        result["issues"].append({
+            "field": "page",
+            "severity": "warning",
+            "message": f"检测到 {len(pages)} 页，当前仅支持单页"
+        })
+        if result["severity"] not in ["critical", "error"]:
+            result["severity"] = "warning"
+    
+    # 更新最终消息
+    if result["severity"] == "critical":
+        result["message"] = "IR 包含不支持的特性，无法 roundtrip"
+    elif result["severity"] == "error":
+        result["message"] = "IR 存在错误，但可部分 roundtrip"
+    elif result["severity"] == "warning":
+        result["message"] = "IR 验证通过，但存在部分支持限制"
+    elif result["ok"] and result["supported"] == "full":
+        result["message"] = "IR 验证完全通过，支持完整 roundtrip"
+    
+    return result

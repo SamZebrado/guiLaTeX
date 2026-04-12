@@ -151,7 +151,12 @@ class LatexExporter:
         font_family_en = element.get("font_family_en", "Times New Roman")
         
         # Font command
-        font_cmd = f"\fontsize{{{font_size}}}{{{font_size * 1.2}}}\selectfont"
+        if font_size is None:
+            font_size = 12  # 默认字体大小
+        # 格式化字体大小，避免浮点脏值
+        font_size_int = int(font_size)
+        line_spacing = round(font_size * 1.2, 1)
+        font_cmd = f"\\fontsize{{{font_size_int}}}{{{line_spacing}}}\\selectfont"
         node_attrs.append(f"font={font_cmd}")
         
         # Color
@@ -180,14 +185,14 @@ class LatexExporter:
             # For images, use \includegraphics
             width = element["width"]
             height = element["height"]
-            content = f"\includegraphics[width={width}mm, height={height}mm]{{{sanitized_content}}}"
+            content = f"\\includegraphics[width={width}mm, height={height}mm]{{{sanitized_content}}}"
         else:
             content = sanitized_content
         
         # Build node
         node_attrs_str = ", ".join(node_attrs)
         lines.append(f"  % Layer {layer}: {element_id}")
-        lines.append(f"  \node[{node_attrs_str}]")
+        lines.append(f"  \\node[{node_attrs_str}]")
         lines.append(f"    {position} {{{content}}};")
         
         return lines
