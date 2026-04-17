@@ -64,10 +64,15 @@ def web_to_core_bridge(web_ir_path, output_tex_path):
         return False
 
 def main():
-    # 输入输出路径 - 使用真实浏览器导出的 IR
-    web_ir_path = os.path.join(os.path.dirname(__file__), 'web_real_exported_ir.json')
-    output_dir = os.path.join(os.path.dirname(__file__), '..', 'temp', 'web_to_core')
-    output_tex_path = os.path.join(output_dir, 'web_real_export_output.tex')
+    # 输入输出路径 - 使用命令行参数或默认值
+    if len(sys.argv) == 3:
+        web_ir_path = sys.argv[1]
+        output_tex_path = sys.argv[2]
+    else:
+        # 默认路径 - 使用真实浏览器导出的 IR
+        web_ir_path = os.path.join(os.path.dirname(__file__), 'web_real_exported_ir.json')
+        output_dir = os.path.join(os.path.dirname(__file__), '..', 'temp', 'web_to_core')
+        output_tex_path = os.path.join(output_dir, 'web_real_export_output.tex')
     
     # 执行桥接
     success = web_to_core_bridge(web_ir_path, output_tex_path)
