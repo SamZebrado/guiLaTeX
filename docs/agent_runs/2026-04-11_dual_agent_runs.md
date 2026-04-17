@@ -872,6 +872,77 @@ Web 线现已从“功能完善与验证”推进到：
 
 当前 Web 线最准确的里程碑表述：**已稳定落实统一 UI 模式 v1，固化了 Playwright 回归测试（点击瞬移、多选旋转、Export IR 都通过），证据文件已完整保存，达到可提交的稳定基线**。
 
+### Round 8: 辅线稳盘模式
+
+#### 1. 右侧属性面板滚动 - 已实现
+- **状态**: ✅ 已实现
+- **实现内容**: 为右侧属性面板添加了滚动功能
+- **修改文件**: [index.html](<repo-root>/web_prototype/index.html)
+- **实现细节**:
+  - 添加了 `max-height: calc(100vh - 80px)` 限制
+  - 添加了 `overflow-y: auto` 滚动属性
+  - 确保在窄宽度下仍然可访问
+- **验证状态**: Playwright 测试通过，确认滚动功能正常
+
+#### 2. Playwright regression 固化 - 已增强
+- **状态**: ✅ 已增强
+- **测试脚本**: [web_prototype/playwright_regression_test_v2.js](<repo-root>/web_prototype/playwright_regression_test_v2.js)
+- **测试内容**:
+  - 点击瞬移问题（回归基线）
+  - 多选旋转功能（回归基线）
+  - Export IR 功能检查
+  - PDF 导出按钮检查
+  - 右侧属性面板滚动检查
+- **测试结果**: 所有测试通过
+- **证据文件**:
+  - [regression_test_output_v2.txt](<repo-root>/web_prototype/regression_test_output_v2.txt)
+  - [regression_test_results_v2.json](<repo-root>/web_prototype/regression_test_results_v2.json)
+
+#### 3. Web -> Core 导出评估 - 已明确
+- **状态**: ⚠️ 已评估
+- **当前状态**: Web 可导出 IR/JSON，可通过 bridge 脚本调用 Core 生成 LaTeX
+- **最小桥接层**: web_to_core_bridge.py
+- **接口需求**: ExportCore 的 `normalize_web_model_to_ir` 和 `export_ir_to_latex` 函数
+- **最小工程动作**: 
+  1. 运行 `run_real_browser_export.py` 脚本
+  2. 该脚本会使用 Playwright 从浏览器导出 IR
+  3. 调用 bridge 脚本生成 LaTeX
+  4. 保存所有证据文件
+
+#### 4. 默认字体列表 - 已确认
+- **状态**: ✅ 已确认
+- **中文字体**: Noto Sans SC, Source Han Sans SC
+- **英文字体**: Inter, Noto Sans, Sans Serif
+- **所有字体**: 均为开源/免费可商用字体
+
+#### 5. 统一 UI 模式 v1 - 已保持
+- **状态**: ✅ 已保持
+- **UI 结构**:
+  - 顶部主工具栏（分组：文件/编辑/排列/视图）
+  - 主区：画布 + 右侧属性面板
+  - 右侧属性面板（分组：选中信息/内容/几何/旋转/图层编号/字体/对象专属属性/模型预览/调试信息）
+- **中文标签**: 所有标签已统一为中文
+- **响应式布局**: 1200px 以下切换为垂直布局，700px 以下画布缩小
+
+#### 6. 本轮不再继续推进的内容
+- ✅ 没有大扩功能
+- ✅ 没有发明新 UI 模式
+- ✅ 没有碰 Qt 文件
+- ✅ 没有碰 ExportCore 核心文件
+- ✅ 没有在没有浏览器级证据时写“已修复”
+- ✅ 没有抢主线去做大规模 Core 集成
+
+#### 7. 结论
+Web 线现已从“收口提交轮”推进到：
+1. ✅ 右侧属性面板滚动功能已实现
+2. ✅ Playwright regression 已增强并固化（包含新的滚动测试）
+3. ✅ 所有回归测试通过（点击瞬移、多选旋转、Export IR、PDF 导出、面板滚动）
+4. ✅ Web -> Core 导出路径已明确（通过 bridge 脚本）
+5. ✅ 统一 UI 模式 v1 已保持稳定
+6. ✅ 默认字体列表只保留开源/免费可商用字体
+
+当前 Web 线最准确的里程碑表述：**已实现右侧属性面板滚动功能，增强并固化了 Playwright 回归测试（所有测试通过），明确了 Web -> Core 导出路径，保持了统一 UI 模式 v1 的稳定，默认字体列表安全**。
+
 ## ExportCore
 
 ### Round 1
