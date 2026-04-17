@@ -27,7 +27,7 @@ class LatexExporter:
         latex_parts.append("\\begin{document}")
         
         # Metadata / 注释区
-        latex_parts.append(self._generate_metadata())
+        latex_parts.append(self._generate_metadata(ir))
         
         # Optional semantic summary 区
         latex_parts.append(self._generate_semantic_summary(sorted_elements))
@@ -51,14 +51,40 @@ class LatexExporter:
 \\usepackage{amsmath}
 """
     
-    def _generate_metadata(self) -> str:
+    def _generate_metadata(self, ir: Dict[str, Any]) -> str:
         """Generate metadata section"""
+        import json
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        return f"""% Metadata / 注释区
-% Exported by guiLaTeX ExportCore
-% Export date: {now}
-% Page size: A4 (210mm × 297mm)
-"""
+        
+        # 构建元数据
+        metadata = {
+            "export_date": now,
+            "page_size": "A4 (210mm × 297mm)",
+            "exporter": "guiLaTeX ExportCore",
+            "version": "1.0",
+            "ir": ir  # 嵌入完整的 IR 数据用于导回
+        }
+        
+        # 转换为 JSON 字符串并添加注释标记
+        json_metadata = json.dumps(metadata, ensure_ascii=False, indent=2)
+        
+        # 构建元数据字符串
+        metadata_lines = [
+            "% Metadata / 注释区",
+            "% Exported by guiLaTeX ExportCore",
+            f"% Export date: {now}",
+            "% Page size: A4 (210mm × 297mm)",
+            "% IR Metadata for roundtrip:",
+            "% BEGIN_IR_METADATA",
+        ]
+        
+        # 添加 JSON 元数据，每行前加 %
+        for line in json_metadata.split('\n'):
+            metadata_lines.append(f"% {line}")
+        
+        metadata_lines.append("% END_IR_METADATA")
+        
+        return "\n".join(metadata_lines)
     
     def _generate_semantic_summary(self, elements: List[Dict[str, Any]]) -> str:
         """Generate semantic summary section"""

@@ -12,6 +12,9 @@ __all__ = [
     'normalize_web_model_to_ir',
     'normalize_qt_model_to_ir',
     'export_ir_to_latex',
+    'import_own_exported_tex_to_ir',
+    'validate_tex_profile',
+    'extract_embedded_ir_from_tex',
     'validate_ir_roundtripability'
 ]
 
@@ -327,3 +330,121 @@ def validate_ir_roundtripability(ir_data: dict) -> dict:
         result["message"] = "IR 验证完全通过，支持完整 roundtrip"
     
     return result
+
+def import_own_exported_tex_to_ir(tex_content: str) -> dict:
+    """
+    从自家导出的 LaTeX 导回 IR
+    
+    Args:
+        tex_content: LaTeX 内容
+    
+    Returns:
+        导回的 IR 数据
+    
+    Raises:
+        ValueError: 如果无法从 tex 中提取 IR
+    """
+    # 提取嵌入的 IR 元数据
+    ir_data = extract_embedded_ir_from_tex(tex_content)
+    
+    # 验证提取的 IR
+    validation_result = validate_ir_roundtripability(ir_data)
+    if not validation_result["ok"]:
+        raise ValueError(f"Extracted IR validation failed: {validation_result['message']}")
+    
+    return ir_data
+
+def validate_tex_profile(tex_content: str) -> dict:
+    """
+    验证 LaTeX 是否符合 Conforming LaTeX Profile v1
+    
+    Args:
+        tex_content: LaTeX 内容
+    
+    Returns:
+        验证结果字典，包含 ok / issues / message
+    """
+    result = {
+        "ok": True,
+        "issues": [],
+        "message": "Tex 符合 Conforming LaTeX Profile v1"
+    }
+    
+    # 检查必要的结构
+    required_sections = [
+        "% Preamble / 宏包区",
+        "% Metadata / 注释区",
+        "% IR Metadata for roundtrip:",
+        "% BEGIN_IR_METADATA",
+        "% END_IR_METADATA",
+        "\\begin{document}",
+        "\\end{document}"
+    ]
+    
+    for section in required_sections:
+        if section not in tex_content:
+            result["ok"] = False
+            result["issues"].append(f"Missing required section: {section}")
+    
+    # 检查嵌入的 IR 元数据
+    try:
+        ir_data = extract_embedded_ir_from_tex(tex_content)
+    except Exception as e:
+        result["ok"] = False
+        result["issues"].append(f"Failed to extract IR metadata: {str(e)}")
+    
+    if not result["ok"]:
+        result["message"] = "Tex 不符合 Conforming LaTeX Profile v1"
+    
+    return result
+
+def extract_embedded_ir_from_tex(tex_content: str) -> dict:
+    """
+    从 LaTeX 中提取嵌入的 IR 元数据
+    
+    Args:
+        tex_content: LaTeX 内容
+    
+    Returns:
+        提取的 IR 数据
+    
+    Raises:
+        ValueError: 如果无法提取 IR 元数据
+    """
+    import json
+    
+    # 查找 IR 元数据的开始和结束标记
+    start_marker = "% BEGIN_IR_METADATA"
+    end_marker = "% END_IR_METADATA"
+    
+    start_idx = tex_content.find(start_marker)
+    if start_idx == -1:
+        raise ValueError("No IR metadata found in tex content")
+    
+    end_idx = tex_content.find(end_marker, start_idx)
+    if end_idx == -1:
+        raise ValueError("Incomplete IR metadata in tex content")
+    
+    # 提取元数据部分
+    metadata_section = tex_content[start_idx + len(start_marker):end_idx].strip()
+    
+    # 移除每行的 % 前缀
+    lines = metadata_section.split('\n')
+    json_lines = []
+    for line in lines:
+        if line.startswith('%'):
+            json_line = line[1:].strip()
+            if json_line:
+                json_lines.append(json_line)
+    
+    # 重建 JSON 字符串
+    json_str = '\n'.join(json_lines)
+    
+    try:
+        metadata = json.loads(json_str)
+        ir_data = metadata.get('ir')
+        if not ir_data:
+            raise ValueError("No IR data found in metadata")
+        return ir_data
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse IR metadata: {str(e)}")
