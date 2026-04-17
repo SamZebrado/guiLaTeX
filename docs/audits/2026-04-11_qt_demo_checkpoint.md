@@ -32,6 +32,10 @@
   - 调用的 Core 函数：
     - normalize_qt_model_to_ir(...)
     - export_ir_to_latex(...)
+- ✅ 导入 LaTeX 功能已实现
+  - 导入 LaTeX 按钮真实调用 Core 函数
+  - 调用的 Core 函数：
+    - import_own_exported_tex_to_ir(...)
 - ✅ 真实生成 .tex 文件
 - ✅ 保留导出 IR 能力
 - ✅ 使用 Core 作为唯一 tex 导出主路径
@@ -60,6 +64,7 @@
 - tests/qt_ui_smoke_test.py：UI 烟雾测试
 - tests/qt_core_smoke_test.py：Core 集成测试
 - tests/qt_code_verification.py：代码验证测试
+- tests/qt_roundtrip_test.py：Roundtrip 测试（导出 -> 导入）
 
 ### 导出文件路径
 - IR 导出：temp/guiLaTeX_export_ir.json
@@ -78,6 +83,8 @@
 - ✅ 复制/粘贴：生成新 ID 且轻微偏移
 - ✅ 旋转：字段进入模型，绘制链读取 rotation
 - ✅ 导出：Qt 正式导出按钮真实调用 Core，生成 .tex
+- ✅ 导入：Qt 正式导入按钮真实调用 Core，导回元素
+- ✅ Roundtrip：导出 -> 导入 完整流程测试通过
 - ✅ 右侧属性面板：可滚动
 
 ## 未完成项

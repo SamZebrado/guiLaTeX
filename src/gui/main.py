@@ -120,6 +120,11 @@ class MainWindow(QMainWindow):
         export_latex_action.triggered.connect(self.export_latex)
         file_menu.addAction(export_latex_action)
         
+        import_latex_action = QAction("导入 LaTeX", self)
+        import_latex_action.setShortcut("Ctrl+I")
+        import_latex_action.triggered.connect(self.import_latex)
+        file_menu.addAction(import_latex_action)
+        
         export_pdf_action = QAction("导出 PDF", self)
         export_pdf_action.setShortcut("Ctrl+E")
         export_pdf_action.triggered.connect(self.export_document)
@@ -435,7 +440,7 @@ This is another paragraph that you can edit.
         """Export model to LaTeX via Core"""
         try:
             # Import Core functions
-            from export.core import normalize_qt_model_to_ir, export_ir_to_latex
+            from export_core import normalize_qt_model_to_ir, export_ir_to_latex
             
             # Get IR data from PDF canvas
             if self.pdf_canvas:
@@ -455,11 +460,20 @@ This is another paragraph that you can edit.
                     with open(latex_path, 'w', encoding='utf-8') as f:
                         f.write(latex_code)
                     
+                    # Also save a copy to screenshots directory for evidence
+                    screenshots_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'docs', 'contest_evidence', 'screenshots')
+                    os.makedirs(screenshots_dir, exist_ok=True)
+                    evidence_path = os.path.join(screenshots_dir, 'qt_latex_export.tex')
+                    
+                    with open(evidence_path, 'w', encoding='utf-8') as f:
+                        f.write(latex_code)
+                    
                     # Show success message
                     from PyQt6.QtWidgets import QMessageBox
                     QMessageBox.information(self, "导出 LaTeX", 
                         f"LaTeX 已成功导出到:\n{latex_path}")
                     print(f"Exported LaTeX to: {latex_path}")
+                    print(f"Evidence saved to: {evidence_path}")
                 else:
                     from PyQt6.QtWidgets import QMessageBox
                     QMessageBox.warning(self, "导出 LaTeX", "获取 IR 数据失败")
@@ -467,6 +481,73 @@ This is another paragraph that you can edit.
             from PyQt6.QtWidgets import QMessageBox
             QMessageBox.warning(self, "导出 LaTeX", f"导出失败:\n{str(e)}")
             print(f"Error exporting LaTeX: {e}")
+    
+    def import_latex(self):
+        """Import LaTeX via Core"""
+        try:
+            # Import Core functions
+            from export_core import import_own_exported_tex_to_ir
+            
+            # Open file dialog to select LaTeX file
+            from PyQt6.QtWidgets import QFileDialog, QMessageBox
+            options = QFileDialog.Options()
+            options |= QFileDialog.Option.ReadOnly
+            file_path, _ = QFileDialog.getOpenFileName(
+                self, "选择 LaTeX 文件", "", "LaTeX Files (*.tex);;All Files (*)", options=options
+            )
+            
+            if file_path:
+                # Read LaTeX content
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    latex_content = f.read()
+                
+                # Import LaTeX to IR
+                ir_data = import_own_exported_tex_to_ir(latex_content)
+                
+                # Update PDF canvas with imported elements
+                if self.pdf_canvas and self.pdf_canvas.page_widget:
+                    # Clear existing elements
+                    self.pdf_canvas.page_widget.memory_elements = []
+                    
+                    # Convert IR elements to memory elements
+                    for ir_element in ir_data.get('elements', []):
+                        memory_element = {
+                            'id': ir_element.get('id', ''),
+                            'type': ir_element.get('type', 'text'),
+                            'text': ir_element.get('content', ''),
+                            'x': ir_element.get('x', 0),
+                            'y': ir_element.get('y', 0),
+                            'width': ir_element.get('width', 0),
+                            'height': ir_element.get('height', 0),
+                            'font_size': ir_element.get('font_size', 12),
+                            'font_family': ir_element.get('font_family_zh', 'Noto Sans SC'),
+                            'font_family_zh': ir_element.get('font_family_zh', 'Noto Sans SC'),
+                            'font_family_en': ir_element.get('font_family_en', 'Inter'),
+                            'rotation': ir_element.get('rotation', 0),
+                            'layer': ir_element.get('layer', 1),
+                            'layer_id': f'layer_{10 - ir_element.get("layer", 1)}',
+                            'original_width': ir_element.get('width', 0),
+                            'original_height': ir_element.get('height', 0)
+                        }
+                        self.pdf_canvas.page_widget.memory_elements.append(memory_element)
+                    
+                    # Sync to model
+                    self.pdf_canvas.page_widget._sync_to_model()
+                    
+                    # Update view
+                    self.pdf_canvas.page_widget.is_dirty = True
+                    self.pdf_canvas.page_widget.update()
+                    
+                    # Show success message
+                    QMessageBox.information(self, "导入 LaTeX", 
+                        f"LaTeX 已成功导入，共 {len(ir_data.get('elements', []))} 个元素")
+                    print(f"Imported LaTeX from: {file_path}")
+                else:
+                    QMessageBox.warning(self, "导入 LaTeX", "PDF 画布未初始化")
+        except Exception as e:
+            from PyQt6.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "导入 LaTeX", f"导入失败:\n{str(e)}")
+            print(f"Error importing LaTeX: {e}")
     
     def move_element_up(self):
         """Move selected element up"""
