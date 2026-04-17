@@ -532,6 +532,64 @@ Qt 线现已从"Qt 对接 Core 的预接入准备"推进到：
 
 当前 Qt 线最准确的里程碑表述：**已如实记录 duplication 解决过程（借助外部大模型分析），实施了颜色选择器黑盘问题的缓解方案，完成了离屏渲染验证证明 rotation 进入了绘制结果，导出了包含 rotation 的 Qt IR JSON，完成了 Qt -> Core 最小 smoke test（真实调用了 ExportCore 函数），明确了 font_family_zh / font_family_en 映射策略，测试已正式化，证据链已完整整理，复制/粘贴功能可用，字体列表安全，启动命令明确。Qt 线现已具备接 Core 的最小适配能力，测试已正式化，证据链已完整整理，可重复复核**。
 
+### Round 10: 统一 UI 模式 v1 跟进与 Core 集成
+
+#### 1. 统一 UI 模式 v1 跟进
+- **状态**: ✅ 已完成
+- **实现方案**:
+  - 更新了顶部主工具栏，分组清晰，使用中文标签
+  - 主区布局：左侧画布，右侧固定属性面板
+  - 右侧属性面板分组：选中信息 / 内容 / 几何 / 字体 / 对象专属属性 / 调试信息
+  - 属性面板添加了 QScrollArea，支持鼠标滚轮滚动
+  - 面向用户界面全部中文
+  - 默认字体列表只保留安全字体：Noto Sans SC, Source Han Sans SC, Inter, Noto Sans, Sans Serif
+- **修改文件**:
+  - [main.py](<repo-root>/src/gui/main.py)
+  - [properties.py](<repo-root>/src/gui/properties.py)
+
+#### 2. Core 集成正式化
+- **状态**: ✅ 已完成
+- **实现方案**:
+  - 在 MainWindow 中添加了 export_latex 方法
+  - 真实调用了 ExportCore 的两个核心函数：
+    1. `normalize_qt_model_to_ir(qt_model)`
+    2. `export_ir_to_latex(ir_data)`
+  - 真实生成了 .tex 文件
+  - 保留了导出 IR 能力
+  - 使用 Core 作为唯一 tex 导出主路径
+- **修改文件**:
+  - [main.py](<repo-root>/src/gui/main.py)
+
+#### 3. 最小可用编辑体验
+- **状态**: ✅ 已完善
+- **实现内容**:
+  - 旋转控件可见、作用链路真实
+  - 复制 / 粘贴真实可用，生成新 id 且轻微偏移
+  - duplication 不回退
+  - 导出 IR / tex 的路径清楚
+  - 保存 / 导出语义清楚，不混淆
+- **修改文件**:
+  - [main.py](<repo-root>/src/gui/main.py)
+
+#### 4. 测试正式化
+- **状态**: ✅ 已完成
+- **实现方案**:
+  - 创建了 ui_smoke 测试脚本：[tests/qt_ui_smoke_test.py](<repo-root>/tests/qt_ui_smoke_test.py)
+  - 创建了 core_smoke 测试脚本：[tests/qt_core_smoke_test.py](<repo-root>/tests/qt_core_smoke_test.py)
+  - 创建了代码验证脚本：[tests/qt_code_verification.py](<repo-root>/tests/qt_code_verification.py)
+- **验证状态**: 代码验证通过，测试脚本已创建
+
+#### 5. 结论
+Qt 线现已从"测试正式化轮"推进到：
+1. ✅ 统一 UI 模式 v1 已跟进，界面布局和功能与 Web 保持一致
+2. ✅ Core 集成已正式化，真实调用了 ExportCore 函数生成 .tex 文件
+3. ✅ 最小可用编辑体验已完善，包括旋转控件、复制/粘贴等核心功能
+4. ✅ 测试已正式化，创建了完整的测试脚本
+5. ✅ 字体列表安全，只包含开源/免费可商用字体
+6. ✅ 启动命令明确
+
+当前 Qt 线最准确的里程碑表述：**已跟进 Web 的统一 UI 模式 v1，正式集成了 Core 导出功能，完善了最小可用编辑体验，创建了完整的测试脚本，达到了"v1 基本能用版"的标准**。
+
 ## Web 线
 
 ### Round 1: 核心问题修复

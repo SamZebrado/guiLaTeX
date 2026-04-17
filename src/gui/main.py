@@ -97,100 +97,97 @@ class MainWindow(QMainWindow):
         """Create menu bar"""
         menu_bar = self.menuBar()
         
-        # File menu
-        file_menu = menu_bar.addMenu("File")
+        # 文件菜单
+        file_menu = menu_bar.addMenu("文件")
         
-        new_action = QAction("New", self)
-        new_action.setShortcut("Ctrl+N")
-        file_menu.addAction(new_action)
+        open_project_action = QAction("打开项目", self)
+        open_project_action.setShortcut("Ctrl+O")
+        file_menu.addAction(open_project_action)
         
-        open_action = QAction("Open", self)
-        open_action.setShortcut("Ctrl+O")
-        file_menu.addAction(open_action)
-        
-        save_action = QAction("Save", self)
-        save_action.setShortcut("Ctrl+S")
-        file_menu.addAction(save_action)
-        
-        save_as_action = QAction("Save As", self)
-        file_menu.addAction(save_as_action)
+        save_project_action = QAction("保存项目", self)
+        save_project_action.setShortcut("Ctrl+S")
+        file_menu.addAction(save_project_action)
         
         file_menu.addSeparator()
         
-        export_action = QAction("Export", self)
-        export_action.setShortcut("Ctrl+E")
-        export_action.triggered.connect(self.export_document)
-        file_menu.addAction(export_action)
-        
-        export_ir_action = QAction("Export IR", self)
+        export_ir_action = QAction("导出 IR", self)
         export_ir_action.setShortcut("Ctrl+Shift+E")
         export_ir_action.triggered.connect(self.export_ir)
         file_menu.addAction(export_ir_action)
         
-        preview_action = QAction("Preview PDF", self)
-        preview_action.setShortcut("F5")
-        preview_action.triggered.connect(self.preview_document)
-        file_menu.addAction(preview_action)
+        export_latex_action = QAction("导出 LaTeX", self)
+        export_latex_action.setShortcut("Ctrl+L")
+        export_latex_action.triggered.connect(self.export_latex)
+        file_menu.addAction(export_latex_action)
+        
+        export_pdf_action = QAction("导出 PDF", self)
+        export_pdf_action.setShortcut("Ctrl+E")
+        export_pdf_action.triggered.connect(self.export_document)
+        file_menu.addAction(export_pdf_action)
         
         file_menu.addSeparator()
         
-        exit_action = QAction("Exit", self)
+        exit_action = QAction("退出", self)
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
         
-        # Edit menu
-        edit_menu = menu_bar.addMenu("Edit")
+        # 编辑菜单
+        edit_menu = menu_bar.addMenu("编辑")
         
-        undo_action = QAction("Undo", self)
-        undo_action.setShortcut("Ctrl+Z")
-        edit_menu.addAction(undo_action)
-        
-        redo_action = QAction("Redo", self)
-        redo_action.setShortcut("Ctrl+Y")
-        edit_menu.addAction(redo_action)
-        
-        edit_menu.addSeparator()
-        
-        cut_action = QAction("Cut", self)
-        cut_action.setShortcut("Ctrl+X")
-        edit_menu.addAction(cut_action)
-        
-        copy_action = QAction("Copy", self)
+        copy_action = QAction("复制", self)
         copy_action.setShortcut("Ctrl+C")
         copy_action.triggered.connect(self.copy_element)
         edit_menu.addAction(copy_action)
         
-        paste_action = QAction("Paste", self)
+        paste_action = QAction("粘贴", self)
         paste_action.setShortcut("Ctrl+V")
         paste_action.triggered.connect(self.paste_element)
         edit_menu.addAction(paste_action)
         
-        # View menu
-        view_menu = menu_bar.addMenu("View")
+        delete_action = QAction("删除", self)
+        delete_action.setShortcut("Del")
+        delete_action.triggered.connect(self.delete_element)
+        edit_menu.addAction(delete_action)
         
-        zoom_in_action = QAction("Zoom In", self)
+        # 排列菜单
+        arrange_menu = menu_bar.addMenu("排列")
+        
+        move_up_action = QAction("上移", self)
+        move_up_action.triggered.connect(self.move_element_up)
+        arrange_menu.addAction(move_up_action)
+        
+        move_down_action = QAction("下移", self)
+        move_down_action.triggered.connect(self.move_element_down)
+        arrange_menu.addAction(move_down_action)
+        
+        move_to_top_action = QAction("移到顶部", self)
+        move_to_top_action.triggered.connect(self.move_element_to_top)
+        arrange_menu.addAction(move_to_top_action)
+        
+        move_to_bottom_action = QAction("移到底部", self)
+        move_to_bottom_action.triggered.connect(self.move_element_to_bottom)
+        arrange_menu.addAction(move_to_bottom_action)
+        
+        # 变换菜单
+        transform_menu = menu_bar.addMenu("变换")
+        
+        # 视图菜单
+        view_menu = menu_bar.addMenu("视图")
+        
+        zoom_in_action = QAction("放大", self)
         zoom_in_action.setShortcut("Ctrl++")
+        zoom_in_action.triggered.connect(self.zoom_in)
         view_menu.addAction(zoom_in_action)
         
-        zoom_out_action = QAction("Zoom Out", self)
+        zoom_out_action = QAction("缩小", self)
         zoom_out_action.setShortcut("Ctrl+-")
+        zoom_out_action.triggered.connect(self.zoom_out)
         view_menu.addAction(zoom_out_action)
         
-        view_menu.addSeparator()
-        
-        preview_action = QAction("Toggle Preview", self)
-        preview_action.setShortcut("F5")
-        view_menu.addAction(preview_action)
-        
-        # Help menu
-        help_menu = menu_bar.addMenu("Help")
-        
-        about_action = QAction("About", self)
-        help_menu.addAction(about_action)
-        
-        documentation_action = QAction("Documentation", self)
-        help_menu.addAction(documentation_action)
+        reset_view_action = QAction("重置视图", self)
+        reset_view_action.triggered.connect(self.reset_view)
+        view_menu.addAction(reset_view_action)
     
 
     
@@ -263,15 +260,24 @@ This is another paragraph that you can edit.
             # Update font size
             elif property_name == 'font_size':
                 self.pdf_canvas.page_widget.update_element_font_size(element_id, value)
-            # Update font family
-            elif property_name == 'font_family':
+            # Update font family zh
+            elif property_name == 'font_family_zh':
                 element = self.pdf_canvas.page_widget.get_element_by_id(element_id)
                 if element:
-                    element['font_family'] = value
+                    element['font_family_zh'] = value
                     self.pdf_canvas.page_widget.is_dirty = True
                     self.pdf_canvas.page_widget.update()
                     self.pdf_canvas.page_widget._sync_to_model()
-                    print(f"Updated element font family: {value}")
+                    print(f"Updated element font family zh: {value}")
+            # Update font family en
+            elif property_name == 'font_family_en':
+                element = self.pdf_canvas.page_widget.get_element_by_id(element_id)
+                if element:
+                    element['font_family_en'] = value
+                    self.pdf_canvas.page_widget.is_dirty = True
+                    self.pdf_canvas.page_widget.update()
+                    self.pdf_canvas.page_widget._sync_to_model()
+                    print(f"Updated element font family en: {value}")
             # Update position
             elif property_name == 'position':
                 x, y = value
@@ -280,6 +286,17 @@ This is another paragraph that you can edit.
                     element['x'] = x
                     element['y'] = y
                     self.pdf_canvas.page_widget.update()
+            # Update geometry
+            elif property_name == 'geometry':
+                width, height = value
+                element = self.pdf_canvas.page_widget.get_element_by_id(element_id)
+                if element:
+                    element['width'] = width
+                    element['height'] = height
+                    self.pdf_canvas.page_widget.is_dirty = True
+                    self.pdf_canvas.page_widget.update()
+                    self.pdf_canvas.page_widget._sync_to_model()
+                    print(f"Updated element geometry: {width}x{height}")
             # Update rotation
             elif property_name == 'rotation':
                 element = self.pdf_canvas.page_widget.get_element_by_id(element_id)
@@ -289,6 +306,15 @@ This is another paragraph that you can edit.
                     self.pdf_canvas.page_widget.update()
                     self.pdf_canvas.page_widget._sync_to_model()
                     print(f"Updated element rotation: {value}")
+            # Update layer
+            elif property_name == 'layer':
+                element = self.pdf_canvas.page_widget.get_element_by_id(element_id)
+                if element:
+                    element['layer'] = value
+                    self.pdf_canvas.page_widget.is_dirty = True
+                    self.pdf_canvas.page_widget.update()
+                    self.pdf_canvas.page_widget._sync_to_model()
+                    print(f"Updated element layer: {value}")
             
             # Sync changes to LaTeX view
             self.sync_to_latex()
@@ -365,6 +391,30 @@ This is another paragraph that you can edit.
             self.pdf_canvas.paste_element(self.copied_element)
             print("元素已粘贴到文档")
     
+    def delete_element(self):
+        """Delete selected element"""
+        if self.pdf_canvas and self.pdf_canvas.page_widget and self.pdf_canvas.page_widget.selected_element:
+            element_id = self.pdf_canvas.page_widget.selected_element['id']
+            # Remove element from memory_elements
+            for i, elem in enumerate(self.pdf_canvas.page_widget.memory_elements):
+                if elem['id'] == element_id:
+                    self.pdf_canvas.page_widget.memory_elements.pop(i)
+                    break
+            # Remove from layer
+            for layer in self.pdf_canvas.page_widget.layers:
+                if element_id in layer['elements']:
+                    layer['elements'].remove(element_id)
+                    break
+            # Clear selection
+            self.pdf_canvas.page_widget.selected_element = None
+            # Mark as dirty
+            self.pdf_canvas.page_widget.is_dirty = True
+            # Update view
+            self.pdf_canvas.page_widget.update()
+            # Sync to model
+            self.pdf_canvas.page_widget._sync_to_model()
+            print(f"元素 {element_id} 已删除")
+    
     def export_ir(self):
         """Export model to Export IR format"""
         if self.pdf_canvas:
@@ -380,6 +430,80 @@ This is another paragraph that you can edit.
             else:
                 from PyQt6.QtWidgets import QMessageBox
                 QMessageBox.warning(self, "导出 IR", "导出 IR 失败")
+    
+    def export_latex(self):
+        """Export model to LaTeX via Core"""
+        try:
+            # Import Core functions
+            from export.core import normalize_qt_model_to_ir, export_ir_to_latex
+            
+            # Get IR data from PDF canvas
+            if self.pdf_canvas:
+                ir_data = self.pdf_canvas.export_model_to_ir()
+                if ir_data:
+                    # Normalize Qt model to IR
+                    normalized_ir = normalize_qt_model_to_ir(ir_data)
+                    
+                    # Export IR to LaTeX
+                    latex_code = export_ir_to_latex(normalized_ir)
+                    
+                    # Save LaTeX to file
+                    export_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'temp')
+                    os.makedirs(export_dir, exist_ok=True)
+                    latex_path = os.path.join(export_dir, 'guiLaTeX_export.tex')
+                    
+                    with open(latex_path, 'w', encoding='utf-8') as f:
+                        f.write(latex_code)
+                    
+                    # Show success message
+                    from PyQt6.QtWidgets import QMessageBox
+                    QMessageBox.information(self, "导出 LaTeX", 
+                        f"LaTeX 已成功导出到:\n{latex_path}")
+                    print(f"Exported LaTeX to: {latex_path}")
+                else:
+                    from PyQt6.QtWidgets import QMessageBox
+                    QMessageBox.warning(self, "导出 LaTeX", "获取 IR 数据失败")
+        except Exception as e:
+            from PyQt6.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "导出 LaTeX", f"导出失败:\n{str(e)}")
+            print(f"Error exporting LaTeX: {e}")
+    
+    def move_element_up(self):
+        """Move selected element up"""
+        if self.pdf_canvas:
+            self.pdf_canvas.bring_forward()
+    
+    def move_element_down(self):
+        """Move selected element down"""
+        if self.pdf_canvas:
+            self.pdf_canvas.send_backward()
+    
+    def move_element_to_top(self):
+        """Move selected element to top"""
+        if self.pdf_canvas:
+            self.pdf_canvas.bring_to_front()
+    
+    def move_element_to_bottom(self):
+        """Move selected element to bottom"""
+        if self.pdf_canvas:
+            self.pdf_canvas.send_to_back()
+    
+    def zoom_in(self):
+        """Zoom in"""
+        if self.pdf_canvas:
+            self.pdf_canvas.zoom_in()
+    
+    def zoom_out(self):
+        """Zoom out"""
+        if self.pdf_canvas:
+            self.pdf_canvas.zoom_out()
+    
+    def reset_view(self):
+        """Reset view to default zoom"""
+        if self.pdf_canvas:
+            self.pdf_canvas.zoom_scale = 1.0
+            if self.pdf_canvas.page_widget:
+                self.pdf_canvas.page_widget.set_scale(1.0)
 
 
 def main():
