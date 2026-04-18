@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>guiLaTeX — Demo Index</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap');
+  :root { --bg: #FAFAF8; --card: #fff; --ink: #1a1a1a; --muted: #666; --accent: #8B2500; --gold: #C9A84C; --green: #2D6A4F; --blue: #1D4ED8; --border: #E5E5E0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--ink); line-height: 1.7; }
+  .container { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem; }
+
+  .badge { display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 2px; font-weight: 500; letter-spacing: 0.05em; }
+  .badge.stage { background: #FEF3C7; color: #92400E; }
+  .badge.web { background: #DBEAFE; color: #1E40AF; }
+  .badge.qt { background: #EDE9FE; color: #5B21B6; }
+  .badge.core { background: #D1FAE5; color: #065F46; }
+
+  h1 { font-family: 'Noto Serif SC', serif; font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+
+  .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin: 1.5rem 0 2rem; }
+  .status-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; }
+  .status-card h3 { font-size: 0.9rem; margin-bottom: 0.3rem; }
+  .status-card p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+  .note { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 4px; padding: 1rem 1.2rem; font-size: 0.8rem; line-height: 1.6; margin: 1.5rem 0; }
+  .note strong { color: var(--accent); }
+
+  .links { list-style: none; margin: 1.5rem 0; }
+  .links li { border-bottom: 1px solid var(--border); }
+  .links a { display: block; padding: 0.8rem 0; text-decoration: none; color: var(--ink); font-size: 0.9rem; }
+  .links a:hover { color: var(--accent); }
+  .links .desc { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+
+  footer { text-align: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--muted); }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>guiLaTeX <span class="badge stage">v1-candidate · 第一阶段收官区</span></h1>
+  <p class="subtitle">可视化 LaTeX 编辑器 — Visual LaTeX Editor with element-level PDF editing</p>
+
+  <div class="status-grid">
+    <div class="status-card">
+      <h3>🌐 Web <span class="badge web">浏览器级验证</span></h3>
+      <p>独立应用候选版。文本 CRUD、多选旋转、图层管理、IR/PDF 导出。LaTeX 功能依赖 bridge。</p>
+    </div>
+    <div class="status-card">
+      <h3>🖥️ Qt <span class="badge qt">桌面级验证</span></h3>
+      <p>v1-candidate。Roundtrip 闭环已跑通。font_family 有 Core gap。PDF 主路径 blocked。</p>
+    </div>
+    <div class="status-card">
+      <h3>📦 Core <span class="badge core">已封板</span></h3>
+      <p>IR Schema + LaTeX 导出器 + 回归样本齐备。Qt 和 Web 均可接入。</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>⚠️ 口径说明：</strong>Web 的 LaTeX 导入导出依赖 Python bridge 工作流（非浏览器原生）；Qt 存在 font_family Core gap；当前不是最终完整版。
+  </div>
+
+  <h2 style="font-size:1rem;margin:2rem 0 0.8rem;">导航 / Navigation</h2>
+  <ul class="links">
+    <li>
+      <a href="index.html">🏛️ 朝堂风云录 — 开发展示页</a>
+      <div class="desc">AI Agent 协作开发的宫廷风全记录</div>
+    </li>
+    <li>
+      <a href="../docs/release/public_project_overview.md">📋 公开总览 — Public Project Overview</a>
+      <div class="desc">项目状态、证据层级、红线清单</div>
+    </li>
+    <li>
+      <a href="../docs/release/demo_asset_index.md">🗂️ 演示资产索引 — Demo Asset Index</a>
+      <div class="desc">全部截图、JSON、LaTeX 证据的总目录</div>
+    </li>
+    <li>
+      <a href="../docs/release/demo_master_shot_list.md">🎬 总录制脚本 — Master Shot List</a>
+      <div class="desc">16 个 Shot、四幕结构、6-8 分钟录屏指南</div>
+    </li>
+    <li>
+      <a href="../docs/release/forum_update_draft.md">📢 论坛战报草稿 — Forum Update Draft</a>
+      <div class="desc">可直接使用的阶段性更新稿</div>
+    </li>
+    <li>
+      <a href="../docs/release/public_evidence_redaction_map.md">🔒 证据脱敏映射 — Redaction Map</a>
+      <div class="desc">哪些证据已脱敏、哪些仅摘要公开、哪些内部留档</div>
+    </li>
+    <li>
+      <a href="../README.md">📖 README</a>
+      <div class="desc">项目介绍、技术栈、许可证</div>
+    </li>
+  </ul>
+
+  <footer>
+    guiLaTeX · <a href="https://github.com/SamZebrado/guiLaTeX">GitHub</a> · <a href="https://forum.trae.cn/t/topic/7939/12">TRAE 创意编程大赛</a>
+  </footer>
+</div>
+</body>
+</html>
