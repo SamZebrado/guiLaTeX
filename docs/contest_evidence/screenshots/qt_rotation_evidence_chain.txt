@@ -1,0 +1,94 @@
+=== Qt 线 Rotation 证据链整理 ===
+
+## 一、证据链概览
+Rotation 功能从模型到绘制的完整证据链，分为四个阶段：
+1. ✅ rotation 进入模型
+2. ✅ rotation 进入绘制链
+3. ✅ 离屏渲染 before / after / diff
+4. ✅ rotation 进入 IR JSON
+
+## 二、详细证据
+
+### 2.1 rotation 进入模型
+**状态**: ✅ 已验证
+**证据文件**:
+- [temp/guiLaTeX_qt_with_rotation_export_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/temp/guiLaTeX_qt_with_rotation_export_ir.json)
+- [docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json)
+
+**验证内容**:
+- 初始化 demo 元素时包含 rotation 字段
+- _sync_from_model 函数包含 rotation 同步
+- _sync_to_model 函数包含 rotation 同步
+- main.py 的 on_property_changed 函数包含 rotation 属性处理
+- properties.py 包含 rotation 控件和事件处理
+
+**测试文件**:
+- [temp/test_qt_rotation_verification.py](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/temp/test_qt_rotation_verification.py)
+
+### 2.2 rotation 进入绘制链
+**状态**: ✅ 已验证
+**修改文件**:
+- [src/gui/pdf_canvas.py](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/src/gui/pdf_canvas.py) 的 draw_memory_elements 方法
+
+**实现内容**:
+- 在绘制前使用 QTransform 进行旋转变换
+- 旋转中心点为元素中心点
+- 正确读取元素的 rotation 字段
+- 旋转后绘制元素内容
+- 绘制完成后重置变换
+
+### 2.3 离屏渲染 before / after / diff
+**状态**: ✅ 已验证
+**测试文件**:
+- [temp/test_qt_offscreen_rotation.py](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/temp/test_qt_offscreen_rotation.py)
+
+**测试内容**:
+- 使用 QT_QPA_PLATFORM=offscreen 进行离屏渲染
+- 文字对象 rotation=0 时渲染一张图
+- 文字对象 rotation=45 时渲染一张图
+- 图片对象（占位图）rotation=0 时渲染一张图
+- 图片对象（占位图）rotation=30 时渲染一张图
+- 比较像素差异，验证 rotation 是否影响绘制结果
+
+**证据文件**:
+- [qt_rotation_test_text_0.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_text_0.png) - 文字对象 rotation=0
+- [qt_rotation_test_text_45.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_text_45.png) - 文字对象 rotation=45
+- [qt_rotation_test_image_0.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_image_0.png) - 图片对象 rotation=0
+- [qt_rotation_test_image_30.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_image_30.png) - 图片对象 rotation=30
+- [qt_offscreen_rotation_verification.txt](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_offscreen_rotation_verification.txt) - 验证结果日志
+
+**验证结果**:
+- ✅ 文字对象不同像素数: 3335（总像素 60000）
+- ✅ 图片对象不同像素数: 1890
+- ✅ 检测到像素差异，证明 rotation 进入了绘制结果
+
+### 2.4 rotation 进入 IR JSON
+**状态**: ✅ 已验证
+**导出文件**:
+- [temp/guiLaTeX_qt_with_rotation_export_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/temp/guiLaTeX_qt_with_rotation_export_ir.json)
+- [docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json)
+
+**导出内容**:
+- 5 个对象，每个都有不同的 rotation 值
+- demo_title: rotation=15
+- demo_author: rotation=0
+- demo_body: rotation=-10
+- demo_formula: rotation=30
+- demo_image: rotation=45
+
+**覆盖字段**:
+- id, type, content, page
+- x, y, width, height, rotation, layer
+- font_family_zh, font_family_en, font_size, color, visible
+
+## 三、证据总结
+
+| 阶段 | 状态 | 证据 |
+|------|------|------|
+| rotation 进入模型 | ✅ 已验证 | 模型同步代码、测试文件 |
+| rotation 进入绘制链 | ✅ 已验证 | draw_memory_elements 方法 |
+| 离屏渲染验证 | ✅ 已验证 | 4 张对比图片、像素差异统计 |
+| rotation 进入 IR JSON | ✅ 已验证 | IR 导出文件 |
+
+## 四、注意事项
+⚠️ 注意：当前实现了旋转绘制支持和旋转入口，但旋转后的元素选择和调整大小交互尚未完善，这是待完成项。

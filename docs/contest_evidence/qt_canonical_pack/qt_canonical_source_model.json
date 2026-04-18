@@ -1,0 +1,61 @@
+{
+  "elements": [
+    {
+      "id": "canonical_title",
+      "type": "text",
+      "text": "Canonical 标题",
+      "x": 100,
+      "y": 50,
+      "width": 400,
+      "height": 40,
+      "font_size": 24,
+      "font_family": "Noto Sans SC",
+      "font_family_zh": "Noto Sans SC",
+      "font_family_en": "Inter",
+      "rotation": 0,
+      "layer": 1,
+      "layer_id": "layer_1",
+      "color": "#000000",
+      "alignment": "left",
+      "visible": true
+    },
+    {
+      "id": "canonical_paragraph",
+      "type": "text",
+      "text": "这是一段 Canonical 测试文本，包含中英文混合内容：Hello World",
+      "x": 100,
+      "y": 100,
+      "width": 400,
+      "height": 80,
+      "font_size": 12,
+      "font_family": "Noto Sans SC",
+      "font_family_zh": "Noto Sans SC",
+      "font_family_en": "Inter",
+      "rotation": 45,
+      "layer": 2,
+      "layer_id": "layer_2",
+      "color": "#000000",
+      "alignment": "left",
+      "visible": true
+    },
+    {
+      "id": "canonical_formula",
+      "type": "text",
+      "text": "E = mc²",
+      "x": 100,
+      "y": 200,
+      "width": 200,
+      "height": 30,
+      "font_size": 16,
+      "font_family": "Noto Sans",
+      "font_family_zh": "Noto Sans SC",
+      "font_family_en": "Noto Sans",
+      "rotation": 0,
+      "layer": 3,
+      "layer_id": "layer_3",
+      "color": "#000000",
+      "alignment": "left",
+      "visible": true
+    }
+  ]
+}

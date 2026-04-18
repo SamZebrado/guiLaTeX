@@ -1,0 +1,65 @@
+{
+  "test_date": "2026-04-18",
+  "fields": [
+    {
+      "field": "type",
+      "qt_value": "text",
+      "ir_value": "paragraph",
+      "expected_value": "paragraph",
+      "status": "可接受",
+      "attribution": "映射策略",
+      "note": "Qt 'text' → IR 'paragraph' 是预期的映射行为"
+    },
+    {
+      "field": "layer",
+      "qt_value": [
+        1,
+        2,
+        3
+      ],
+      "ir_value": [
+        1,
+        2,
+        3
+      ],
+      "expected_value": [
+        1,
+        2,
+        3
+      ],
+      "status": "必须保住",
+      "attribution": "直接映射",
+      "note": "layer 字段应该完整保住"
+    },
+    {
+      "field": "font_family_zh",
+      "qt_value": "Noto Sans SC",
+      "ir_value": "SimSun",
+      "expected_value": "Noto Sans SC",
+      "status": "不可接受",
+      "attribution": "Core gap",
+      "note": "normalize_qt_model_to_ir 中硬编码为 'SimSun'"
+    },
+    {
+      "field": "font_family_en",
+      "qt_value": [
+        "Inter",
+        "Noto Sans"
+      ],
+      "ir_value": "Times New Roman",
+      "expected_value": [
+        "Inter",
+        "Noto Sans"
+      ],
+      "status": "不可接受",
+      "attribution": "Core gap",
+      "note": "normalize_qt_model_to_ir 中硬编码为 'Times New Roman'"
+    }
+  ],
+  "evidence_files": {
+    "source_model": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_source_model.json",
+    "expected_ir": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_expected_ir.json",
+    "conforming_tex": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_conforming.tex",
+    "readme": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_readme.txt"
+  }
+}

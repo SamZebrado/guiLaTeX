@@ -1,0 +1,13 @@
+=== Qt 离屏渲染验证结果 ===
+
+文字对象 rotation 验证: 通过
+图片对象 rotation 验证: 通过
+
+文字不同像素数: 3335
+图片不同像素数: 1890
+
+保存的文件:
+  - qt_rotation_test_text_0.png
+  - qt_rotation_test_text_45.png
+  - qt_rotation_test_image_0.png
+  - qt_rotation_test_image_30.png

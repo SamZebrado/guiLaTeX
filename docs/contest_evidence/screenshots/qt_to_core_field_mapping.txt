@@ -1,0 +1,148 @@
+=== Qt -> Core 字段对照说明与映射策略 ===
+
+## 一、当前 Qt 模型字段
+Qt 模型目前使用单一数据源，包含以下字段：
+- id: 元素唯一标识符
+- type: 元素类型（text）
+- text: 文本内容
+- x, y: 位置坐标（左上角为原点）
+- width, height: 元素尺寸
+- font_size: 字体大小（磅值）
+- font_family: 单一字体家族（当前仅一个字段）
+- rotation: 旋转角度（度，顺时针为正）
+- layer: 图层编号（数字越大越靠上）
+
+## 二、Core IR 期望字段
+ExportCore 的 IR 格式期望以下完整字段：
+- id: 元素唯一标识符
+- type: 元素类型（title/author/paragraph/equation/image/textbox）
+- content: 元素内容
+- page: 页码（当前固定为 1）
+- x, y: 位置坐标（左上角为原点，单位 mm）
+- width, height: 元素尺寸（单位 mm）
+- rotation: 旋转角度（度，顺时针为正）
+- layer: 图层编号（数字越大越靠上）
+- font_family_zh: 中文字体家族
+- font_family_en: 英文字体家族
+- font_size: 字体大小（磅值）
+- color: 文字颜色（HEX 格式，#RRGGBB）
+- alignment: 文本对齐方式（left/center/right）
+- visible: 元素可见性（布尔值）
+
+## 三、当前字段缺口
+
+### 1. font_family_zh / font_family_en
+**状态**: ⚠️ 部分支持 - 目前使用默认值
+**问题**: Qt 只有单一 `font_family` 字段
+**当前处理**: `normalize_qt_model_to_ir` 目前硬编码默认值：
+- font_family_zh = 'SimSun'
+- font_family_en = 'Times New Roman'
+
+### 2. page
+**状态**: ⚠️ 支持 - 使用默认值
+**当前处理**: `normalize_qt_model_to_ir` 默认为 1
+
+### 3. color
+**状态**: ⚠️ 支持 - 使用默认值
+**当前处理**: `normalize_qt_model_to_ir` 默认为 '#000000'
+
+### 4. alignment
+**状态**: ⚠️ 支持 - 使用默认值
+**当前处理**: `normalize_qt_model_to_ir` 默认为 'left'
+
+### 5. visible
+**状态**: ⚠️ 支持 - 使用默认值
+**当前处理**: `normalize_qt_model_to_ir` 默认为 True
+
+## 四、font_family 映射策略（已明确，待实现）
+
+### 4.1 映射规则
+根据 Qt 的 `font_family` 单一字段，按以下规则分离为 `font_family_zh` 和 `font_family_en`：
+
+**规则 1：中文字体判断**
+如果 Qt 的 font_family 包含以下关键词之一，判断为中文字体：
+- 'SC' (如 Noto Sans SC)
+- 'Han' (如 Source Han Sans SC)
+- 'PingFang' (如 PingFang SC)
+- 'Microsoft YaHei'
+- 'SimSun'
+- 'Heiti'
+
+**规则 2：中文字体映射**
+如果判断为中文字体：
+- font_family_zh = 原 Qt font_family
+- font_family_en = 'Inter'（默认英文字体）
+
+**规则 3：英文字体映射**
+如果判断为英文字体：
+- font_family_zh = 'Noto Sans SC'（默认中文字体）
+- font_family_en = 原 Qt font_family
+
+### 4.2 映射示例
+
+**示例 1：中文字体**
+Qt 输入: font_family = "Noto Sans SC"
+→ 判断: 包含 'SC'，是中文字体
+→ 输出:
+  - font_family_zh = "Noto Sans SC"
+  - font_family_en = "Inter"
+
+**示例 2：中文字体**
+Qt 输入: font_family = "Source Han Sans SC"
+→ 判断: 包含 'Han' 和 'SC'，是中文字体
+→ 输出:
+  - font_family_zh = "Source Han Sans SC"
+  - font_family_en = "Inter"
+
+**示例 3：英文字体**
+Qt 输入: font_family = "Inter"
+→ 判断: 不包含中文字体关键词，是英文字体
+→ 输出:
+  - font_family_zh = "Noto Sans SC"
+  - font_family_en = "Inter"
+
+**示例 4：英文字体**
+Qt 输入: font_family = "Noto Sans"
+→ 判断: 不包含中文字体关键词，是英文字体
+→ 输出:
+  - font_family_zh = "Noto Sans SC"
+  - font_family_en = "Noto Sans"
+
+### 4.3 实现位置
+该映射策略应该在 `normalize_qt_model_to_ir` 函数中实现，位于：
+`export_core/__init__.py` 的 `_convert_qt_element` 函数内
+
+## 五、其他字段处理说明
+
+### 5.1 type 字段映射
+Qt 的 'text' 类型映射到 IR 类型：
+- 包含 'title' → 'title'
+- 包含 'author' → 'author'
+- 包含 'body' 或 'paragraph' → 'paragraph'
+- 包含 'formula' 或 'equation' → 'equation'
+- 包含 'image' → 'image'
+- 其他 → 'paragraph'
+
+### 5.2 content 字段映射
+直接使用 Qt 的 'text' 字段作为 IR 的 'content' 字段
+
+### 5.3 坐标系统
+Qt 和 IR 使用相同的坐标系统：
+- 原点：左上角
+- x 轴：向右为正
+- y 轴：向下为正
+- 单位：mm
+
+## 六、当前 Qt 线最准确的状态总结
+✅ duplication 解决过程已如实文档化（借助外部大模型分析）
+✅ 颜色选择器黑盘问题已实施缓解方案
+✅ 已完成离屏渲染验证证明 rotation 进入了绘制结果
+✅ 已导出包含 rotation 的 Qt IR JSON
+✅ 已完成 Qt -> Core 最小 smoke test（真实调用了 ExportCore 函数）
+✅ 明确了 font_family_zh / font_family_en 映射策略
+✅ 复制/粘贴功能可用
+✅ 字体列表安全（仅开源/免费可商用字体）
+✅ 启动命令明确
+
+当前 Qt 线最准确的里程碑表述：
+**已如实记录 duplication 解决过程（借助外部大模型分析），实施了颜色选择器黑盘问题的缓解方案，完成了离屏渲染验证证明 rotation 进入了绘制结果，导出了包含 rotation 的 Qt IR JSON，完成了 Qt -> Core 最小 smoke test（真实调用了 ExportCore 函数），明确了 font_family_zh / font_family_en 映射策略，复制/粘贴功能可用，字体列表安全，启动命令明确。Qt 线现已具备接 Core 的最小适配能力。**

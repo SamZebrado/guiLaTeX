@@ -1,0 +1,94 @@
+% Preamble / 宏包区
+\documentclass{article}
+\usepackage[margin=0mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{amsmath}
+
+\begin{document}
+% Metadata / 注释区
+% Exported by guiLaTeX ExportCore
+% Export date: 2026-04-18 15:19:47
+% Page size: A4 (210mm × 297mm)
+% IR Metadata for roundtrip:
+% BEGIN_IR_METADATA
+% {
+%   "export_date": "2026-04-18 15:19:47",
+%   "page_size": "A4 (210mm × 297mm)",
+%   "exporter": "guiLaTeX ExportCore",
+%   "version": "1.0",
+%   "ir": {
+%     "elements": [
+%       {
+%         "id": "test_title",
+%         "type": "paragraph",
+%         "content": "测试标题",
+%         "page": 1,
+%         "x": 100,
+%         "y": 50,
+%         "width": 400,
+%         "height": 40,
+%         "rotation": 0,
+%         "layer": 1,
+%         "font_family_zh": "SimSun",
+%         "font_family_en": "Times New Roman",
+%         "font_size": 24,
+%         "color": "#000000",
+%         "alignment": "left",
+%         "visible": true
+%       },
+%       {
+%         "id": "test_paragraph",
+%         "type": "paragraph",
+%         "content": "这是一段测试文本",
+%         "page": 1,
+%         "x": 100,
+%         "y": 100,
+%         "width": 400,
+%         "height": 80,
+%         "rotation": 45,
+%         "layer": 2,
+%         "font_family_zh": "SimSun",
+%         "font_family_en": "Times New Roman",
+%         "font_size": 12,
+%         "color": "#000000",
+%         "alignment": "left",
+%         "visible": true
+%       },
+%       {
+%         "id": "test_formula",
+%         "type": "paragraph",
+%         "content": "E = mc²",
+%         "page": 1,
+%         "x": 100,
+%         "y": 200,
+%         "width": 200,
+%         "height": 30,
+%         "rotation": 0,
+%         "layer": 3,
+%         "font_family_zh": "SimSun",
+%         "font_family_en": "Times New Roman",
+%         "font_size": 16,
+%         "color": "#000000",
+%         "alignment": "left",
+%         "visible": true
+%       }
+%     ]
+%   }
+% }
+% END_IR_METADATA
+% Optional semantic summary 区
+% Absolute positioned objects 区
+\begin{tikzpicture}[remember picture, overlay]
+  % Layer 1: test_title
+  \node[anchor=north west, rotate=0, text width=400mm, align=left, font=\fontsize{24}{28.8}\selectfont, color={rgb,1:red,0.0;green,0.0;blue,0.0}, visible on layer=1]
+    at (100mm, 247mm) {测试标题};
+  % Layer 2: test_paragraph
+  \node[anchor=north west, rotate=45, text width=400mm, align=left, font=\fontsize{12}{14.4}\selectfont, color={rgb,1:red,0.0;green,0.0;blue,0.0}, visible on layer=2]
+    at (100mm, 197mm) {这是一段测试文本};
+  % Layer 3: test_formula
+  \node[anchor=north west, rotate=0, text width=200mm, align=left, font=\fontsize{16}{19.2}\selectfont, color={rgb,1:red,0.0;green,0.0;blue,0.0}, visible on layer=3]
+    at (100mm, 97mm) {E = mc²};
+\end{tikzpicture}
+\end{document}

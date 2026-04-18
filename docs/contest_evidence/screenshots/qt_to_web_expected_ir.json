@@ -1,0 +1,58 @@
+{
+  "elements": [
+    {
+      "id": "test_title",
+      "type": "paragraph",
+      "content": "测试标题",
+      "page": 1,
+      "x": 100,
+      "y": 50,
+      "width": 400,
+      "height": 40,
+      "rotation": 0,
+      "layer": 1,
+      "font_family_zh": "SimSun",
+      "font_family_en": "Times New Roman",
+      "font_size": 24,
+      "color": "#000000",
+      "alignment": "left",
+      "visible": true
+    },
+    {
+      "id": "test_paragraph",
+      "type": "paragraph",
+      "content": "这是一段测试文本，包含中英文混合内容：Hello World",
+      "page": 1,
+      "x": 100,
+      "y": 100,
+      "width": 400,
+      "height": 80,
+      "rotation": 45,
+      "layer": 2,
+      "font_family_zh": "SimSun",
+      "font_family_en": "Times New Roman",
+      "font_size": 12,
+      "color": "#000000",
+      "alignment": "left",
+      "visible": true
+    },
+    {
+      "id": "test_formula",
+      "type": "paragraph",
+      "content": "E = mc²",
+      "page": 1,
+      "x": 100,
+      "y": 200,
+      "width": 200,
+      "height": 30,
+      "rotation": 0,
+      "layer": 3,
+      "font_family_zh": "SimSun",
+      "font_family_en": "Times New Roman",
+      "font_size": 16,
+      "color": "#000000",
+      "alignment": "left",
+      "visible": true
+    }
+  ]
+}

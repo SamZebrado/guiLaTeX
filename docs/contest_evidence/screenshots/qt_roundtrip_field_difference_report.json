@@ -1,0 +1,105 @@
+{
+  "test_date": "2026-04-18",
+  "status": "完成",
+  "original_elements_count": 3,
+  "imported_elements_count": 3,
+  "elements_with_differences": 3,
+  "differences": [
+    {
+      "element_id": "test_title",
+      "element_index": 0,
+      "differences": [
+        {
+          "field": "type",
+          "original": "textbox",
+          "imported": "test_title",
+          "status": "不匹配"
+        },
+        {
+          "field": "layer",
+          "original": 9,
+          "imported": 1,
+          "status": "不匹配"
+        },
+        {
+          "field": "font_family_zh",
+          "original": "Noto Sans SC",
+          "imported": "SimSun",
+          "status": "不匹配"
+        },
+        {
+          "field": "font_family_en",
+          "original": "Inter",
+          "imported": "Times New Roman",
+          "status": "不匹配"
+        }
+      ]
+    },
+    {
+      "element_id": "test_paragraph",
+      "element_index": 1,
+      "differences": [
+        {
+          "field": "type",
+          "original": "paragraph",
+          "imported": "test_paragraph",
+          "status": "不匹配"
+        },
+        {
+          "field": "layer",
+          "original": 8,
+          "imported": 2,
+          "status": "不匹配"
+        },
+        {
+          "field": "font_family_zh",
+          "original": "Noto Sans SC",
+          "imported": "SimSun",
+          "status": "不匹配"
+        },
+        {
+          "field": "font_family_en",
+          "original": "Inter",
+          "imported": "Times New Roman",
+          "status": "不匹配"
+        }
+      ]
+    },
+    {
+      "element_id": "test_formula",
+      "element_index": 2,
+      "differences": [
+        {
+          "field": "type",
+          "original": "textbox",
+          "imported": "test_formula",
+          "status": "不匹配"
+        },
+        {
+          "field": "layer",
+          "original": 7,
+          "imported": 3,
+          "status": "不匹配"
+        },
+        {
+          "field": "font_family_zh",
+          "original": "Noto Sans SC",
+          "imported": "SimSun",
+          "status": "不匹配"
+        },
+        {
+          "field": "font_family_en",
+          "original": "Noto Sans",
+          "imported": "Times New Roman",
+          "status": "不匹配"
+        }
+      ]
+    }
+  ],
+  "evidence_files": {
+    "original_model": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_original_model.json",
+    "normalized_ir": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_normalized_ir.json",
+    "exported_tex": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_export.tex",
+    "imported_ir": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_imported_ir.json"
+  }
+}

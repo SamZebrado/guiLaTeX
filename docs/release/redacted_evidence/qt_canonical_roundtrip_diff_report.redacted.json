@@ -1,0 +1,72 @@
+{
+  "test_date": "2026-04-18",
+  "source_model": "<project_root>/tests/../docs/contest_evidence/qt_canonical_pack/qt_canonical_source_model.json",
+  "normalized_ir": "<project_root>/tests/../docs/contest_evidence/qt_canonical_pack/qt_canonical_normalized_ir.json",
+  "exported_tex": "<project_root>/tests/../docs/contest_evidence/qt_canonical_pack/qt_canonical_exported.tex",
+  "imported_ir": "<project_root>/tests/../docs/contest_evidence/qt_canonical_pack/qt_canonical_imported_ir.json",
+  "field_comparison": {
+    "type": {
+      "qt_value": "text",
+      "ir_value": "paragraph",
+      "imported_value": "paragraph",
+      "status": "已验证",
+      "note": "Qt 'text' → IR 'paragraph' 是预期的映射行为"
+    },
+    "layer": {
+      "qt_value": [
+        1,
+        2,
+        3
+      ],
+      "ir_value": [
+        1,
+        2,
+        3
+      ],
+      "imported_value": [
+        1,
+        2,
+        3
+      ],
+      "status": "已验证",
+      "note": "layer 字段完整保住"
+    },
+    "font_family_zh": {
+      "qt_value": "Noto Sans SC",
+      "ir_value": "SimSun",
+      "imported_value": "SimSun",
+      "status": "Core gap",
+      "note": "normalize_qt_model_to_ir 中硬编码为 'SimSun'"
+    },
+    "font_family_en": {
+      "qt_value": [
+        "Inter",
+        "Noto Sans"
+      ],
+      "ir_value": "Times New Roman",
+      "imported_value": "Times New Roman",
+      "status": "Core gap",
+      "note": "normalize_qt_model_to_ir 中硬编码为 'Times New Roman'"
+    },
+    "export_tex": {
+      "status": "已验证",
+      "note": "成功生成 conforming tex 并包含 IR 元数据"
+    },
+    "import_conforming_tex": {
+      "status": "已验证",
+      "note": "成功从 conforming tex 导回 IR"
+    },
+    "pdf_main_path": {
+      "status": "blocked",
+      "note": "PDF 导出不是通过 Core->tex->编译路径"
+    },
+    "save_project": {
+      "status": "blocked",
+      "note": "保存项目功能未实现"
+    },
+    "open_project": {
+      "status": "blocked",
+      "note": "打开项目功能未实现"
+    }
+  }
+}

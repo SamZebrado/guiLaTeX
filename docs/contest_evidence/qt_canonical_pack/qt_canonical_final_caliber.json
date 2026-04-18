@@ -1,0 +1,77 @@
+{
+  "test_date": "2026-04-18",
+  "caliber_table": [
+    {
+      "item": "type",
+      "status": "已验证",
+      "note": "Qt 'text' → IR 'paragraph' 是预期的映射行为"
+    },
+    {
+      "item": "layer",
+      "status": "已验证",
+      "note": "layer 字段完整保住"
+    },
+    {
+      "item": "font_family_zh",
+      "status": "Core gap",
+      "note": "normalize_qt_model_to_ir 中硬编码为 'SimSun'"
+    },
+    {
+      "item": "font_family_en",
+      "status": "Core gap",
+      "note": "normalize_qt_model_to_ir 中硬编码为 'Times New Roman'"
+    },
+    {
+      "item": "export_tex",
+      "status": "已验证",
+      "note": "成功生成 conforming tex 并包含 IR 元数据"
+    },
+    {
+      "item": "import_conforming_tex",
+      "status": "已验证",
+      "note": "成功从 conforming tex 导回 IR"
+    },
+    {
+      "item": "pdf_main_path",
+      "status": "blocked",
+      "note": "PDF 导出不是通过 Core->tex->编译路径"
+    },
+    {
+      "item": "save_project",
+      "status": "blocked",
+      "note": "保存项目功能未实现"
+    },
+    {
+      "item": "open_project",
+      "status": "blocked",
+      "note": "打开项目功能未实现"
+    }
+  ],
+  "ui_caliber": [
+    {
+      "item": "顶部主工具栏分组",
+      "status": "已验证",
+      "note": "分组清晰，中文标签"
+    },
+    {
+      "item": "左侧画布 / 右侧属性面板",
+      "status": "已验证",
+      "note": "布局稳定"
+    },
+    {
+      "item": "属性面板滚动",
+      "status": "已验证",
+      "note": "鼠标滚轮可滚动"
+    },
+    {
+      "item": "中文界面",
+      "status": "已验证",
+      "note": "全中文界面"
+    },
+    {
+      "item": "默认字体安全列表",
+      "status": "已验证",
+      "note": "包含 Noto Sans SC, Source Han Sans SC, Inter, Noto Sans, Sans Serif"
+    }
+  ]
+}

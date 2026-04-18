@@ -1,0 +1,41 @@
+{
+  "purpose": "为 Web 端导回 Qt 导出的 conforming tex 准备的验证材料",
+  "qt_exported_tex_path": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_export.tex",
+  "qt_exported_ir_path": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_normalized_ir.json",
+  "field_mapping_notes": {
+    "type": "Qt 'text' 映射为 IR 'paragraph'",
+    "layer": "直接使用 Qt layer 值",
+    "font_family_zh": "当前 Core 硬编码为 'SimSun'",
+    "font_family_en": "当前 Core 硬编码为 'Times New Roman'"
+  },
+  "web_import_instructions": "\n1. 使用 Web 端的导入 LaTeX 功能\n2. 选择 qt_fidelity_export.tex 文件\n3. 验证元素是否正确导入\n4. 检查以下字段：id, content, x, y, width, height, rotation\n5. 注意：type/layer/font_family_zh/font_family_en 可能与 Qt 原始模型有差异\n        ",
+  "expected_elements": [
+    {
+      "id": "test_title",
+      "content": "测试标题",
+      "x": 100,
+      "y": 50,
+      "width": 400,
+      "height": 40,
+      "rotation": 0
+    },
+    {
+      "id": "test_paragraph",
+      "content": "这是一段测试文本",
+      "x": 100,
+      "y": 100,
+      "width": 400,
+      "height": 80,
+      "rotation": 45
+    },
+    {
+      "id": "test_formula",
+      "content": "E = mc²",
+      "x": 100,
+      "y": 200,
+      "width": 200,
+      "height": 30,
+      "rotation": 0
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "test_date": "2026-04-18",
+  "status": "完成",
+  "focus_fields": [
+    "type",
+    "layer",
+    "font_family_zh",
+    "font_family_en"
+  ],
+  "core_gaps": {
+    "font_family_zh": {
+      "status": "Core gap",
+      "description": "normalize_qt_model_to_ir 中硬编码为 'SimSun'",
+      "code_location": "export_core/__init__.py:111",
+      "current_behavior": "忽略 Qt 模型中的 font_family_zh 字段",
+      "expected_behavior": "应该保留 Qt 模型中的 font_family_zh 字段"
+    },
+    "font_family_en": {
+      "status": "Core gap",
+      "description": "normalize_qt_model_to_ir 中硬编码为 'Times New Roman'",
+      "code_location": "export_core/__init__.py:112",
+      "current_behavior": "忽略 Qt 模型中的 font_family_en 字段",
+      "expected_behavior": "应该保留 Qt 模型中的 font_family_en 字段"
+    },
+    "type": {
+      "status": "映射策略",
+      "description": "Qt 类型到 IR 类型的映射",
+      "code_location": "export_core/__init__.py:119-134",
+      "current_behavior": "text -> paragraph, textbox -> textbox",
+      "note": "这是预期的映射行为"
+    },
+    "layer": {
+      "status": "直接映射",
+      "description": "直接使用 Qt 模型的 layer 字段",
+      "code_location": "export_core/__init__.py:110",
+      "current_behavior": "layer: qt_element.get('layer', 0)",
+      "note": "这是预期的直接映射"
+    }
+  },
+  "field_analysis": [
+    {
+      "element_id": "test_title",
+      "element_index": 0,
+      "fields": {
+        "type": {
+          "original_qt": "text",
+          "normalized_ir": "paragraph",
+          "imported_ir": "paragraph",
+          "qt_to_norm_match": false,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": false
+        },
+        "layer": {
+          "original_qt": 1,
+          "normalized_ir": 1,
+          "imported_ir": 1,
+          "qt_to_norm_match": true,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": true
+        },
+        "font_family_zh": {
+          "original_qt": "Noto Sans SC",
+          "normalized_ir": "SimSun",
+          "imported_ir": "SimSun",
+          "qt_to_norm_match": false,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": false
+        },
+        "font_family_en": {
+          "original_qt": "Inter",
+          "normalized_ir": "Times New Roman",
+          "imported_ir": "Times New Roman",
+          "qt_to_norm_match": false,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": false
+        }
+      }
+    },
+    {
+      "element_id": "test_paragraph",
+      "element_index": 1,
+      "fields": {
+        "type": {
+          "original_qt": "text",
+          "normalized_ir": "paragraph",
+          "imported_ir": "paragraph",
+          "qt_to_norm_match": false,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": false
+        },
+        "layer": {
+          "original_qt": 2,
+          "normalized_ir": 2,
+          "imported_ir": 2,
+          "qt_to_norm_match": true,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": true
+        },
+        "font_family_zh": {
+          "original_qt": "Noto Sans SC",
+          "normalized_ir": "SimSun",
+          "imported_ir": "SimSun",
+          "qt_to_norm_match": false,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": false
+        },
+        "font_family_en": {
+          "original_qt": "Inter",
+          "normalized_ir": "Times New Roman",
+          "imported_ir": "Times New Roman",
+          "qt_to_norm_match": false,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": false
+        }
+      }
+    },
+    {
+      "element_id": "test_formula",
+      "element_index": 2,
+      "fields": {
+        "type": {
+          "original_qt": "text",
+          "normalized_ir": "paragraph",
+          "imported_ir": "paragraph",
+          "qt_to_norm_match": false,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": false
+        },
+        "layer": {
+          "original_qt": 3,
+          "normalized_ir": 3,
+          "imported_ir": 3,
+          "qt_to_norm_match": true,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": true
+        },
+        "font_family_zh": {
+          "original_qt": "Noto Sans SC",
+          "normalized_ir": "SimSun",
+          "imported_ir": "SimSun",
+          "qt_to_norm_match": false,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": false
+        },
+        "font_family_en": {
+          "original_qt": "Noto Sans",
+          "normalized_ir": "Times New Roman",
+          "imported_ir": "Times New Roman",
+          "qt_to_norm_match": false,
+          "norm_to_imp_match": true,
+          "full_roundtrip_match": false
+        }
+      }
+    }
+  ],
+  "summary": {
+    "qt_to_norm_match_count": 3,
+    "norm_to_imp_match_count": 12,
+    "full_roundtrip_match_count": 3,
+    "total_possible": 12
+  },
+  "evidence_files": {
+    "original_model": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_original_model.json",
+    "normalized_ir": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_normalized_ir.json",
+    "exported_tex": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_export.tex",
+    "imported_ir": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_imported_ir.json"
+  }
+}

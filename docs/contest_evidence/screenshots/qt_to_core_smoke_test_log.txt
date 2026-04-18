@@ -1,0 +1,56 @@
+测试开始时间: 2026-04-11T12:00:00
+============================================================
+
+步骤 1: 准备 Qt 模型数据
+✅ Qt 输入模型已保存: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_input_model.json
+   元素数量: 5
+
+步骤 2: 导入 ExportCore
+✅ export_core 模块导入成功
+   可用函数: normalize_qt_model_to_ir, export_ir_to_latex
+
+步骤 3: 调用 normalize_qt_model_to_ir(qt_model)
+✅ normalize_qt_model_to_ir 调用成功
+✅ IR 数据已保存: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_ir_data.json
+   元素数量: 5
+
+步骤 4: 调用 export_ir_to_latex(ir_data)
+✅ export_ir_to_latex 调用成功
+✅ LaTeX 输出已保存: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_output.tex
+   输出大小: 1749 字符
+
+步骤 5: 验证 LaTeX 内容
+   ✅ documentclass 存在
+   ✅ begin{document} 存在
+   ✅ tikz 存在
+   ✅ end{document} 存在
+
+============================================================
+Smoke Test 总结
+============================================================
+
+真实调用的 ExportCore 函数:
+  1. normalize_qt_model_to_ir(qt_model)
+  2. export_ir_to_latex(ir_data)
+
+保存的文件:
+  1. Qt 输入模型: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_input_model.json
+  2. IR 中间数据: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_ir_data.json
+  3. LaTeX 输出: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_output.tex
+  4. 字段对照说明: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_field_mapping.txt
+  5. 测试日志: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_smoke_test_log.txt
+
+字体映射当前状态:
+  - normalize_qt_model_to_ir 目前使用默认值
+  - font_family_zh = 'SimSun'
+  - font_family_en = 'Times New Roman'
+
+当前 Qt 还差的最小动作:
+  1. 修改 normalize_qt_model_to_ir 中的字体映射逻辑，从 Qt 的 font_family 分离
+  2. 正式添加 font_family_zh 字段到 Qt 模型（可选）
+  3. 正式添加 font_family_en 字段到 Qt 模型（可选）
+  4. 将正式导出按钮切换到 Core 路径
+
+测试结束时间: 2026-04-11T12:00:05
+
+=== Smoke Test 完成 ===
