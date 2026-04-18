@@ -1,0 +1,55 @@
+{
+  "elements": [
+    {
+      "id": "test_title",
+      "type": "paragraph",
+      "role": "paragraph",
+      "content": "测试标题",
+      "x": 100,
+      "y": 50,
+      "width": 400,
+      "height": 40,
+      "rotation": 0,
+      "layerId": 3,
+      "zIndex": 3,
+      "selected": false,
+      "chineseFont": "SimSun",
+      "englishFont": "Times New Roman",
+      "fontSize": 24
+    },
+    {
+      "id": "test_paragraph",
+      "type": "paragraph",
+      "role": "paragraph",
+      "content": "这是一段测试文本",
+      "x": 100,
+      "y": 100,
+      "width": 400,
+      "height": 80,
+      "rotation": 45,
+      "layerId": 2,
+      "zIndex": 2,
+      "selected": false,
+      "chineseFont": "SimSun",
+      "englishFont": "Times New Roman",
+      "fontSize": 12
+    },
+    {
+      "id": "test_formula",
+      "type": "paragraph",
+      "role": "paragraph",
+      "content": "E = mc²",
+      "x": 100,
+      "y": 200,
+      "width": 200,
+      "height": 30,
+      "rotation": 0,
+      "layerId": 1,
+      "zIndex": 1,
+      "selected": false,
+      "chineseFont": "SimSun",
+      "englishFont": "Times New Roman",
+      "fontSize": 16
+    }
+  ]
+}

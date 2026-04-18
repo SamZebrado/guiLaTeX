@@ -1508,20 +1508,37 @@
         
         // Import LaTeX
         importLatexButton.addEventListener('click', () => {
-            latexFileInput.click();
+            const importSteps = `LaTeX 导入流程：\n\n1. 准备 conforming LaTeX 文件（如 Qt 导出的 tex 文件）\n2. 运行 Python 桥接脚本：\n   python3 core_to_web_bridge.py <latex_file> <output_json>\n3. 点击"打开项目"按钮，选择生成的 JSON 文件\n\n注意：此功能依赖 Python 桥接脚本，浏览器内无法直接处理 LaTeX 文件。`;
+            
+            if (confirm(importSteps + '\n\n是否继续选择 LaTeX 文件？')) {
+                latexFileInput.click();
+            }
         });
         
         latexFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                alert('LaTeX 导入功能需要通过 Python 桥接脚本处理。\n\n请运行：\npython3 core_to_web_bridge.py <latex_file> <output_json>\n\n然后使用"打开项目"功能导入生成的 JSON 文件。');
+                alert('已选择 LaTeX 文件：' + file.name + '\n\n请按照上述流程运行 Python 桥接脚本进行处理。');
             }
             latexFileInput.value = '';
         });
         
         // Export LaTeX
         exportLatexButton.addEventListener('click', () => {
-            alert('LaTeX 导出功能需要通过 Python 桥接脚本处理。\n\n步骤：\n1. 先点击"导出 IR"按钮保存 IR 文件\n2. 然后运行：\npython3 web_to_core_bridge.py <input_ir.json> <output.tex>\n\n输出文件将保存在 temp/web_to_core/ 目录中。');
+            const exportSteps = `LaTeX 导出流程：\n\n1. 点击"导出 IR"按钮，保存 IR 文件\n2. 运行 Python 桥接脚本：\n   python3 web_to_core_bridge.py <input_ir.json> <output.tex>\n3. 查看生成的 LaTeX 文件（保存在 temp/web_to_core/ 目录）\n\n注意：此功能依赖 Python 桥接脚本，浏览器内无法直接生成 LaTeX 文件。`;
+            
+            if (confirm(exportSteps + '\n\n是否先导出 IR 文件？')) {
+                // 自动触发导出 IR
+                const ir = exportToIR();
+                const dataStr = JSON.stringify(ir, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'guilatex_ir.json';
+                link.click();
+                URL.revokeObjectURL(url);
+            }
         });
         
         exportScreenshotButton.addEventListener('click', () => {

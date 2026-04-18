@@ -1,0 +1,56 @@
+{
+  "diff_analysis": {
+    "original_source": "qt_fidelity_imported_ir.json",
+    "converted_target": "web_import_from_qt.json",
+    "elements_count": 3,
+    "field_changes": {
+      "preserved_fields": ["id", "type", "content", "x", "y", "width", "height", "rotation"],
+      "converted_fields": [
+        {"original": "layer", "target": "layerId", "note": "值已转换：IR 中 layer 越大层级越高，Web 中 layerId 越小层级越高"},
+        {"original": "font_family_zh", "target": "chineseFont", "note": "字段名映射"},
+        {"original": "font_family_en", "target": "englishFont", "note": "字段名映射"},
+        {"original": "font_size", "target": "fontSize", "note": "字段名映射"}
+      ],
+      "added_fields": [
+        {"field": "role", "value": "type 字段的值", "note": "Web 模型需要 role 字段"},
+        {"field": "zIndex", "value": "layerId 的值", "note": "Web 模型需要 zIndex 字段"},
+        {"field": "selected", "value": "false", "note": "Web 模型需要 selected 字段"}
+      ],
+      "missing_fields": [
+        {"field": "page", "note": "Web 模型默认单页，不需要 page 字段"},
+        {"field": "color", "note": "Web 模型暂未支持颜色字段"},
+        {"field": "alignment", "note": "Web 模型暂未支持对齐字段"},
+        {"field": "visible", "note": "Web 模型默认所有元素可见"}
+      ]
+    },
+    "layer_conversion": {
+      "original_layers": [1, 2, 3],
+      "converted_layerIds": [3, 2, 1],
+      "note": "转换逻辑：max_layer - original_layer + 1"
+    },
+    "element_details": [
+      {
+        "id": "test_title",
+        "original_layer": 1,
+        "converted_layerId": 3,
+        "original_font_size": 24,
+        "converted_fontSize": 24
+      },
+      {
+        "id": "test_paragraph",
+        "original_layer": 2,
+        "converted_layerId": 2,
+        "original_rotation": 45,
+        "converted_rotation": 45
+      },
+      {
+        "id": "test_formula",
+        "original_layer": 3,
+        "converted_layerId": 1,
+        "original_font_size": 16,
+        "converted_fontSize": 16
+      }
+    ],
+    "summary": "成功将 Qt 导出的 conforming tex 转换为 Web 可编辑模型，保留了所有核心几何和内容字段，转换了字体相关字段，并添加了 Web 模型所需的额外字段。部分高级字段（如颜色、对齐）暂未支持。"
+  }
+}

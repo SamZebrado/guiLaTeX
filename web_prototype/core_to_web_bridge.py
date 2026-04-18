@@ -124,7 +124,10 @@ def core_to_web_bridge(latex_path, output_json_path):
         
         # 4. 保存 JSON 文件
         print(f"保存 Web 模型文件: {output_json_path}")
-        os.makedirs(os.path.dirname(output_json_path), exist_ok=True)
+        # 确保输出目录存在
+        output_dir = os.path.dirname(output_json_path)
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
         with open(output_json_path, 'w', encoding='utf-8') as f:
             json.dump(web_model, f, indent=2, ensure_ascii=False)
         

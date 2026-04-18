@@ -1,0 +1,36 @@
+# Qt 导出的 conforming tex 跨端验证日志
+
+## 验证时间
+2026-04-18
+
+## 验证文件
+- 输入文件：../docs/contest_evidence/screenshots/qt_fidelity_export.tex
+- 输出文件：web_import_from_qt.json
+- 差异分析：web_import_from_qt_diff.json
+
+## 验证步骤
+1. 检查 Qt 导出的 LaTeX 文件是否包含 IR 元数据
+2. 使用 core_to_web_bridge.py 脚本将 LaTeX 文件转换为 Web 模型
+3. 验证转换结果
+4. 生成字段差异分析
+
+## 验证结果
+✅ 桥接成功！
+- 输入: ../docs/contest_evidence/screenshots/qt_fidelity_export.tex
+- 输出: web_import_from_qt.json
+
+## 转换详情
+- 成功转换 3 个元素
+- 保留了所有核心字段：id、type、content、x、y、width、height、rotation
+- 转换了字体相关字段：font_family_zh → chineseFont, font_family_en → englishFont, font_size → fontSize
+- 转换了层级字段：layer → layerId（值已调整以适应 Web 模型的层级规则）
+- 添加了 Web 模型所需的额外字段：role、zIndex、selected
+- 暂未支持的字段：page、color、alignment、visible
+
+## 层级转换逻辑
+- 原始 IR 层级：[1, 2, 3]
+- 转换后 Web 层级：[3, 2, 1]
+- 转换公式：max_layer - original_layer + 1
+
+## 总结
+Qt 导出的 conforming tex 文件成功被 Web bridge 导回路径吃进去，转换为 Web 可编辑模型。所有核心几何和内容字段都被保留，部分高级字段暂未支持。
