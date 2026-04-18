@@ -385,6 +385,7 @@
             <label>文件</label>
             <button id="open-button">打开项目</button>
             <button id="save-button">保存项目</button>
+            <button id="import-latex-button">导入 LaTeX</button>
             <button id="export-screenshot-button">导出截图</button>
             <button id="export-ir-button">导出 IR</button>
             <button id="export-pdf-button">导出 PDF</button>
@@ -522,6 +523,7 @@
     </div>
     
     <input type="file" id="file-input" accept=".json" style="display: none;">
+    <input type="file" id="latex-file-input" accept=".tex" style="display: none;">
     </div>
 
     <script>
@@ -632,10 +634,12 @@
         const moveDownBtn = document.getElementById('move-down');
         const openButton = document.getElementById('open-button');
         const saveButton = document.getElementById('save-button');
+        const importLatexButton = document.getElementById('import-latex-button');
         const exportScreenshotButton = document.getElementById('export-screenshot-button');
         const exportIRButton = document.getElementById('export-ir-button');
         const exportPdfButton = document.getElementById('export-pdf-button');
         const fileInput = document.getElementById('file-input');
+        const latexFileInput = document.getElementById('latex-file-input');
         const copyButton = document.getElementById('copy-button');
         const pasteButton = document.getElementById('paste-button');
         const deleteButton = document.getElementById('delete-button');
@@ -1490,6 +1494,7 @@
                         renderElements();
                         updateModelPreview();
                         updateDebugInfo();
+                        updateSelectionInfo();
                     } catch (err) {
                         alert('无法打开文件：' + err.message);
                     }
@@ -1497,6 +1502,19 @@
                 reader.readAsText(file);
             }
             fileInput.value = '';
+        });
+        
+        // Import LaTeX
+        importLatexButton.addEventListener('click', () => {
+            latexFileInput.click();
+        });
+        
+        latexFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                alert('LaTeX 导入功能需要通过 Python 桥接脚本处理。\n\n请运行：\npython3 core_to_web_bridge.py <latex_file> <output_json>\n\n然后使用"打开项目"功能导入生成的 JSON 文件。');
+            }
+            latexFileInput.value = '';
         });
         
         exportScreenshotButton.addEventListener('click', () => {

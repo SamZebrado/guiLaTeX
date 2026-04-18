@@ -23,20 +23,24 @@
    - 再走 Core 规定的 conforming profile / contract
    - 真实生成项目自己风格的 `.tex`
 
-4. **Web 导入自己导出的 conforming LaTeX**：待实现
-   - 阻塞点：缺少导入解析逻辑
-   - 下一轮最小工程动作：实现 LaTeX 解析和模型恢复功能
+4. **Web 导入自己导出的 conforming LaTeX**：已实现基础功能
+   - 实现了 `core_to_web_bridge.py` 脚本
+   - 可解析项目自己导出的 conforming LaTeX 文件中的 IR 元数据
+   - 转换为 Web 可编辑的模型格式
+   - 保存为 JSON 文件后可通过 "打开项目" 功能导入
 
 ### 技术实现
 
 - **右侧属性面板滚动**：通过 CSS `max-height: calc(100vh - 80px)` 和 `overflow-y: auto` 实现
 - **LaTeX 导出**：通过 `web_to_core_bridge.py` 脚本调用 ExportCore 函数生成 LaTeX
+- **LaTeX 导入**：通过 `core_to_web_bridge.py` 脚本解析 LaTeX 文件中的 IR 元数据并转换为 Web 模型
 - **Playwright 测试**：增强了测试脚本，添加了属性面板滚动测试
 
 ### 验证结果
 
 - **Playwright 测试**：所有 5 个测试用例全部通过
 - **LaTeX 导出**：成功生成符合项目风格的 `.tex` 文件，包含完整的 IR 元数据
+- **LaTeX 导入**：成功解析 LaTeX 文件并转换为 Web 模型
 - **UI 一致性**：保持统一 UI 模式 v1
 
 ### 保存的证据文件
@@ -45,10 +49,11 @@
 - `web_prototype/regression_test_results_v2.json`
 - `web_prototype/regression_initial_page.png`
 - `temp/web_to_core/web_real_export_output.tex`
+- `temp/core_to_web/core_to_web_import_output.json`
 
 ### 下一步计划
 
-1. 实现 LaTeX 导入功能
-2. 优化导出导入闭环体验
-3. 增强 Playwright 测试覆盖率
-4. 进一步完善 UI 响应式设计
+1. 优化 LaTeX 导入体验，实现浏览器内直接导入
+2. 增强 LaTeX 导出/导入的功能完整性
+3. 进一步完善 UI 响应式设计
+4. 增加更多 Playwright 测试用例
