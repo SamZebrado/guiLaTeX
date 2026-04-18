@@ -386,6 +386,7 @@
             <button id="open-button">打开项目</button>
             <button id="save-button">保存项目</button>
             <button id="import-latex-button">导入 LaTeX</button>
+            <button id="export-latex-button">导出 LaTeX</button>
             <button id="export-screenshot-button">导出截图</button>
             <button id="export-ir-button">导出 IR</button>
             <button id="export-pdf-button">导出 PDF</button>
@@ -635,6 +636,7 @@
         const openButton = document.getElementById('open-button');
         const saveButton = document.getElementById('save-button');
         const importLatexButton = document.getElementById('import-latex-button');
+        const exportLatexButton = document.getElementById('export-latex-button');
         const exportScreenshotButton = document.getElementById('export-screenshot-button');
         const exportIRButton = document.getElementById('export-ir-button');
         const exportPdfButton = document.getElementById('export-pdf-button');
@@ -1515,6 +1517,11 @@
                 alert('LaTeX 导入功能需要通过 Python 桥接脚本处理。\n\n请运行：\npython3 core_to_web_bridge.py <latex_file> <output_json>\n\n然后使用"打开项目"功能导入生成的 JSON 文件。');
             }
             latexFileInput.value = '';
+        });
+        
+        // Export LaTeX
+        exportLatexButton.addEventListener('click', () => {
+            alert('LaTeX 导出功能需要通过 Python 桥接脚本处理。\n\n步骤：\n1. 先点击"导出 IR"按钮保存 IR 文件\n2. 然后运行：\npython3 web_to_core_bridge.py <input_ir.json> <output.tex>\n\n输出文件将保存在 temp/web_to_core/ 目录中。');
         });
         
         exportScreenshotButton.addEventListener('click', () => {
