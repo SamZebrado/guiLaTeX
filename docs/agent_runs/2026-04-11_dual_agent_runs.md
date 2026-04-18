@@ -1,5 +1,88 @@
 # Dual Agent Runs (2026-04-11 起)
 
+## Qt 侧新 Round（desktop closing round）
+
+### 一、已验证的功能（证据充分）
+
+| 功能 | 验证状态 | 证据文件 |
+|------|----------|----------|
+| Qt roundtrip 主闭环完整验证 | ✅ 已验证 | [qt_roundtrip_verification.py](<repo-root>/tests/qt_roundtrip_verification.py) |
+| normalize_qt_model_to_ir(...) 真实调用 | ✅ 已验证 | [qt_roundtrip_verification.py](<repo-root>/tests/qt_roundtrip_verification.py#L47) |
+| export_ir_to_latex(...) 真实调用 | ✅ 已验证 | [qt_roundtrip_verification.py](<repo-root>/tests/qt_roundtrip_verification.py#L50) |
+| import_own_exported_tex_to_ir(...) 真实调用 | ✅ 已验证 | [qt_roundtrip_verification.py](<repo-root>/tests/qt_roundtrip_verification.py#L59) |
+| 真实生成 conforming .tex | ✅ 已验证 | [qt_roundtrip_export.tex](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_export.tex) |
+| 字段保留差异报告 | ✅ 已验证 | [qt_roundtrip_field_difference_report.json](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_field_difference_report.json) |
+| 右侧属性面板滚动 | ✅ 已验证 | [properties.py](<repo-root>/src/gui/properties.py#L28-L53) |
+| 统一 UI 模式 v1 保持 | ✅ 已验证 | [main.py](<repo-root>/src/gui/main.py) |
+
+### 二、Roundtrip 字段保留情况
+
+| 字段 | 保住状态 | 说明 |
+|------|----------|------|
+| id | ✅ 保住 | |
+| content | ✅ 保住 | |
+| page | ✅ 保住 | |
+| x / y / width / height | ✅ 保住 | |
+| rotation | ✅ 保住 | |
+| visible | ✅ 保住 | |
+| font_size | ✅ 保住 | |
+| color | ✅ 保住 | |
+| alignment | ✅ 保住 | |
+| type | ⚠️ 有差异 | 原始是 "textbox"/"paragraph"，导入变成元素 ID |
+| layer | ⚠️ 有差异 | 原始是 9/8/7，导入变成 1/2/3 |
+| font_family_zh | ⚠️ 有差异 | 原始是安全字体，导入变成 'SimSun'（ExportCore 硬编码） |
+| font_family_en | ⚠️ 有差异 | 原始是安全字体，导入变成 'Times New Roman'（ExportCore 硬编码） |
+
+### 三、Qt 导出/导入闭环链路说明
+
+#### 已打通链路（桌面端完整）
+1. **Qt 模型 → IR**
+   - 入口：qt_roundtrip_verification.py
+   - 调用函数：normalize_qt_model_to_ir(...)
+   - 证据：[qt_roundtrip_normalized_ir.json](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_normalized_ir.json)
+
+2. **IR → conforming LaTeX**
+   - 入口：qt_roundtrip_verification.py
+   - 调用函数：export_ir_to_latex(...)
+   - 证据：[qt_roundtrip_export.tex](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_export.tex)
+
+3. **conforming LaTeX → IR**
+   - 入口：qt_roundtrip_verification.py
+   - 调用函数：import_own_exported_tex_to_ir(...)
+   - 证据：[qt_roundtrip_imported_ir.json](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_imported_ir.json)
+
+4. **IR → Qt 可编辑对象**
+   - 入口：qt_roundtrip_verification.py
+   - 完成验证：字段比较完成
+   - 证据：[qt_roundtrip_field_difference_report.json](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_field_difference_report.json)
+
+### 四、导出语义说明
+
+| 功能 | 当前语义 | 说明 |
+|------|----------|------|
+| 保存项目 | 未实现 | |
+| 导出 IR | 导出当前模型为 IR JSON | temp/guiLaTeX_export_ir.json |
+| 导出 LaTeX | 通过 Core 导出 conforming LaTeX | temp/guiLaTeX_export.tex |
+| 导出 PDF | 直接复制现有 PDF | 不是 Core->tex->编译路径 |
+
+### 五、保存的证据文件
+
+| 文件 | 说明 |
+|------|------|
+| [qt_roundtrip_original_model.json](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_original_model.json) | 原始测试模型 |
+| [qt_roundtrip_normalized_ir.json](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_normalized_ir.json) | 标准化后的 IR |
+| [qt_roundtrip_export.tex](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_export.tex) | 导出的 LaTeX 文件 |
+| [qt_roundtrip_imported_ir.json](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_imported_ir.json) | 导回的 IR |
+| [qt_roundtrip_field_difference_report.json](<repo-root>/docs/contest_evidence/screenshots/qt_roundtrip_field_difference_report.json) | 字段保留差异报告 |
+
+### 六、下一步计划
+
+1. 保持 Qt roundtrip 固化，不要回退
+2. 继续稳住统一 UI 模式 v1，不再大扩无关功能
+3. 实现打开项目 / 保存项目功能
+4. 完善 PDF 导出流程，通过 Core->tex->编译得到
+5. 优化 ExportCore 中的字体硬编码问题
+
 ## Web 侧新 Round
 
 ### 一、已浏览器级验证（Playwright 证据充分）
