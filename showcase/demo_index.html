@@ -3,100 +3,146 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>guiLaTeX — Demo Index</title>
+<title>guiLaTeX — Demo</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap');
-  :root { --bg: #FAFAF8; --card: #fff; --ink: #1a1a1a; --muted: #666; --accent: #8B2500; --gold: #C9A84C; --green: #2D6A4F; --blue: #1D4ED8; --border: #E5E5E0; }
+  :root { --bg: #FAFAF8; --card: #fff; --ink: #1a1a1a; --muted: #888; --accent: #8B2500; --gold: #C9A84C; --green: #2D6A4F; --blue: #1D4ED8; --purple: #7C3AED; --border: #E8E8E3; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--ink); line-height: 1.7; }
-  .container { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem; }
 
-  .badge { display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 2px; font-weight: 500; letter-spacing: 0.05em; }
-  .badge.stage { background: #FEF3C7; color: #92400E; }
-  .badge.web { background: #DBEAFE; color: #1E40AF; }
-  .badge.qt { background: #EDE9FE; color: #5B21B6; }
-  .badge.core { background: #D1FAE5; color: #065F46; }
+  /* Header */
+  .header { background: #1a1a1a; color: #fff; padding: 2.5rem 1.5rem 2rem; text-align: center; }
+  .header h1 { font-family: 'Noto Serif SC', serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .header .tag { display: inline-block; font-size: 0.65rem; padding: 0.15rem 0.6rem; background: rgba(201,168,76,0.2); color: var(--gold); border-radius: 2px; letter-spacing: 0.05em; margin-bottom: 0.8rem; }
+  .header p { color: rgba(255,255,255,0.5); font-size: 0.8rem; }
 
-  h1 { font-family: 'Noto Serif SC', serif; font-size: 1.8rem; margin-bottom: 0.3rem; }
-  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+  .container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
 
-  .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin: 1.5rem 0 2rem; }
-  .status-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; }
-  .status-card h3 { font-size: 0.9rem; margin-bottom: 0.3rem; }
-  .status-card p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+  /* Primary CTA Cards */
+  .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .cta-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1.5rem; text-decoration: none; color: var(--ink); transition: all 0.2s ease; display: block; }
+  .cta-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); border-color: var(--accent); }
+  .cta-card .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .cta-card h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+  .cta-card p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+  .cta-card.web { border-top: 3px solid var(--blue); }
+  .cta-card.qt { border-top: 3px solid var(--purple); }
 
-  .note { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 4px; padding: 1rem 1.2rem; font-size: 0.8rem; line-height: 1.6; margin: 1.5rem 0; }
-  .note strong { color: var(--accent); }
+  /* Secondary links */
+  .secondary { display: flex; gap: 0.8rem; margin: 1.5rem 0; flex-wrap: wrap; }
+  .secondary a { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.2rem; background: var(--card); border: 1px solid var(--border); border-radius: 4px; text-decoration: none; color: var(--ink); font-size: 0.85rem; transition: all 0.2s ease; }
+  .secondary a:hover { border-color: var(--gold); color: var(--accent); }
 
-  .links { list-style: none; margin: 1.5rem 0; }
-  .links li { border-bottom: 1px solid var(--border); }
-  .links a { display: block; padding: 0.8rem 0; text-decoration: none; color: var(--ink); font-size: 0.9rem; }
-  .links a:hover { color: var(--accent); }
-  .links .desc { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+  /* Status strip */
+  .status-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin: 2rem 0; }
+  .status-item { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 1rem 1.2rem; }
+  .status-item h4 { font-size: 0.85rem; margin-bottom: 0.2rem; }
+  .status-item p { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+  .status-item .badge { display: inline-block; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 2px; font-weight: 500; margin-left: 0.3rem; vertical-align: middle; }
+  .badge.green { background: #DCFCE7; color: #166534; }
+  .badge.yellow { background: #FEF9C3; color: #854D0E; }
+  .badge.gray { background: #F3F4F6; color: #6B7280; }
 
-  footer { text-align: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--muted); }
+  /* Note */
+  .note { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 4px; padding: 0.8rem 1rem; font-size: 0.78rem; line-height: 1.6; margin: 1.5rem 0; color: #92400E; }
+
+  /* GIF placeholder areas */
+  .demo-media { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .demo-slot { background: var(--card); border: 1px dashed var(--border); border-radius: 6px; min-height: 180px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0.5rem; color: var(--muted); font-size: 0.8rem; }
+  .demo-slot .placeholder-icon { font-size: 2rem; opacity: 0.4; }
+
+  /* Footer */
+  footer { text-align: center; margin-top: 3rem; padding: 1.5rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--muted); }
   footer a { color: var(--accent); text-decoration: none; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .cta-grid, .demo-media { grid-template-columns: 1fr; }
+    .status-strip { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>guiLaTeX <span class="badge stage">v1-candidate · 第一阶段收官区</span></h1>
-  <p class="subtitle">可视化 LaTeX 编辑器 — Visual LaTeX Editor with element-level PDF editing</p>
 
-  <div class="status-grid">
-    <div class="status-card">
-      <h3>🌐 Web <span class="badge web">浏览器级验证</span></h3>
-      <p>独立应用候选版。文本 CRUD、多选旋转、图层管理、IR/PDF 导出。LaTeX 功能依赖 bridge。</p>
+<div class="header">
+  <div class="tag">v1-candidate · 第一阶段收官区</div>
+  <h1>guiLaTeX</h1>
+  <p>可视化 LaTeX 编辑器 — Visual LaTeX Editor</p>
+</div>
+
+<div class="container">
+
+  <!-- 第一层：最值得点的 -->
+  <div class="cta-grid">
+    <a class="cta-card web" href="../web_prototype/index.html">
+      <div class="icon">🌐</div>
+      <h3>Web 端演示</h3>
+      <p>纯浏览器应用，零依赖。文本编辑、多选旋转、图层管理、IR/PDF 导出。</p>
+    </a>
+    <a class="cta-card qt" href="index.html">
+      <div class="icon">🏛️</div>
+      <h3>朝堂风云录</h3>
+      <p>AI Agent 协作开发的宫廷风全记录。展示页、皇子状态、完整叙事。</p>
+    </a>
+  </div>
+
+  <div class="secondary">
+    <a href="https://github.com/SamZebrado/guiLaTeX">⚔️ GitHub 仓库</a>
+    <a href="https://forum.trae.cn/t/topic/7939/12">🏆 TRAE 大赛投票</a>
+  </div>
+
+  <!-- GIF 预留区 -->
+  <div class="demo-media">
+    <div class="demo-slot">
+      <div class="placeholder-icon">🌐</div>
+      <span>Web 端操作演示</span>
+      <span style="font-size:0.7rem;opacity:0.6;">GIF coming soon</span>
     </div>
-    <div class="status-card">
-      <h3>🖥️ Qt <span class="badge qt">桌面级验证</span></h3>
-      <p>v1-candidate。Roundtrip 闭环已跑通。font_family 有 Core gap。PDF 主路径 blocked。</p>
+    <div class="demo-slot">
+      <div class="placeholder-icon">🖥️</div>
+      <span>Qt 端操作演示</span>
+      <span style="font-size:0.7rem;opacity:0.6;">GIF coming soon</span>
     </div>
-    <div class="status-card">
-      <h3>📦 Core <span class="badge core">已封板</span></h3>
-      <p>IR Schema + LaTeX 导出器 + 回归样本齐备。Qt 和 Web 均可接入。</p>
+  </div>
+
+  <!-- 第二层：简短公共说明 -->
+  <div class="status-strip">
+    <div class="status-item">
+      <h4>🌐 Web <span class="badge green">候选版</span></h4>
+      <p>独立应用，浏览器级验证。LaTeX 导入导出依赖 Python bridge。</p>
+    </div>
+    <div class="status-item">
+      <h4>🖥️ Qt <span class="badge yellow">v1-candidate</span></h4>
+      <p>Roundtrip 闭环已跑通。font_family 有 Core gap，PDF 主路径 blocked。</p>
+    </div>
+    <div class="status-item">
+      <h4>📦 Core <span class="badge gray">已封板</span></h4>
+      <p>IR Schema + LaTeX 导出器 + 回归样本齐备。</p>
     </div>
   </div>
 
   <div class="note">
-    <strong>⚠️ 口径说明：</strong>Web 的 LaTeX 导入导出依赖 Python bridge 工作流（非浏览器原生）；Qt 存在 font_family Core gap；当前不是最终完整版。
+    ⚠️ 当前不是最终完整版。Web 的 LaTeX 功能依赖 Python bridge（非浏览器原生）；Qt 仍有少量 Core gap。
   </div>
 
-  <h2 style="font-size:1rem;margin:2rem 0 0.8rem;">导航 / Navigation</h2>
-  <ul class="links">
-    <li>
-      <a href="index.html">🏛️ 朝堂风云录 — 开发展示页</a>
-      <div class="desc">AI Agent 协作开发的宫廷风全记录</div>
-    </li>
-    <li>
-      <a href="../docs/release/public_project_overview.md">📋 公开总览 — Public Project Overview</a>
-      <div class="desc">项目状态、证据层级、红线清单</div>
-    </li>
-    <li>
-      <a href="../docs/release/demo_asset_index.md">🗂️ 演示资产索引 — Demo Asset Index</a>
-      <div class="desc">全部截图、JSON、LaTeX 证据的总目录</div>
-    </li>
-    <li>
-      <a href="../docs/release/demo_master_shot_list.md">🎬 总录制脚本 — Master Shot List</a>
-      <div class="desc">16 个 Shot、四幕结构、6-8 分钟录屏指南</div>
-    </li>
-    <li>
-      <a href="../docs/release/forum_update_draft.md">📢 论坛战报草稿 — Forum Update Draft</a>
-      <div class="desc">可直接使用的阶段性更新稿</div>
-    </li>
-    <li>
-      <a href="../docs/release/public_evidence_redaction_map.md">🔒 证据脱敏映射 — Redaction Map</a>
-      <div class="desc">哪些证据已脱敏、哪些仅摘要公开、哪些内部留档</div>
-    </li>
-    <li>
-      <a href="../README.md">📖 README</a>
-      <div class="desc">项目介绍、技术栈、许可证</div>
-    </li>
-  </ul>
+  <!-- 第三层：更多资料（低调） -->
+  <details style="margin-top:1.5rem;">
+    <summary style="cursor:pointer;font-size:0.85rem;color:var(--muted);padding:0.5rem 0;">更多资料 ▾</summary>
+    <div style="padding:0.8rem 0;font-size:0.8rem;color:var(--muted);line-height:2;">
+      <a href="../docs/release/public_project_overview.md" style="color:var(--ink);text-decoration:none;">公开总览</a> ·
+      <a href="../docs/release/demo_asset_index.md" style="color:var(--ink);text-decoration:none;">演示资产索引</a> ·
+      <a href="../docs/release/demo_master_shot_list.md" style="color:var(--ink);text-decoration:none;">总录制脚本</a> ·
+      <a href="../docs/release/forum_update_draft.md" style="color:var(--ink);text-decoration:none;">论坛战报草稿</a> ·
+      <a href="../docs/release/public_evidence_redaction_map.md" style="color:var(--ink);text-decoration:none;">证据脱敏映射</a> ·
+      <a href="../README.md" style="color:var(--ink);text-decoration:none;">README</a>
+    </div>
+  </details>
 
-  <footer>
-    guiLaTeX · <a href="https://github.com/SamZebrado/guiLaTeX">GitHub</a> · <a href="https://forum.trae.cn/t/topic/7939/12">TRAE 创意编程大赛</a>
-  </footer>
 </div>
+
+<footer>
+  guiLaTeX · <a href="https://github.com/SamZebrado/guiLaTeX">GitHub</a> · <a href="https://forum.trae.cn/t/topic/7939/12">TRAE 创意编程大赛</a>
+</footer>
+
 </body>
 </html>
