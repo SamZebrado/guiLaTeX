@@ -60,6 +60,7 @@ PyQt6 桌面应用，核心闭环已验证，但多项功能尚未收口。
 ## 快速体验
 
 - 🌐 [Web 端在线体验](web_prototype/index.html) — 直接在浏览器中打开（推荐）
+- 🎬 [录屏演示（B 站）](https://www.bilibili.com/video/BV1L7rzBzEDs/) — 完整操作演示
 - 📜 [朝堂风云录 · 开发展示页](https://samzebrado.github.io/guiLaTeX/showcase/) — AI Agent 协作开发全记录
 - 📋 [Demo 入口](https://samzebrado.github.io/guiLaTeX/showcase/demo_index.html) — 模块状态与演示导航
 
@@ -157,6 +158,7 @@ A PyQt6 desktop app, core loop validated but several features not yet finalized.
 ## Quick Start
 
 - 🌐 [Try Web App](web_prototype/index.html) — Open directly in your browser (recommended)
+- 🎬 [Demo Recording (Bilibili)](https://www.bilibili.com/video/BV1L7rzBzEDs/) — Full operation demo
 - 📜 [Court Chronicles · Showcase](https://samzebrado.github.io/guiLaTeX/showcase/) — AI agent dev journal
 - 📋 [Demo Index](https://samzebrado.github.io/guiLaTeX/showcase/demo_index.html) — Module status & demo navigation
 

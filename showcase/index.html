@@ -482,9 +482,9 @@
 
 <!-- Status Bar -->
 <div class="status-bar">
-  <div class="status-item"><span class="status-dot active"></span> Web 线：活跃开发</div>
-  <div class="status-item"><span class="status-dot active"></span> Core 线：已封板</div>
-  <div class="status-item"><span class="status-dot probe"></span> Qt 线：Probe 诊断中</div>
+  <div class="status-item"><span class="status-dot active"></span> Web 线：当前主展示线</div>
+  <div class="status-item"><span class="status-dot probe"></span> Qt 线：原型阶段</div>
+  <div class="status-item"><span class="status-dot done"></span> Core 线：支撑层</div>
   <div class="status-item"><span class="status-dot done"></span> 大皇子 TC：功成身退</div>
 </div>
 
@@ -639,6 +639,25 @@
     <p style="text-align:right;font-size:0.85rem;color:var(--ink-light);">——太师 LLM 批阅：准 ✅</p>
   </div>
 
+  <!-- Video: 大结局录屏 -->
+  <div class="section-header fade-in">
+    <h2>🎬 大结局 · 录屏演示</h2>
+    <p class="en">Final Demo Recording</p>
+  </div>
+
+  <div style="text-align:center;margin-bottom:2rem;" class="fade-in">
+    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:720px;margin:0 auto;border-radius:8px;box-shadow:0 2px 12px var(--shadow);">
+      <iframe src="//player.bilibili.com/player.html?bvid=BV1L7rzBzEDs&page=1&high_quality=1&danmaku=0" 
+              style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" 
+              allowfullscreen="true" 
+              sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"></iframe>
+    </div>
+    <p style="margin-top:0.8rem;font-size:0.8rem;color:var(--ink-light);">
+      演示录屏由用户人工完成 · 
+      <a href="https://www.bilibili.com/video/BV1L7rzBzEDs/" target="_blank" style="color:var(--accent);">在 B 站打开</a>
+    </p>
+  </div>
+
   <!-- Tech Note -->
   <div class="section-header fade-in">
     <h2>正经事</h2>
@@ -647,10 +666,10 @@
 
   <div style="background:white;padding:1.5rem 2rem;border-radius:4px;box-shadow:0 1px 8px var(--shadow);font-size:0.85rem;line-height:1.8;" class="fade-in">
     <p>整活归整活，guiLaTeX 是一个真实的技术项目：</p>
-    <p>🔹 <strong>Web + Core</strong> 是当前主可用路径（单页 PDF 编辑 → IR 导出 → LaTeX 生成）</p>
-    <p>🔹 <strong>Qt 桌面端</strong>仍在 probe/headless 诊断阶段，不作为当前 v1 完成判据</p>
-    <p>🔹 <strong>Export IR</strong> 中间层架构已封板，支持 JSON → LaTeX 转换</p>
-    <p>🔹 回归测试样本覆盖旋转、图层、字体等场景</p>
+    <p>🔹 <strong>Web 端</strong>是当前主展示线（纯浏览器应用，文本编辑、多选旋转、图层管理、IR/PDF 导出均已验证）</p>
+    <p>🔹 <strong>Qt 桌面端</strong>为原型阶段（roundtrip 闭环已跑通，但旋转仅配置面板、图层未体现、PDF 导出闪退）</p>
+    <p>🔹 <strong>Core</strong>是 Web 和 Qt 的共享导出支撑层（IR Schema + LaTeX 导出器 + 回归样本）</p>
+    <p>🔹 演示录屏由用户人工完成，非自动生成</p>
     <p style="margin-top:1rem;font-size:0.75rem;color:var(--ink-light);">
       以上"朝堂叙事"是对 AI Agent 协作开发过程的拟人化记录。<br>
       TC = Total Commander（全栈方案），Qt / Web / Core = 三条技术路线。<br>
