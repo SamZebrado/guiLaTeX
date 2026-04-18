@@ -18,4 +18,4 @@
 
 ## 录制指南
 
-详细的录制指南请参考：[qt_gif_recording_final.md](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/release/qt_gif_recording_final.md)
+详细的录制指南请参考：[qt_gif_recording_final.md](../../docs/release/qt_gif_recording_final.md)
