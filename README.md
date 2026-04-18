@@ -113,3 +113,123 @@ Python 3.10+ · PyQt6 · PyMuPDF · HTML/CSS/JS · LaTeX · Playwright
 ## 许可
 
 [Apache License 2.0](LICENSE)
+
+---
+
+# English
+
+## guiLaTeX
+
+**A visual LaTeX editor** — supports element-level PDF editing, LaTeX code generation via Export IR, and dual-end prototypes (Web + Qt).
+
+> 🏆 [TRAE Creative Coding Contest Submission](https://forum.trae.cn/t/topic/7939/12) · Vote for us! ❤️
+
+---
+
+## Screenshots
+
+<table>
+<tr>
+<td width="50%">
+
+### 🌐 Web
+
+A pure browser application, zero dependencies.
+
+<br>
+
+![Web Initial Page](assets/web_screenshot.png)
+
+<br>
+
+![Web Multi-select Rotation](docs/contest_evidence/screenshots/web_regression_v4_multi_select_rotation.png)
+
+</td>
+<td width="50%">
+
+### 🖥️ Qt Desktop
+
+A PyQt6 desktop app with roundtrip verification.
+
+<br>
+
+![Qt Desktop](assets/qt_screenshot.png)
+
+<br>
+
+![Web Click Teleportation](docs/contest_evidence/screenshots/web_regression_v4_click_teleportation.png)
+
+</td>
+</tr>
+</table>
+
+---
+
+## Current Status
+
+> ⚠️ **This is not the final version.** v1-candidate · Phase 1 milestone
+
+| | Web | Qt | Core |
+|---|---|---|---|
+| **Status** | Independent app candidate | v1-candidate | Sealed |
+| **Verification** | Browser-level | Desktop-level | Script-level |
+| **Capabilities** | Text CRUD, multi-select rotation, layer management, IR/PDF export, project save/open | Element editing, rotation, copy/paste, LaTeX import/export, roundtrip | IR Schema + LaTeX exporter + regression samples |
+| **Known Limits** | LaTeX depends on Python bridge | font_family Core gap, PDF path blocked | Font mapping hardcoded |
+
+→ Full details: [Public Overview](docs/release/public_project_overview.md)
+
+---
+
+## 🎭 Development Showcase
+
+This project uses AI agent collaborative development with full process records preserved:
+
+- 📜 [Court Chronicles · Showcase](https://samzebrado.github.io/guiLaTeX/showcase/) — Imperial court themed dev journal
+- 📋 [Demo Index](https://samzebrado.github.io/guiLaTeX/showcase/demo_index.html) — Module status + navigation
+
+---
+
+## Documentation
+
+<details>
+<summary><b>📋 Release Documents</b></summary>
+
+- [Public Overview](docs/release/public_project_overview.md) — Project status, evidence levels, red lines
+- [Demo Asset Index](docs/release/demo_asset_index.md) — Complete demo asset catalog
+- [Master Shot List](docs/release/demo_master_shot_list.md) — Suggested demo recording flow
+- [Forum Update Draft](docs/release/forum_update_draft.md) — Ready-to-post progress update
+
+</details>
+
+<details>
+<summary><b>📖 Technical Docs</b></summary>
+
+- [Architecture](docs/architecture.md) · [User Guide](docs/user-guide.md)
+- [Export Core Design](docs/export_core_design.md) · [Quick Start](docs/export_core_quickstart.md)
+- [Conforming LaTeX Profile](docs/export_core_conforming_latex_profile.md) · [Roundtrip Guide](docs/export_core_roundtrip_guide.md)
+- [README for Humans](docs/README_FOR_HUMANS.md)
+
+</details>
+
+---
+
+## Project Structure
+
+```
+guiLaTeX/
+├── src/                    # Core source code
+├── export_core/            # Export IR intermediate layer
+├── web_prototype/          # Web prototype (pure browser app)
+├── tests/                  # Test suite
+├── showcase/               # Dev showcase pages
+├── docs/                   # Documentation
+└── assets/                 # Screenshots
+```
+
+## Tech Stack
+
+Python 3.10+ · PyQt6 · PyMuPDF · HTML/CSS/JS · LaTeX · Playwright
+
+## License
+
+[Apache License 2.0](LICENSE)
