@@ -177,6 +177,14 @@ class MainWindow(QMainWindow):
         # 变换菜单
         transform_menu = menu_bar.addMenu("变换")
         
+        # 变换操作
+        transform_menu.addAction("x", self.on_transform)
+        transform_menu.addAction("y", self.on_transform)
+        transform_menu.addAction("宽", self.on_transform)
+        transform_menu.addAction("高", self.on_transform)
+        transform_menu.addAction("旋转", self.on_transform)
+        transform_menu.addAction("图层编号", self.on_transform)
+        
         # 视图菜单
         view_menu = menu_bar.addMenu("视图")
         
@@ -585,6 +593,12 @@ This is another paragraph that you can edit.
             self.pdf_canvas.zoom_scale = 1.0
             if self.pdf_canvas.page_widget:
                 self.pdf_canvas.page_widget.set_scale(1.0)
+    
+    def on_transform(self):
+        """Handle transform menu actions"""
+        # This is a placeholder for transform operations
+        # The actual implementation would depend on the specific transform action
+        print("Transform action triggered")
 
 
 def main():

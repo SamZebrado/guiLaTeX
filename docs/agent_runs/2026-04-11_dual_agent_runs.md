@@ -88,3 +88,63 @@
 2. 继续稳住统一 UI 模式 v1，不再大扩无关功能
 3. 为将来与 Core 的正式对接继续留清晰接口，但不自发明第二套不兼容 tex 规范
 4. 探索浏览器内直接导入 LaTeX 的方案（如需）
+
+## Qt 侧新 Round
+
+### 一、已验证
+
+| 功能 | 验证状态 | 证据文件 |
+|------|----------|----------|
+| 顶部主工具栏分组 | ✅ 已验证 | [main.py](<repo-root>/src/gui/main.py#L96-L195) |
+| 右侧属性面板滚动 | ✅ 已验证 | [properties.py](<repo-root>/src/gui/properties.py#L28-L53) |
+| 导出 LaTeX 走 Core | ✅ 已验证 | [main.py](<repo-root>/src/gui/main.py#L439-L483) |
+| 导入 LaTeX 走 Core | ✅ 已验证 | [main.py](<repo-root>/src/gui/main.py#L485-L541) |
+| Roundtrip 测试 | ✅ 已验证 | [qt_roundtrip_test.py](<repo-root>/tests/qt_roundtrip_test.py) |
+| 变换菜单 | ✅ 已验证 | [main.py](<repo-root>/src/gui/main.py#L177-L186) |
+
+### 二、Blocked
+
+| 功能 | 阻塞原因 | 阻塞点 |
+|------|----------|--------|
+| PDF 导出 | 不是通过 Core->tex->编译 | 直接复制现有 PDF |
+| 打开/保存项目 | 未实现 | 需要实现文件读写功能 |
+| 图层编号变整数 | 未实现 | 需要修改图层编号逻辑 |
+| 变换菜单功能 | 仅添加菜单项 | 需要实现具体变换操作 |
+
+### 三、Qt 导出/导入闭环链路
+
+1. **Qt 模型 → IR**：[export_model_to_ir](<repo-root>/src/gui/pdf_canvas.py#L1475-L1577)
+2. **IR → 项目风格 LaTeX**：[export_latex](<repo-root>/src/gui/main.py#L439-L483)
+3. **项目风格 LaTeX → Qt 模型**：[import_latex](<repo-root>/src/gui/main.py#L485-L541)
+
+### 四、技术实现详情
+
+#### 顶部主工具栏
+- 分组：文件、编辑、排列、变换、视图
+- 中文标签：全部使用中文
+- 快捷键：为常用操作添加了快捷键
+
+#### 右侧属性面板
+- 分组：选中信息、内容、几何、字体、对象专属属性、调试信息
+- 滚动：使用 QScrollArea 实现
+- 字体列表：只保留安全字体
+
+#### Core 集成
+- 导出：使用 `normalize_qt_model_to_ir` 和 `export_ir_to_latex`
+- 导入：使用 `import_own_exported_tex_to_ir`
+
+### 五、保存的证据文件
+
+| 文件 | 说明 |
+|------|------|
+| [qt_latex_export.tex](<repo-root>/docs/contest_evidence/screenshots/qt_latex_export.tex) | 导出的 LaTeX 文件 |
+| [18_qt_demo_model_export.json](<repo-root>/docs/contest_evidence/screenshots/18_qt_demo_model_export.json) | 导出的模型 JSON |
+| [qt_roundtrip_test.py](<repo-root>/tests/qt_roundtrip_test.py) | Roundtrip 测试脚本 |
+
+### 六、下一步计划
+
+1. 继续跟进 Web 的统一 UI 模式 v1
+2. 压实正式导出按钮功能
+3. 完善变换菜单的具体功能
+4. 探索 PDF 导出通过 Core->tex->编译的方案
+5. 实现打开/保存项目功能
