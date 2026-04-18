@@ -2,58 +2,89 @@
 
 ## Web 侧新 Round
 
-### 完成情况
+### 一、已浏览器级验证
 
-1. **右侧属性面板滚动**：已落实
-   - 属性面板内容过多时可滚动
-   - 鼠标滚轮可以上下滚动
-   - 窄宽度下仍可访问
-   - Playwright 测试通过
+| 功能 | 验证状态 | 证据文件 |
+|------|----------|----------|
+| 右侧属性面板滚动 | ✅ 已验证 | [regression_test_output_v2.txt](<repo-root>/web_prototype/regression_test_output_v2.txt) |
+| 点击对象中心后位置不变 | ✅ 已验证 | [regression_test_output_v2.txt](<repo-root>/web_prototype/regression_test_output_v2.txt) |
+| 点击对象偏右下后位置不变 | ✅ 已验证 | [regression_test_output_v2.txt](<repo-root>/web_prototype/regression_test_output_v2.txt) |
+| 多选两个对象后执行旋转 | ✅ 已验证 | [regression_test_output_v2.txt](<repo-root>/web_prototype/regression_test_output_v2.txt) |
+| 导出 IR 按钮存在且结果包含关键字段 | ✅ 已验证 | [regression_test_output_v2.txt](<repo-root>/web_prototype/regression_test_output_v2.txt) |
+| PDF 导出按钮存在且 print 路径可触发 | ✅ 已验证 | [regression_test_output_v2.txt](<repo-root>/web_prototype/regression_test_output_v2.txt) |
+| 统一 UI 模式 v1 保持 | ✅ 已验证 | [index.html](<repo-root>/web_prototype/index.html) |
 
-2. **Playwright 回归测试**：全部通过
-   - 点击对象中心后位置不变
-   - 点击对象偏右下后位置不变
-   - 多选两个对象后执行旋转，两个对象的 rotation 都变化
-   - 导出 IR 按钮存在且结果包含关键字段
-   - PDF 导出按钮存在且 print 路径仍可触发
-   - 右侧属性面板可滚动
+### 二、仅逻辑层/脚本层验证
 
-3. **Web 导出自己风格的 LaTeX**：已实现
-   - Web model -> IR
-   - 再走 Core 规定的 conforming profile / contract
-   - 真实生成项目自己风格的 `.tex`
+| 功能 | 验证状态 | 证据文件 |
+|------|----------|----------|
+| Web model → IR | ✅ 已验证 | [exportToIR函数](<repo-root>/web_prototype/index.html#L1559-L1586) |
+| IR → 项目风格 LaTeX（通过 bridge） | ✅ 已验证 | [web_to_core_bridge.py](<repo-root>/web_prototype/web_to_core_bridge.py) |
+| 项目风格 LaTeX → Web 模型（通过 bridge） | ✅ 已验证 | [core_to_web_bridge.py](<repo-root>/web_prototype/core_to_web_bridge.py) |
 
-4. **Web 导入自己导出的 conforming LaTeX**：已实现基础功能
-   - 实现了 `core_to_web_bridge.py` 脚本
-   - 可解析项目自己导出的 conforming LaTeX 文件中的 IR 元数据
-   - 转换为 Web 可编辑的模型格式
-   - 保存为 JSON 文件后可通过 "打开项目" 功能导入
+### 三、Blocked
 
-### 技术实现
+| 功能 | 阻塞原因 | 阻塞点 |
+|------|----------|--------|
+| 浏览器内直接导入 LaTeX | 缺少浏览器与 Python 脚本的交互机制 | 需要实现 Web 与本地 Python 脚本的通信 |
 
-- **右侧属性面板滚动**：通过 CSS `max-height: calc(100vh - 80px)` 和 `overflow-y: auto` 实现
-- **LaTeX 导出**：通过 `web_to_core_bridge.py` 脚本调用 ExportCore 函数生成 LaTeX
-- **LaTeX 导入**：通过 `core_to_web_bridge.py` 脚本解析 LaTeX 文件中的 IR 元数据并转换为 Web 模型
-- **Playwright 测试**：增强了测试脚本，添加了属性面板滚动测试
+### 四、Bridge 依赖项
 
-### 验证结果
+| 功能 | 依赖 Bridge | Bridge 文件 |
+|------|-------------|-------------|
+| Web 导出项目风格 LaTeX | 是 | [web_to_core_bridge.py](<repo-root>/web_prototype/web_to_core_bridge.py) |
+| 导入项目风格 LaTeX 到 Web | 是 | [core_to_web_bridge.py](<repo-root>/web_prototype/core_to_web_bridge.py) |
 
-- **Playwright 测试**：所有 5 个测试用例全部通过
-- **LaTeX 导出**：成功生成符合项目风格的 `.tex` 文件，包含完整的 IR 元数据
-- **LaTeX 导入**：成功解析 LaTeX 文件并转换为 Web 模型
-- **UI 一致性**：保持统一 UI 模式 v1
+### 五、Web 导出/导入闭环链路说明
 
-### 保存的证据文件
+#### 已打通链路
+1. **Web 模型 → IR**：浏览器内完成，无需 bridge
+   - 入口：`exportToIR()` 函数
+   - 文件：[index.html](<repo-root>/web_prototype/index.html#L1559-L1586)
 
-- `web_prototype/regression_test_output_v2.txt`
-- `web_prototype/regression_test_results_v2.json`
-- `web_prototype/regression_initial_page.png`
-- `temp/web_to_core/web_real_export_output.tex`
-- `temp/core_to_web/core_to_web_import_output.json`
+#### 仍依赖 Bridge 的链路
+2. **IR → 项目风格 LaTeX**：需要 Python bridge
+   - 脚本：[web_to_core_bridge.py](<repo-root>/web_prototype/web_to_core_bridge.py)
+   - 执行命令：`python3 web_to_core_bridge.py <input_ir.json> <output.tex>`
+   - 输出：`temp/web_to_core/web_real_export_output.tex`
 
-### 下一步计划
+3. **项目风格 LaTeX → Web 模型**：需要 Python bridge
+   - 脚本：[core_to_web_bridge.py](<repo-root>/web_prototype/core_to_web_bridge.py)
+   - 执行命令：`python3 core_to_web_bridge.py <input.tex> <output.json>`
+   - 输出：`temp/core_to_web/core_to_web_import_output.json`
 
-1. 优化 LaTeX 导入体验，实现浏览器内直接导入
-2. 增强 LaTeX 导出/导入的功能完整性
-3. 进一步完善 UI 响应式设计
-4. 增加更多 Playwright 测试用例
+#### 完全 Blocked 的链路
+4. **浏览器内直接导入 LaTeX**：无实现
+   - 原因：当前浏览器无法直接运行 Python 脚本
+   - 备选方案：先通过 bridge 转换为 JSON，再用"打开项目"功能导入
+
+### 六、技术实现详情
+
+#### 右侧属性面板滚动
+- 实现方式：CSS `max-height: calc(100vh - 80px)` 和 `overflow-y: auto`
+- 文件：[index.html](<repo-root>/web_prototype/index.html#L147-L155)
+
+#### Web 导出 IR
+- 实现方式：[exportToIR](<repo-root>/web_prototype/index.html#L1559-L1586) 函数
+- 覆盖字段：id, type, content, page, x, y, width, height, rotation, layer, font_family_zh, font_family_en, font_size, color, visible
+
+#### 统一 UI 模式 v1
+- 保持不变：顶部主工具栏、左/中画布+右侧固定属性面板、右侧分组明确、全中文界面
+- 默认字体：Noto Sans SC, Source Han Sans SC, Inter, Noto Sans, Sans Serif
+
+### 七、保存的证据文件
+
+| 文件 | 说明 |
+|------|------|
+| [regression_test_output_v2.txt](<repo-root>/web_prototype/regression_test_output_v2.txt) | Playwright 测试结果 |
+| [regression_test_results_v2.json](<repo-root>/web_prototype/regression_test_results_v2.json) | Playwright 测试 JSON 结果 |
+| [regression_initial_page.png](<repo-root>/web_prototype/regression_initial_page.png) | 初始页面截图 |
+| [temp/web_to_core/web_real_export_output.tex](<repo-root>/temp/web_to_core/web_real_export_output.tex) | 导出的 LaTeX 文件 |
+| [temp/core_to_web/core_to_web_import_output.json](<repo-root>/temp/core_to_web/core_to_web_import_output.json) | 导入转换的 JSON 文件 |
+
+### 八、下一步计划
+
+1. 保持 Playwright regression 固化，不要回退
+2. 继续稳住统一 UI 模式 v1，不再大扩无关功能
+3. 为将来与 Core 的正式对接继续留清晰接口，但不自发明第二套不兼容 tex 规范
+4. 探索浏览器内直接导入 LaTeX 的方案（如需）
