@@ -1,6 +1,104 @@
 # Dual Agent Runs (2026-04-11 起)
 
-## Qt 侧新 Round（desktop closing round）
+## Qt 侧第二轮（desktop closing round - 第二轮）
+
+### 一、本轮目标
+- 压字段保真（type、layer、font_family_zh、font_family_en）
+- 做跨端验证
+- 继续 UI 收口，严格区分"菜单已出现"和"功能已实现"
+- 收紧口径，不要说成"v1 基本能用桌面版已经完成"
+
+### 二、已验证的功能（证据充分）
+
+| 功能 | 验证状态 | 证据文件 |
+|------|----------|----------|
+| 字段保真验证 | ✅ 已验证 | [qt_field_fidelity_verification.py](<repo-root>/tests/qt_field_fidelity_verification.py) |
+| Core gap 识别 | ✅ 已验证 | [qt_fidelity_report.json](<repo-root>/docs/contest_evidence/screenshots/qt_fidelity_report.json) |
+| 跨端验证材料生成 | ✅ 已验证 | [qt_cross_end_verification_material.json](<repo-root>/docs/contest_evidence/screenshots/qt_cross_end_verification_material.json) |
+| 右侧属性面板滚动 | ✅ 已验证 | [properties.py](<repo-root>/src/gui/properties.py#L28-L53) |
+| 统一 UI 模式 v1 保持 | ✅ 已验证 | [main.py](<repo-root>/src/gui/main.py) |
+
+### 三、字段保真情况（重点字段）
+
+| 字段 | Qt 原始值 | IR 值 | 导入值 | 保住状态 | 说明 |
+|------|-----------|--------|--------|----------|------|
+| type | "text" | "paragraph" | "paragraph" | ⚠️ 映射策略 | Qt 'text' → IR 'paragraph'（预期映射） |
+| layer | 1/2/3 | 1/2/3 | 1/2/3 | ✅ 保住 | 直接映射，正确保住 |
+| font_family_zh | "Noto Sans SC" | "SimSun" | "SimSun" | ❌ Core gap | normalize_qt_model_to_ir 中硬编码为 'SimSun' |
+| font_family_en | "Inter"/"Noto Sans" | "Times New Roman" | "Times New Roman" | ❌ Core gap | normalize_qt_model_to_ir 中硬编码为 'Times New Roman' |
+
+### 四、Core gap 明确识别
+
+| 字段 | 状态 | 说明 | 代码位置 |
+|------|------|------|----------|
+| font_family_zh | Core gap | normalize_qt_model_to_ir 中硬编码为 'SimSun' | [export_core/__init__.py:111](<repo-root>/export_core/__init__.py#L111) |
+| font_family_en | Core gap | normalize_qt_model_to_ir 中硬编码为 'Times New Roman' | [export_core/__init__.py:112](<repo-root>/export_core/__init__.py#L112) |
+
+### 五、跨端验证材料
+
+为 Web 端导回 Qt 导出的 conforming tex 准备的验证材料：
+- Qt 导出的 tex：[qt_fidelity_export.tex](<repo-root>/docs/contest_evidence/screenshots/qt_fidelity_export.tex)
+- 对应 IR：[qt_fidelity_normalized_ir.json](<repo-root>/docs/contest_evidence/screenshots/qt_fidelity_normalized_ir.json)
+- 跨端验证材料：[qt_cross_end_verification_material.json](<repo-root>/docs/contest_evidence/screenshots/qt_cross_end_verification_material.json)
+
+Web 端导入说明：
+1. 使用 Web 端的导入 LaTeX 功能
+2. 选择 qt_fidelity_export.tex 文件
+3. 验证元素是否正确导入
+4. 检查以下字段：id, content, x, y, width, height, rotation
+5. 注意：type/layer/font_family_zh/font_family_en 可能与 Qt 原始模型有差异
+
+### 六、UI 收口说明
+
+| 菜单项 | 出现状态 | 功能实现状态 |
+|--------|----------|--------------|
+| 文件：打开项目 | ✅ 已出现 | ❌ 未实现 |
+| 文件：保存项目 | ✅ 已出现 | ❌ 未实现 |
+| 文件：导出 IR | ✅ 已出现 | ✅ 已实现 |
+| 文件：导出 LaTeX | ✅ 已出现 | ✅ 已实现 |
+| 文件：导入 LaTeX | ✅ 已出现 | ✅ 已实现 |
+| 文件：导出 PDF | ✅ 已出现 | ⚠️ 部分实现（直接复制 PDF，非 Core->tex->编译） |
+| 编辑：复制/粘贴/删除 | ✅ 已出现 | ✅ 已实现 |
+| 排列：上移/下移/移到顶部/移到底部 | ✅ 已出现 | ✅ 已实现 |
+| 变换：x/y/宽/高/旋转/图层编号 | ✅ 已出现 | ❌ 未实现（只有菜单项） |
+| 视图：缩放/重置视图 | ✅ 已出现 | ✅ 已实现 |
+
+### 七、字段保真统计
+
+- 重点字段：type, layer, font_family_zh, font_family_en
+- Qt -> IR 匹配：3/12（layer 全部匹配，其他不匹配）
+- IR -> 导入匹配：12/12（完全匹配）
+- 完整 roundtrip 匹配：3/12（只有 layer 完全匹配）
+
+### 八、保存的证据文件
+
+| 文件 | 说明 |
+|------|------|
+| [qt_fidelity_original_model.json](<repo-root>/docs/contest_evidence/screenshots/qt_fidelity_original_model.json) | 原始测试模型 |
+| [qt_fidelity_normalized_ir.json](<repo-root>/docs/contest_evidence/screenshots/qt_fidelity_normalized_ir.json) | 标准化后的 IR |
+| [qt_fidelity_export.tex](<repo-root>/docs/contest_evidence/screenshots/qt_fidelity_export.tex) | 导出的 LaTeX 文件 |
+| [qt_fidelity_imported_ir.json](<repo-root>/docs/contest_evidence/screenshots/qt_fidelity_imported_ir.json) | 导回的 IR |
+| [qt_fidelity_report.json](<repo-root>/docs/contest_evidence/screenshots/qt_fidelity_report.json) | 字段保真报告 |
+| [qt_cross_end_verification_material.json](<repo-root>/docs/contest_evidence/screenshots/qt_cross_end_verification_material.json) | 跨端验证材料 |
+
+### 九、重要口径收紧
+
+**不要说成：**
+- ❌ "v1 基本能用桌面版已经完成"
+
+**正确表述：**
+- ✅ "Qt 主闭环已跑通，但仍存在字段保真差异，已进入 v1 收官区"
+
+### 十、下一步计划
+
+1. 保持 Qt roundtrip 固化，不要回退
+2. 继续稳住统一 UI 模式 v1，不再大扩无关功能
+3. 修复 Core gap：让 normalize_qt_model_to_ir 保留 Qt 模型中的 font_family_zh 和 font_family_en 字段
+4. 实现打开项目 / 保存项目功能
+5. 完善变换菜单下的具体功能
+6. 完善 PDF 导出流程，通过 Core->tex->编译得到
+
+## Qt 侧第一轮（desktop closing round）
 
 ### 一、已验证的功能（证据充分）
 
