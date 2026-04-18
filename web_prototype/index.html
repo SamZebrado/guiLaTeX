@@ -150,6 +150,8 @@
             padding: 20px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             border-radius: 5px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
         }
         
         .debug-info {
@@ -325,6 +327,56 @@
                 flex-wrap: wrap;
             }
         }
+
+        @media print {
+            .toolbar,
+            .properties-panel,
+            .debug-info,
+            .selection-box,
+            .resize-handle,
+            .rotate-handle {
+                display: none !important;
+            }
+
+            .main-container {
+                padding: 0;
+                margin: 0;
+            }
+
+            .canvas-container {
+                padding: 0;
+            }
+
+            .paper {
+                width: 8.5in;
+                height: 11in;
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                position: absolute;
+                top: 0;
+                left: 0;
+                transform: none !important;
+            }
+
+            .text-element {
+                cursor: default;
+                outline: none !important;
+            }
+
+            .text-element.dragging {
+                cursor: default;
+            }
+
+            body {
+                background-color: white;
+            }
+
+            @page {
+                margin: 0;
+                size: letter;
+            }
+        }
     </style>
 </head>
 <body>
@@ -333,8 +385,11 @@
             <label>文件</label>
             <button id="open-button">打开项目</button>
             <button id="save-button">保存项目</button>
+            <button id="import-latex-button">导入 LaTeX</button>
+            <button id="export-latex-button">导出 LaTeX</button>
             <button id="export-screenshot-button">导出截图</button>
             <button id="export-ir-button">导出 IR</button>
+            <button id="export-pdf-button">导出 PDF</button>
         </div>
         
         <div class="toolbar-group">
@@ -469,6 +524,7 @@
     </div>
     
     <input type="file" id="file-input" accept=".json" style="display: none;">
+    <input type="file" id="latex-file-input" accept=".tex" style="display: none;">
     </div>
 
     <script>
@@ -579,9 +635,13 @@
         const moveDownBtn = document.getElementById('move-down');
         const openButton = document.getElementById('open-button');
         const saveButton = document.getElementById('save-button');
+        const importLatexButton = document.getElementById('import-latex-button');
+        const exportLatexButton = document.getElementById('export-latex-button');
         const exportScreenshotButton = document.getElementById('export-screenshot-button');
         const exportIRButton = document.getElementById('export-ir-button');
+        const exportPdfButton = document.getElementById('export-pdf-button');
         const fileInput = document.getElementById('file-input');
+        const latexFileInput = document.getElementById('latex-file-input');
         const copyButton = document.getElementById('copy-button');
         const pasteButton = document.getElementById('paste-button');
         const deleteButton = document.getElementById('delete-button');
@@ -1436,6 +1496,7 @@
                         renderElements();
                         updateModelPreview();
                         updateDebugInfo();
+                        updateSelectionInfo();
                     } catch (err) {
                         alert('无法打开文件：' + err.message);
                     }
@@ -1445,8 +1506,47 @@
             fileInput.value = '';
         });
         
+        // Import LaTeX
+        importLatexButton.addEventListener('click', () => {
+            const importSteps = `LaTeX 导入流程：\n\n1. 准备 conforming LaTeX 文件（如 Qt 导出的 tex 文件）\n2. 运行 Python 桥接脚本：\n   python3 core_to_web_bridge.py <latex_file> <output_json>\n3. 点击"打开项目"按钮，选择生成的 JSON 文件\n\n注意：此功能依赖 Python 桥接脚本，浏览器内无法直接处理 LaTeX 文件。`;
+            
+            if (confirm(importSteps + '\n\n是否继续选择 LaTeX 文件？')) {
+                latexFileInput.click();
+            }
+        });
+        
+        latexFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                alert('已选择 LaTeX 文件：' + file.name + '\n\n请按照上述流程运行 Python 桥接脚本进行处理。');
+            }
+            latexFileInput.value = '';
+        });
+        
+        // Export LaTeX
+        exportLatexButton.addEventListener('click', () => {
+            const exportSteps = `LaTeX 导出流程：\n\n1. 点击"导出 IR"按钮，保存 IR 文件\n2. 运行 Python 桥接脚本：\n   python3 web_to_core_bridge.py <input_ir.json> <output.tex>\n3. 查看生成的 LaTeX 文件（保存在 temp/web_to_core/ 目录）\n\n注意：此功能依赖 Python 桥接脚本，浏览器内无法直接生成 LaTeX 文件。`;
+            
+            if (confirm(exportSteps + '\n\n是否先导出 IR 文件？')) {
+                // 自动触发导出 IR
+                const ir = exportToIR();
+                const dataStr = JSON.stringify(ir, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'guilatex_ir.json';
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+        });
+        
         exportScreenshotButton.addEventListener('click', () => {
             alert('请使用浏览器截图功能手动截图。\n\n快捷键：\n- Mac: Cmd+Shift+4\n- Windows: Win+Shift+S');
+        });
+
+        exportPdfButton.addEventListener('click', () => {
+            window.print();
         });
         
         // Export to IR

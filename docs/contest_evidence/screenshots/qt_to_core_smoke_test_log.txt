@@ -2,7 +2,7 @@
 ============================================================
 
 步骤 1: 准备 Qt 模型数据
-✅ Qt 输入模型已保存: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_input_model.json
+✅ Qt 输入模型已保存: /path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_input_model.json
    元素数量: 5
 
 步骤 2: 导入 ExportCore
@@ -11,12 +11,12 @@
 
 步骤 3: 调用 normalize_qt_model_to_ir(qt_model)
 ✅ normalize_qt_model_to_ir 调用成功
-✅ IR 数据已保存: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_ir_data.json
+✅ IR 数据已保存: /path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_ir_data.json
    元素数量: 5
 
 步骤 4: 调用 export_ir_to_latex(ir_data)
 ✅ export_ir_to_latex 调用成功
-✅ LaTeX 输出已保存: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_output.tex
+✅ LaTeX 输出已保存: /path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_output.tex
    输出大小: 1749 字符
 
 步骤 5: 验证 LaTeX 内容
@@ -34,11 +34,11 @@ Smoke Test 总结
   2. export_ir_to_latex(ir_data)
 
 保存的文件:
-  1. Qt 输入模型: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_input_model.json
-  2. IR 中间数据: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_ir_data.json
-  3. LaTeX 输出: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_output.tex
-  4. 字段对照说明: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_field_mapping.txt
-  5. 测试日志: /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_smoke_test_log.txt
+  1. Qt 输入模型: /path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_input_model.json
+  2. IR 中间数据: /path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_ir_data.json
+  3. LaTeX 输出: /path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_output.tex
+  4. 字段对照说明: /path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_field_mapping.txt
+  5. 测试日志: /path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_to_core_smoke_test_log.txt
 
 字体映射当前状态:
   - normalize_qt_model_to_ir 目前使用默认值

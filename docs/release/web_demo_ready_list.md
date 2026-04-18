@@ -5,8 +5,8 @@
 ### 1.1 统一 UI 模式展示
 - **功能说明**：展示 Web 应用的统一 UI 布局，包括顶部主工具栏、左/中画布和右侧固定属性面板
 - **证据文件**：
-  - [regression_initial_page.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/regression_initial_page.png)
-  - [regression_test_output_v2.txt](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/regression_test_output_v2.txt)
+  - [regression_initial_page.png](web_prototype/regression_initial_page.png)
+  - [regression_test_output_v2.txt](web_prototype/regression_test_output_v2.txt)
 - **录制建议**：
   - 打开 Web 应用，展示整体布局
   - 演示响应式设计（调整浏览器窗口大小）
@@ -19,8 +19,8 @@
 ### 1.2 文本元素操作
 - **功能说明**：演示文本元素的创建、编辑、拖动和调整大小
 - **证据文件**：
-  - [regression_click_teleportation.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/regression_click_teleportation.png)
-  - [regression_click_teleportation.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/regression_click_teleportation.json)
+  - [regression_click_teleportation.png](web_prototype/regression_click_teleportation.png)
+  - [regression_click_teleportation.json](web_prototype/regression_click_teleportation.json)
 - **录制建议**：
   - 选择一个文本元素
   - 编辑文本内容
@@ -34,8 +34,8 @@
 ### 1.3 多选与旋转功能
 - **功能说明**：演示选择多个元素并进行批量旋转操作
 - **证据文件**：
-  - [regression_multi_select_rotation.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/regression_multi_select_rotation.png)
-  - [regression_multi_select_rotation.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/regression_multi_select_rotation.json)
+  - [regression_multi_select_rotation.png](web_prototype/regression_multi_select_rotation.png)
+  - [regression_multi_select_rotation.json](web_prototype/regression_multi_select_rotation.json)
 - **录制建议**：
   - 启用多选模式
   - 选择多个元素
@@ -49,7 +49,7 @@
 ### 1.4 图层管理
 - **功能说明**：演示元素的图层管理功能，包括上下移动、置顶、置底
 - **证据文件**：
-  - [regression_test_output_v2.txt](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/regression_test_output_v2.txt)
+  - [regression_test_output_v2.txt](web_prototype/regression_test_output_v2.txt)
 - **录制建议**：
   - 创建多个重叠元素
   - 使用图层管理按钮调整元素层级
@@ -62,8 +62,8 @@
 ### 1.5 导出功能
 - **功能说明**：演示导出 IR 和 PDF 功能
 - **证据文件**：
-  - [regression_export_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/regression_export_ir.json)
-  - [regression_test_output_v2.txt](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/regression_test_output_v2.txt)
+  - [regression_export_ir.json](web_prototype/regression_export_ir.json)
+  - [regression_test_output_v2.txt](web_prototype/regression_test_output_v2.txt)
 - **录制建议**：
   - 点击 "导出 IR" 按钮，展示生成的 JSON 文件
   - 点击 "导出 PDF" 按钮，展示浏览器打印功能
@@ -77,7 +77,7 @@
 ### 2.1 LaTeX 导出
 - **功能说明**：演示 LaTeX 导出流程
 - **证据文件**：
-  - [web_real_export_output.tex](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/temp/web_to_core/web_real_export_output.tex)
+  - [web_real_export_output.tex](temp/web_to_core/web_real_export_output.tex)
 - **录制建议**：
   - 点击 "导出 LaTeX" 按钮
   - 展示自动导出的 IR 文件
@@ -90,8 +90,8 @@
 ### 2.2 LaTeX 导入
 - **功能说明**：演示 LaTeX 导入流程
 - **证据文件**：
-  - [web_import_from_qt.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/web_import_from_qt.json)
-  - [web_import_from_qt_diff.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/web_import_from_qt_diff.json)
+  - [web_import_from_qt.json](web_prototype/web_import_from_qt.json)
+  - [web_import_from_qt_diff.json](web_prototype/web_import_from_qt_diff.json)
 - **录制建议**：
   - 简要说明需要运行 bridge 脚本将 LaTeX 转换为 JSON
   - 点击 "打开项目" 按钮，选择生成的 JSON 文件

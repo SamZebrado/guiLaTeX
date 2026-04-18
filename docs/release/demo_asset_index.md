@@ -109,7 +109,7 @@
 
 | 文件/目录 | 原因 | 处理建议 |
 |-----------|------|----------|
-| `*_bridge_fresh_*/execution_log_*.txt` (3个) | 含 `/Users/samzebrado/` 路径 | 脱敏后可公开，或只公开 tex/json |
+| `*_bridge_fresh_*/execution_log_*.txt` (3个) | 含 `/Users/.../` 路径 | 脱敏后可公开，或只公开 tex/json |
 | `*_bridge_synthetic_*/execution_log_*.txt` | 含路径 + 合成证据不宜作真实证据 | 内部留档 |
-| `*_bridge_real_*/execution_log_*.txt` (2个) | 含 `/Users/samzebrado/` 路径 | 脱敏后可公开，或只公开 tex/json/png |
+| `*_bridge_real_*/execution_log_*.txt` (2个) | 含 `/Users/.../` 路径 | 脱敏后可公开，或只公开 tex/json/png |
 | `qt_canonical_roundtrip_diff_report.json` | 含 4 处本地路径 | 脱敏后可公开 |

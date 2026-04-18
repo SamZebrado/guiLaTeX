@@ -15,14 +15,14 @@ guiLaTeX Web Prototype
 ## 最短运行方式
 
 ### 方案一：直接在浏览器中打开
-- **文件路径**: `file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype/index.html`
+- **文件路径**: `file:///path/to/guiLaTeX/web_prototype/index.html`
 - **优点**: 无需启动服务器，直接访问
 - **适用场景**: 快速验证，本地演示
 
 ### 方案二：使用 Python 静态服务器
 - **命令**:
   ```bash
-  cd /Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/web_prototype
+  cd /path/to/guiLaTeX/web_prototype
   python3 -m http.server 8000
   ```
 - **访问地址**: `http://localhost:8000`

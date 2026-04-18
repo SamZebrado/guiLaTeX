@@ -7,8 +7,8 @@
 ### 1. 元素选择与属性编辑
 **功能说明**：选择元素后在右侧属性面板编辑属性
 **对应证据文件**：
-- [qt_canonical_source_model.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/qt_canonical_source_model.json)
-- [properties.py](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/src/gui/properties.py)
+- [qt_canonical_source_model.json](docs/contest_evidence/qt_canonical_pack/qt_canonical_source_model.json)
+- [properties.py](src/gui/properties.py)
 
 **建议录制方式**：
 1. 启动 Qt 应用
@@ -24,8 +24,8 @@
 ### 2. 旋转功能
 **功能说明**：对元素进行旋转操作
 **对应证据文件**：
-- [qt_canonical_source_model.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/qt_canonical_source_model.json)
-- [qt_canonical_exported.tex](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/qt_canonical_exported.tex)
+- [qt_canonical_source_model.json](docs/contest_evidence/qt_canonical_pack/qt_canonical_source_model.json)
+- [qt_canonical_exported.tex](docs/contest_evidence/qt_canonical_pack/qt_canonical_exported.tex)
 
 **建议录制方式**：
 1. 选择一个元素
@@ -40,7 +40,7 @@
 ### 3. 复制/粘贴功能
 **功能说明**：复制元素并生成新 ID 和偏移
 **对应证据文件**：
-- [qt_canonical_source_model.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/qt_canonical_source_model.json)
+- [qt_canonical_source_model.json](docs/contest_evidence/qt_canonical_pack/qt_canonical_source_model.json)
 
 **建议录制方式**：
 1. 选择一个元素
@@ -56,8 +56,8 @@
 ### 4. 导出 LaTeX 功能
 **功能说明**：导出为 conforming LaTeX 文件
 **对应证据文件**：
-- [qt_canonical_exported.tex](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/qt_canonical_exported.tex)
-- [qt_canonical_roundtrip_diff_report.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/qt_canonical_roundtrip_diff_report.json)
+- [qt_canonical_exported.tex](docs/contest_evidence/qt_canonical_pack/qt_canonical_exported.tex)
+- [qt_canonical_roundtrip_diff_report.json](docs/contest_evidence/qt_canonical_pack/qt_canonical_roundtrip_diff_report.json)
 
 **建议录制方式**：
 1. 点击文件菜单的"导出 LaTeX"
@@ -72,8 +72,8 @@
 ### 5. 导入 LaTeX 功能
 **功能说明**：导入 conforming LaTeX 文件
 **对应证据文件**：
-- [qt_canonical_imported_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/qt_canonical_imported_ir.json)
-- [qt_canonical_roundtrip_diff_report.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/qt_canonical_roundtrip_diff_report.json)
+- [qt_canonical_imported_ir.json](docs/contest_evidence/qt_canonical_pack/qt_canonical_imported_ir.json)
+- [qt_canonical_roundtrip_diff_report.json](docs/contest_evidence/qt_canonical_pack/qt_canonical_roundtrip_diff_report.json)
 
 **建议录制方式**：
 1. 点击文件菜单的"导入 LaTeX"
@@ -93,8 +93,8 @@
 - 准备一个干净的测试项目
 
 ### 证据文件准备
-- 确保 [qt_canonical_pack](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/) 目录下所有文件都存在
-- 确保 [qt_canonical_exported.tex](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/qt_canonical_pack/qt_canonical_exported.tex) 包含 IR 元数据
+- 确保 [qt_canonical_pack](docs/contest_evidence/qt_canonical_pack/) 目录下所有文件都存在
+- 确保 [qt_canonical_exported.tex](docs/contest_evidence/qt_canonical_pack/qt_canonical_exported.tex) 包含 IR 元数据
 - 准备好截图和视频录制工具
 
 ### 演示流程

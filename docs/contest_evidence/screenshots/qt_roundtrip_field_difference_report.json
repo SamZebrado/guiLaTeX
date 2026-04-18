@@ -97,9 +97,9 @@
     }
   ],
   "evidence_files": {
-    "original_model": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_original_model.json",
-    "normalized_ir": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_normalized_ir.json",
-    "exported_tex": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_export.tex",
-    "imported_ir": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_imported_ir.json"
+    "original_model": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_original_model.json",
+    "normalized_ir": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_normalized_ir.json",
+    "exported_tex": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_export.tex",
+    "imported_ir": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_roundtrip_imported_ir.json"
   }
 }

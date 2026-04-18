@@ -12,8 +12,8 @@ Rotation 功能从模型到绘制的完整证据链，分为四个阶段：
 ### 2.1 rotation 进入模型
 **状态**: ✅ 已验证
 **证据文件**:
-- [temp/guiLaTeX_qt_with_rotation_export_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/temp/guiLaTeX_qt_with_rotation_export_ir.json)
-- [docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json)
+- [temp/guiLaTeX_qt_with_rotation_export_ir.json](file:///path/to/guiLaTeX/temp/guiLaTeX_qt_with_rotation_export_ir.json)
+- [docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json](file:///path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json)
 
 **验证内容**:
 - 初始化 demo 元素时包含 rotation 字段
@@ -23,12 +23,12 @@ Rotation 功能从模型到绘制的完整证据链，分为四个阶段：
 - properties.py 包含 rotation 控件和事件处理
 
 **测试文件**:
-- [temp/test_qt_rotation_verification.py](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/temp/test_qt_rotation_verification.py)
+- [temp/test_qt_rotation_verification.py](file:///path/to/guiLaTeX/temp/test_qt_rotation_verification.py)
 
 ### 2.2 rotation 进入绘制链
 **状态**: ✅ 已验证
 **修改文件**:
-- [src/gui/pdf_canvas.py](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/src/gui/pdf_canvas.py) 的 draw_memory_elements 方法
+- [src/gui/pdf_canvas.py](file:///path/to/guiLaTeX/src/gui/pdf_canvas.py) 的 draw_memory_elements 方法
 
 **实现内容**:
 - 在绘制前使用 QTransform 进行旋转变换
@@ -40,7 +40,7 @@ Rotation 功能从模型到绘制的完整证据链，分为四个阶段：
 ### 2.3 离屏渲染 before / after / diff
 **状态**: ✅ 已验证
 **测试文件**:
-- [temp/test_qt_offscreen_rotation.py](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/temp/test_qt_offscreen_rotation.py)
+- [temp/test_qt_offscreen_rotation.py](file:///path/to/guiLaTeX/temp/test_qt_offscreen_rotation.py)
 
 **测试内容**:
 - 使用 QT_QPA_PLATFORM=offscreen 进行离屏渲染
@@ -51,11 +51,11 @@ Rotation 功能从模型到绘制的完整证据链，分为四个阶段：
 - 比较像素差异，验证 rotation 是否影响绘制结果
 
 **证据文件**:
-- [qt_rotation_test_text_0.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_text_0.png) - 文字对象 rotation=0
-- [qt_rotation_test_text_45.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_text_45.png) - 文字对象 rotation=45
-- [qt_rotation_test_image_0.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_image_0.png) - 图片对象 rotation=0
-- [qt_rotation_test_image_30.png](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_image_30.png) - 图片对象 rotation=30
-- [qt_offscreen_rotation_verification.txt](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_offscreen_rotation_verification.txt) - 验证结果日志
+- [qt_rotation_test_text_0.png](file:///path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_text_0.png) - 文字对象 rotation=0
+- [qt_rotation_test_text_45.png](file:///path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_text_45.png) - 文字对象 rotation=45
+- [qt_rotation_test_image_0.png](file:///path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_image_0.png) - 图片对象 rotation=0
+- [qt_rotation_test_image_30.png](file:///path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_rotation_test_image_30.png) - 图片对象 rotation=30
+- [qt_offscreen_rotation_verification.txt](file:///path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_offscreen_rotation_verification.txt) - 验证结果日志
 
 **验证结果**:
 - ✅ 文字对象不同像素数: 3335（总像素 60000）
@@ -65,8 +65,8 @@ Rotation 功能从模型到绘制的完整证据链，分为四个阶段：
 ### 2.4 rotation 进入 IR JSON
 **状态**: ✅ 已验证
 **导出文件**:
-- [temp/guiLaTeX_qt_with_rotation_export_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/temp/guiLaTeX_qt_with_rotation_export_ir.json)
-- [docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json](file:///Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json)
+- [temp/guiLaTeX_qt_with_rotation_export_ir.json](file:///path/to/guiLaTeX/temp/guiLaTeX_qt_with_rotation_export_ir.json)
+- [docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json](file:///path/to/guiLaTeX/docs/contest_evidence/screenshots/qt_model_with_rotation_ir.json)
 
 **导出内容**:
 - 5 个对象，每个都有不同的 rotation 值

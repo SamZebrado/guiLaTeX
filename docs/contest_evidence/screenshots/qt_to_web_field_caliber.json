@@ -57,9 +57,9 @@
     }
   ],
   "evidence_files": {
-    "source_model": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_source_model.json",
-    "expected_ir": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_expected_ir.json",
-    "conforming_tex": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_conforming.tex",
-    "readme": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_readme.txt"
+    "source_model": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_source_model.json",
+    "expected_ir": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_expected_ir.json",
+    "conforming_tex": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_conforming.tex",
+    "readme": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_to_web_readme.txt"
   }
 }

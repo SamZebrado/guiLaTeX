@@ -1,7 +1,7 @@
 {
   "purpose": "为 Web 端导回 Qt 导出的 conforming tex 准备的验证材料",
-  "qt_exported_tex_path": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_export.tex",
-  "qt_exported_ir_path": "/Users/samzebrado/Documents/PersonalCodingLocal/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_normalized_ir.json",
+  "qt_exported_tex_path": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_export.tex",
+  "qt_exported_ir_path": "/path/to/guiLaTeX/tests/../docs/contest_evidence/screenshots/qt_fidelity_normalized_ir.json",
   "field_mapping_notes": {
     "type": "Qt 'text' 映射为 IR 'paragraph'",
     "layer": "直接使用 Qt layer 值",
