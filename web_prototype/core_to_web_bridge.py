@@ -73,8 +73,12 @@ def ir_to_web_model(ir_data):
             'width': element.get('width', 100),
             'height': element.get('height', 50),
             'rotation': element.get('rotation', 0),
+            'page': element.get('page', 1),
             'layerId': layer_id,
             'zIndex': layer_id,
+            'color': element.get('color', '#000000'),
+            'textAlign': element.get('alignment', 'left'),
+            'visible': element.get('visible', True),
             'selected': False
         }
         

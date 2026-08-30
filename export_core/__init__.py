@@ -57,15 +57,19 @@ def _convert_web_element(web_element: dict) -> dict:
         'id': web_element.get('id', ''),
         'type': canonical_type,
         'content': web_element.get('text', web_element.get('content', '')),
-        'page': 1,
+        'page': web_element.get('page', 1),
         'x': web_element.get('x', 0),
         'y': web_element.get('y', 0),
         'width': web_element.get('width', 0),
         'height': web_element.get('height', 0),
         'rotation': web_element.get('rotation', 0),
         'layer': web_element.get('layerId', web_element.get('layer', 0)),
-        'font_family_zh': 'SimSun',
-        'font_family_en': 'Times New Roman',
+        'font_family_zh': web_element.get(
+            'font_family_zh', web_element.get('chineseFont', 'SimSun')
+        ),
+        'font_family_en': web_element.get(
+            'font_family_en', web_element.get('englishFont', 'Times New Roman')
+        ),
         'font_size': web_element.get('fontSize', web_element.get('font_size', 12)),
         'color': web_element.get('color', '#000000'),
         'alignment': web_element.get('textAlign', web_element.get('alignment', 'left')),

@@ -742,6 +742,8 @@
             // Sort elements by layerId (smaller number is on top)
             const sortedElements = [...model.elements].sort((a, b) => (a.layerId || 0) - (b.layerId || 0));
             
+            const maxLayerId = Math.max(...model.elements.map(el => el.layerId || 0));
+
             // Render each element from the model
             sortedElements.forEach(element => {
                 const div = document.createElement('div');
@@ -750,7 +752,13 @@
                 div.style.left = `${element.x}px`;
                 div.style.top = `${element.y}px`;
                 div.style.transform = `rotate(${element.rotation || 0}deg)`;
-                div.style.zIndex = element.layerId || 0;
+                // layerId 越小越靠上；CSS z-index 则是数值越大越靠上。
+                div.style.zIndex = maxLayerId - (element.layerId || 0);
+                div.style.color = element.color || '#000000';
+                div.style.textAlign = element.textAlign || element.alignment || 'left';
+                if (element.visible === false) {
+                    div.style.display = 'none';
+                }
                 
                 // Add selected outline if element is selected
                 if (element.selected) {
@@ -1609,7 +1617,7 @@
                         id: element.id,
                         type: element.role || element.type,
                         content: element.content,
-                        page: 1,
+                        page: element.page || 1,
                         x: element.x,
                         y: element.y,
                         width: element.width,
@@ -1619,8 +1627,9 @@
                         font_family_zh: element.chineseFont || undefined,
                         font_family_en: element.englishFont || undefined,
                         font_size: element.fontSize || undefined,
-                        color: "#000000",
-                        visible: true
+                        color: element.color || "#000000",
+                        alignment: element.textAlign || element.alignment || "left",
+                        visible: element.visible !== false
                     };
                 })
             };
