@@ -86,6 +86,25 @@
         .text-element.dragging {
             cursor: grabbing;
         }
+
+        .equation-preview {
+            width: 100%;
+            min-height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .equation-preview math {
+            font-size: 1.25em;
+        }
+
+        .equation-error {
+            color: #a40000;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
         
         .selection-box {
             position: absolute;
@@ -424,6 +443,7 @@
             <label>插入</label>
             <button id="insert-image-button">插入图片</button>
             <button id="replace-image-button" disabled>替换图片</button>
+            <button id="insert-equation-button">插入公式</button>
         </div>
         
         <div class="toolbar-group">
@@ -614,7 +634,7 @@
                     id: '4',
                     type: 'textbox',
                     role: 'formula',
-                    content: 'E = mc² (文本框)',
+                    content: 'E = mc^2',
                     x: 100,
                     y: 280,
                     width: 150,
@@ -680,6 +700,7 @@
         const ungroupButton = document.getElementById('ungroup-button');
         const insertImageButton = document.getElementById('insert-image-button');
         const replaceImageButton = document.getElementById('replace-image-button');
+        const insertEquationButton = document.getElementById('insert-equation-button');
         const multiSelectCheckbox = document.getElementById('multi-select-checkbox');
         const modelJson = document.getElementById('model-json');
         const resetButton = document.getElementById('reset-button');
@@ -717,6 +738,7 @@
         let clipboard = null;
         let groupSequence = 0;
         let imageSequence = 0;
+        let equationSequence = 0;
         let pendingImageMode = null;
         const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
         const SUPPORTED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
@@ -871,6 +893,156 @@
             };
         }
 
+        const MATHML_NS = 'http://www.w3.org/1998/Math/MathML';
+        const TEX_SYMBOLS = {
+            alpha: ['mi', 'α'], beta: ['mi', 'β'], gamma: ['mi', 'γ'], delta: ['mi', 'δ'],
+            theta: ['mi', 'θ'], lambda: ['mi', 'λ'], mu: ['mi', 'μ'], pi: ['mi', 'π'],
+            sigma: ['mi', 'σ'], phi: ['mi', 'φ'], omega: ['mi', 'ω'],
+            times: ['mo', '×'], cdot: ['mo', '·'], pm: ['mo', '±'], le: ['mo', '≤'],
+            leq: ['mo', '≤'], ge: ['mo', '≥'], geq: ['mo', '≥'], neq: ['mo', '≠'],
+            sum: ['mo', '∑'], int: ['mo', '∫'], infty: ['mi', '∞']
+        };
+
+        function isEquationElement(element) {
+            return element.type === 'equation' || element.role === 'formula';
+        }
+
+        function mathNode(tag, text = null) {
+            const node = document.createElementNS(MATHML_NS, tag);
+            if (text !== null) node.textContent = text;
+            return node;
+        }
+
+        function renderEquationMathML(source) {
+            const preview = document.createElement('div');
+            preview.className = 'equation-preview';
+            try {
+                let index = 0;
+                const input = String(source || '');
+
+                function skipSpaces() {
+                    while (/\s/.test(input[index] || '')) index += 1;
+                }
+
+                function parseRawGroup() {
+                    skipSpaces();
+                    if (input[index] !== '{') throw new Error('需要 {...} 参数');
+                    index += 1;
+                    let depth = 1;
+                    let text = '';
+                    while (index < input.length && depth > 0) {
+                        const character = input[index++];
+                        if (character === '{') depth += 1;
+                        if (character === '}') depth -= 1;
+                        if (depth > 0) text += character;
+                    }
+                    if (depth !== 0) throw new Error('花括号未闭合');
+                    return text;
+                }
+
+                function parseRequiredGroup() {
+                    skipSpaces();
+                    if (input[index] !== '{') throw new Error('需要 {...} 参数');
+                    index += 1;
+                    const group = parseSequence('}');
+                    if (input[index] !== '}') throw new Error('花括号未闭合');
+                    index += 1;
+                    return group;
+                }
+
+                function parseCommand() {
+                    index += 1;
+                    const start = index;
+                    while (/[A-Za-z]/.test(input[index] || '')) index += 1;
+                    const command = input.slice(start, index);
+                    if (!command && index < input.length) return mathNode('mo', input[index++]);
+                    if (command === 'frac') {
+                        const fraction = mathNode('mfrac');
+                        fraction.append(parseRequiredGroup(), parseRequiredGroup());
+                        return fraction;
+                    }
+                    if (command === 'sqrt') {
+                        const root = mathNode('msqrt');
+                        root.appendChild(parseRequiredGroup());
+                        return root;
+                    }
+                    if (command === 'text') return mathNode('mtext', parseRawGroup());
+                    if (command === 'left' || command === 'right') {
+                        skipSpaces();
+                        return index < input.length ? mathNode('mo', input[index++]) : mathNode('mrow');
+                    }
+                    const symbol = TEX_SYMBOLS[command];
+                    return symbol ? mathNode(symbol[0], symbol[1]) : mathNode('mtext', `\\${command}`);
+                }
+
+                function parseAtom() {
+                    skipSpaces();
+                    const character = input[index];
+                    if (character === '{') return parseRequiredGroup();
+                    if (character === '\\') return parseCommand();
+                    if (character === undefined || character === '}') return null;
+                    index += 1;
+                    if (/[0-9.]/.test(character)) return mathNode('mn', character);
+                    if (/[A-Za-z]/.test(character)) return mathNode('mi', character);
+                    return mathNode('mo', character);
+                }
+
+                function parseScriptArgument() {
+                    skipSpaces();
+                    return input[index] === '{' ? parseRequiredGroup() : parseAtom();
+                }
+
+                function parseSequence(stopCharacter = null) {
+                    const row = mathNode('mrow');
+                    while (index < input.length && input[index] !== stopCharacter) {
+                        let base = parseAtom();
+                        if (!base) break;
+                        let subscript = null;
+                        let superscript = null;
+                        while (input[index] === '_' || input[index] === '^') {
+                            const operator = input[index++];
+                            const argument = parseScriptArgument();
+                            if (!argument) throw new Error('上下标缺少参数');
+                            if (operator === '_') subscript = argument;
+                            else superscript = argument;
+                        }
+                        if (subscript && superscript) {
+                            const scripted = mathNode('msubsup');
+                            scripted.append(base, subscript, superscript);
+                            base = scripted;
+                        } else if (subscript) {
+                            const scripted = mathNode('msub');
+                            scripted.append(base, subscript);
+                            base = scripted;
+                        } else if (superscript) {
+                            const scripted = mathNode('msup');
+                            scripted.append(base, superscript);
+                            base = scripted;
+                        }
+                        row.appendChild(base);
+                    }
+                    return row;
+                }
+
+                const math = mathNode('math');
+                math.setAttribute('display', 'block');
+                math.setAttribute('aria-label', input);
+                math.appendChild(parseSequence());
+                skipSpaces();
+                if (index !== input.length) throw new Error('无法解析完整公式');
+                preview.appendChild(math);
+                preview.dataset.renderState = 'mathml';
+            } catch (error) {
+                const fallback = document.createElement('span');
+                fallback.className = 'equation-error';
+                fallback.textContent = source || '空公式';
+                fallback.title = error.message;
+                preview.appendChild(fallback);
+                preview.dataset.renderState = 'fallback';
+            }
+            return preview;
+        }
+
         function createSelectionBox(elements) {
             // Remove existing selection box
             if (selectionBox) {
@@ -976,7 +1148,14 @@
                 }
                 
                 // Set element-specific styles
-                if (element.type === 'image') {
+                if (isEquationElement(element)) {
+                    div.style.width = `${element.width}px`;
+                    div.style.minHeight = `${element.height}px`;
+                    div.style.border = '1px dashed #7b4ab5';
+                    div.style.padding = '5px';
+                    div.style.fontSize = `${element.fontSize || 18}px`;
+                    div.appendChild(renderEquationMathML(element.content));
+                } else if (element.type === 'image') {
                     // Image element
                     div.style.width = `${element.width}px`;
                     div.style.height = `${element.height}px`;
@@ -1293,7 +1472,7 @@
             e.stopPropagation();
             
             const selectedElement = model.elements.find(el => el.selected);
-            if (selectedElement && (selectedElement.type === 'image' || selectedElement.type === 'textbox')) {
+            if (selectedElement && (selectedElement.type === 'image' || selectedElement.type === 'textbox' || isEquationElement(selectedElement))) {
                 beginHistoryTransaction('调整对象大小');
                 resizingElement = selectedElement;
                 resizePosition = e.target.dataset.position;
@@ -1614,7 +1793,7 @@
                         id: '4',
                         type: 'textbox',
                         role: 'formula',
-                        content: 'E = mc² (文本框)',
+                        content: 'E = mc^2',
                         x: 100,
                         y: 280,
                         width: 150,
@@ -1787,6 +1966,35 @@
             } catch (error) {
                 alert(error.message);
             }
+        });
+
+        insertEquationButton.addEventListener('click', () => {
+            beginHistoryTransaction('插入公式');
+            model.elements.forEach(element => element.selected = false);
+            const minLayerId = model.elements.length
+                ? Math.min(...model.elements.map(element => element.layerId || 0))
+                : 0;
+            const equation = {
+                id: `equation-${Date.now()}-${++equationSequence}`,
+                type: 'equation',
+                content: 'E = mc^2',
+                x: 100,
+                y: 100,
+                width: 240,
+                height: 60,
+                fontSize: 18,
+                chineseFont: 'Noto Sans SC',
+                englishFont: 'Inter',
+                rotation: 0,
+                layerId: minLayerId - 1,
+                selected: true
+            };
+            model.elements.push(equation);
+            commitHistoryTransaction();
+            renderElements();
+            updateModelPreview();
+            updateSelectionInfo();
+            contentInput.value = equation.content;
         });
         
         // Layer input change
