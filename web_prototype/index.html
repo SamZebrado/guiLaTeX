@@ -416,6 +416,8 @@
             <button id="copy-button">复制</button>
             <button id="paste-button">粘贴</button>
             <button id="delete-button">删除</button>
+            <button id="group-button" disabled>成组</button>
+            <button id="ungroup-button" disabled>解组</button>
         </div>
         
         <div class="toolbar-group">
@@ -666,6 +668,8 @@
         const redoButton = document.getElementById('redo-button');
         const pasteButton = document.getElementById('paste-button');
         const deleteButton = document.getElementById('delete-button');
+        const groupButton = document.getElementById('group-button');
+        const ungroupButton = document.getElementById('ungroup-button');
         const multiSelectCheckbox = document.getElementById('multi-select-checkbox');
         const modelJson = document.getElementById('model-json');
         const resetButton = document.getElementById('reset-button');
@@ -687,15 +691,21 @@
         let draggedElements = null;
         let offsetX = 0;
         let offsetY = 0;
+        let dragPointerMoved = false;
+        let selectionChangedOnMouseDown = false;
         
         // Rotate variables
         let rotatingElements = null;
         let initialRotations = [];
+        let initialGroupPositions = [];
         let initialMouseAngle = 0;
+        let rotationCenter = null;
+        let rotateAsPersistentGroup = false;
         
         // Multi-select variables
         let multiSelectMode = false;
         let clipboard = null;
+        let groupSequence = 0;
 
         // Bounded model history. Selection is captured with each transaction so
         // undo/redo restores both the data and the editor focus deterministically.
@@ -793,7 +803,61 @@
         }
         
         // Create selection box
-        function createSelectionBox(element) {
+        function getPersistentGroupId(elements) {
+            if (elements.length < 2 || !elements[0].groupId) return null;
+            const groupId = elements[0].groupId;
+            if (!elements.every(element => element.groupId === groupId)) return null;
+            const groupSize = model.elements.filter(element => element.groupId === groupId).length;
+            return groupSize === elements.length ? groupId : null;
+        }
+
+        function getSelectionBounds(elements) {
+            const paperRect = paper.getBoundingClientRect();
+            const scaleX = paperRect.width / paper.offsetWidth;
+            const scaleY = paperRect.height / paper.offsetHeight;
+            const visualBounds = elements.map(element => {
+                const elementDiv = document.getElementById(element.id);
+                if (elementDiv && scaleX && scaleY) {
+                    const rect = elementDiv.getBoundingClientRect();
+                    return {
+                        left: (rect.left - paperRect.left) / scaleX,
+                        top: (rect.top - paperRect.top) / scaleY,
+                        right: (rect.right - paperRect.left) / scaleX,
+                        bottom: (rect.bottom - paperRect.top) / scaleY
+                    };
+                }
+                const radians = (element.rotation || 0) * Math.PI / 180;
+                const centerX = element.x + element.width / 2;
+                const centerY = element.y + element.height / 2;
+                const halfWidth = Math.abs(Math.cos(radians)) * element.width / 2
+                    + Math.abs(Math.sin(radians)) * element.height / 2;
+                const halfHeight = Math.abs(Math.sin(radians)) * element.width / 2
+                    + Math.abs(Math.cos(radians)) * element.height / 2;
+                return {
+                    left: centerX - halfWidth,
+                    top: centerY - halfHeight,
+                    right: centerX + halfWidth,
+                    bottom: centerY + halfHeight
+                };
+            });
+            const left = Math.min(...visualBounds.map(bounds => bounds.left));
+            const top = Math.min(...visualBounds.map(bounds => bounds.top));
+            const right = Math.max(...visualBounds.map(bounds => bounds.right));
+            const bottom = Math.max(...visualBounds.map(bounds => bounds.bottom));
+            return { left, top, width: right - left, height: bottom - top };
+        }
+
+        // A persistent group's pivot is the arithmetic mean of its member
+        // centers. A rigid rotation leaves that mean invariant, avoiding drift
+        // when a group is rotated repeatedly.
+        function getGroupRotationCenter(elements) {
+            return {
+                modelX: elements.reduce((sum, element) => sum + element.x + element.width / 2, 0) / elements.length,
+                modelY: elements.reduce((sum, element) => sum + element.y + element.height / 2, 0) / elements.length
+            };
+        }
+
+        function createSelectionBox(elements) {
             // Remove existing selection box
             if (selectionBox) {
                 paper.removeChild(selectionBox);
@@ -802,10 +866,22 @@
             // Create new selection box
             selectionBox = document.createElement('div');
             selectionBox.className = 'selection-box';
+            selectionBox.dataset.selectionCount = String(elements.length);
             
-            // Calculate element dimensions
-            const elementDiv = document.getElementById(element.id);
-            if (elementDiv) {
+            if (elements.length > 1) {
+                const bounds = getSelectionBounds(elements);
+                const pivot = getGroupRotationCenter(elements);
+                selectionBox.style.left = `${bounds.left}px`;
+                selectionBox.style.top = `${bounds.top}px`;
+                selectionBox.style.width = `${bounds.width}px`;
+                selectionBox.style.height = `${bounds.height}px`;
+                selectionBox.style.transform = 'none';
+                selectionBox.dataset.pivotX = String(pivot.modelX);
+                selectionBox.dataset.pivotY = String(pivot.modelY);
+            } else {
+                const element = elements[0];
+                const elementDiv = document.getElementById(element.id);
+                if (!elementDiv) return;
                 // Use element's actual computed style for position
                 const computedStyle = window.getComputedStyle(elementDiv);
                 
@@ -814,7 +890,7 @@
                 selectionBox.style.width = `${elementDiv.offsetWidth}px`;
                 selectionBox.style.height = `${elementDiv.offsetHeight}px`;
                 selectionBox.style.transform = `rotate(${element.rotation || 0}deg)`;
-                
+
                 // Add resize handles
                 const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
                 handles.forEach(position => {
@@ -824,25 +900,28 @@
                     handle.addEventListener('mousedown', startResize);
                     selectionBox.appendChild(handle);
                 });
-                
-                // Add rotate handle
-                const rotateHandle = document.createElement('div');
-                rotateHandle.className = 'rotate-handle';
-                rotateHandle.addEventListener('mousedown', startRotate);
-                selectionBox.appendChild(rotateHandle);
-                
-                // Add event listeners for selection box
-                selectionBox.addEventListener('mousedown', startSelectionBoxDrag);
-                
-                paper.appendChild(selectionBox);
             }
+
+            // Multi-object groups intentionally have move and rotation handles,
+            // but no ambiguous resize handles.
+            const rotateHandle = document.createElement('div');
+            rotateHandle.className = 'rotate-handle';
+            if (elements.length > 1) {
+                const bounds = getSelectionBounds(elements);
+                const pivot = getGroupRotationCenter(elements);
+                rotateHandle.style.left = `${((pivot.modelX - bounds.left) / bounds.width) * 100}%`;
+            }
+            rotateHandle.addEventListener('mousedown', startRotate);
+            selectionBox.appendChild(rotateHandle);
+            selectionBox.addEventListener('mousedown', startSelectionBoxDrag);
+            paper.appendChild(selectionBox);
         }
         
         // Update selection box
         function updateSelectionBox() {
-            const selectedElement = model.elements.find(el => el.selected);
-            if (selectedElement) {
-                createSelectionBox(selectedElement);
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
+                createSelectionBox(selectedElements);
             } else if (selectionBox) {
                 paper.removeChild(selectionBox);
                 selectionBox = null;
@@ -946,13 +1025,18 @@
                 heightInput.value = el.height || '';
                 objectSpecificProperties.textContent = `类型: ${el.type}, 角色: ${el.role || 'N/A'}`;
             } else {
-                selectionInfo.textContent = `选中 ${selectedElements.length} 个对象`;
+                const groupId = getPersistentGroupId(selectedElements);
+                selectionInfo.textContent = groupId
+                    ? `选中组 ${groupId}（${selectedElements.length} 个对象）`
+                    : `选中 ${selectedElements.length} 个对象`;
                 xInput.value = '';
                 yInput.value = '';
                 widthInput.value = '';
                 heightInput.value = '';
                 objectSpecificProperties.textContent = '多选模式';
             }
+            groupButton.disabled = selectedElements.length < 2 || Boolean(getPersistentGroupId(selectedElements));
+            ungroupButton.disabled = !selectedElements.some(element => element.groupId);
         }
 
         function updateDebugInfo() {
@@ -972,6 +1056,16 @@
         // Select an element
         function selectElement(e) {
             e.stopPropagation();
+
+            if (dragPointerMoved || selectionChangedOnMouseDown) {
+                dragPointerMoved = false;
+                selectionChangedOnMouseDown = false;
+                updateSelectionBox();
+                updateModelPreview();
+                updateDebugInfo();
+                updateSelectionInfo();
+                return;
+            }
             
             const elementId = e.target.id;
             const element = model.elements.find(el => el.id === elementId);
@@ -980,15 +1074,19 @@
                 // 防止点击时的位置跳动，确保模型位置与视觉位置一致
                 // 不依赖 getBoundingClientRect，直接使用模型中的 x/y
                 
+                const selectionTargets = element.groupId
+                    ? model.elements.filter(candidate => candidate.groupId === element.groupId)
+                    : [element];
                 if (multiSelectMode) {
-                    // Toggle selection in multi-select mode
-                    element.selected = !element.selected;
+                    // Persistent groups toggle atomically in multi-select mode.
+                    const shouldSelect = !selectionTargets.every(candidate => candidate.selected);
+                    selectionTargets.forEach(candidate => candidate.selected = shouldSelect);
                 } else {
                     // Single select mode
                     model.elements.forEach(el => {
                         el.selected = false;
                     });
-                    element.selected = true;
+                    selectionTargets.forEach(candidate => candidate.selected = true);
                 }
                 
                 // Update properties panel for single selection
@@ -1024,6 +1122,8 @@
         // Start dragging
         function startDrag(e) {
             e.stopPropagation();
+            dragPointerMoved = false;
+            selectionChangedOnMouseDown = false;
             
             const elementId = e.target.id;
             const clickedElement = model.elements.find(el => el.id === elementId);
@@ -1037,20 +1137,24 @@
                 let elementsToDrag = [];
                 const selectedElements = model.elements.filter(el => el.selected);
                 
+                const persistentGroup = clickedElement.groupId
+                    ? model.elements.filter(element => element.groupId === clickedElement.groupId)
+                    : null;
                 if (multiSelectMode) {
                     // 多选模式：如果点击的元素未选中，则添加到选择中
                     if (!clickedElement.selected) {
-                        clickedElement.selected = true;
+                        (persistentGroup || [clickedElement]).forEach(element => element.selected = true);
+                        selectionChangedOnMouseDown = true;
                         elementsToDrag = model.elements.filter(el => el.selected);
                     } else {
                         // 点击已选中的元素，拖动所有选中元素
                         elementsToDrag = selectedElements;
                     }
                 } else {
-                    // 单选模式：只拖动点击的元素
+                    // 单选模式：持久组始终作为一个原子选择和移动。
                     model.elements.forEach(el => el.selected = false);
-                    clickedElement.selected = true;
-                    elementsToDrag = [clickedElement];
+                    elementsToDrag = persistentGroup || [clickedElement];
+                    elementsToDrag.forEach(element => element.selected = true);
                 }
                 beginHistoryTransaction('移动对象');
                 
@@ -1080,6 +1184,7 @@
         // Drag element
         function drag(e) {
             if (draggedElements) {
+                dragPointerMoved = true;
                 const paperRect = paper.getBoundingClientRect();
                 const mouseX = e.clientX - paperRect.left;
                 const mouseY = e.clientY - paperRect.top;
@@ -1111,19 +1216,19 @@
         function startSelectionBoxDrag(e) {
             e.stopPropagation();
             
-            const selectedElement = model.elements.find(el => el.selected);
-            if (selectedElement) {
+            const selectedElements = model.elements.filter(el => el.selected);
+            if (selectedElements.length > 0) {
                 beginHistoryTransaction('移动对象');
                 const paperRect = paper.getBoundingClientRect();
                 const mouseX = e.clientX - paperRect.left;
                 const mouseY = e.clientY - paperRect.top;
                 
                 // 使用与 startDrag 相同的方式计算偏移量
-                draggedElements = [{
-                    element: selectedElement,
-                    offsetX: selectedElement.x - mouseX,
-                    offsetY: selectedElement.y - mouseY
-                }];
+                draggedElements = selectedElements.map(element => ({
+                    element,
+                    offsetX: element.x - mouseX,
+                    offsetY: element.y - mouseY
+                }));
                 
                 // Add event listeners for drag
                 document.addEventListener('mousemove', drag);
@@ -1145,6 +1250,8 @@
             
             // Re-render to update all elements properly
             renderElements();
+            updateModelPreview();
+            updateSelectionInfo();
             
             // Update debug info
             updateDebugInfo();
@@ -1245,16 +1352,23 @@
                 beginHistoryTransaction('旋转对象');
                 rotatingElements = selectedElements;
                 initialRotations = selectedElements.map(el => el.rotation || 0);
+                initialGroupPositions = selectedElements.map(element => ({
+                    x: element.x,
+                    y: element.y,
+                    centerX: element.x + element.width / 2,
+                    centerY: element.y + element.height / 2
+                }));
+                rotateAsPersistentGroup = Boolean(getPersistentGroupId(selectedElements));
                 
-                // Calculate initial mouse angle based on first selected element
-                const firstElement = selectedElements[0];
-                const elementDiv = document.getElementById(firstElement.id);
-                if (elementDiv) {
-                    const rect = elementDiv.getBoundingClientRect();
-                    const centerX = rect.left + rect.width / 2;
-                    const centerY = rect.top + rect.height / 2;
-                    initialMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
-                }
+                rotationCenter = rotateAsPersistentGroup
+                    ? getGroupRotationCenter(selectedElements)
+                    : getGroupRotationCenter([selectedElements[0]]);
+                const paperRect = paper.getBoundingClientRect();
+                const scaleX = paperRect.width / paper.offsetWidth;
+                const scaleY = paperRect.height / paper.offsetHeight;
+                const centerX = paperRect.left + rotationCenter.modelX * scaleX;
+                const centerY = paperRect.top + rotationCenter.modelY * scaleY;
+                initialMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
                 
                 // Add event listeners for rotate
                 document.addEventListener('mousemove', rotate);
@@ -1265,13 +1379,13 @@
         // Rotate element
         function rotate(e) {
             if (rotatingElements) {
-                // Calculate angle based on first element
                 const firstElement = rotatingElements[0];
-                const elementDiv = document.getElementById(firstElement.id);
-                if (elementDiv) {
-                    const rect = elementDiv.getBoundingClientRect();
-                    const centerX = rect.left + rect.width / 2;
-                    const centerY = rect.top + rect.height / 2;
+                if (rotationCenter) {
+                    const paperRect = paper.getBoundingClientRect();
+                    const scaleX = paperRect.width / paper.offsetWidth;
+                    const scaleY = paperRect.height / paper.offsetHeight;
+                    const centerX = paperRect.left + rotationCenter.modelX * scaleX;
+                    const centerY = paperRect.top + rotationCenter.modelY * scaleY;
                     const currentMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
                     
                     // Calculate rotation change
@@ -1285,16 +1399,28 @@
                         while (newRotation < -180) newRotation += 360;
                         
                         element.rotation = Math.round(newRotation);
+
+                        if (rotateAsPersistentGroup) {
+                            const radians = rotationChange * Math.PI / 180;
+                            const dx = initialGroupPositions[index].centerX - rotationCenter.modelX;
+                            const dy = initialGroupPositions[index].centerY - rotationCenter.modelY;
+                            const rotatedCenterX = rotationCenter.modelX + dx * Math.cos(radians) - dy * Math.sin(radians);
+                            const rotatedCenterY = rotationCenter.modelY + dx * Math.sin(radians) + dy * Math.cos(radians);
+                            element.x = rotatedCenterX - element.width / 2;
+                            element.y = rotatedCenterY - element.height / 2;
+                        }
                         
                         // Update DOM element directly
                         const elDiv = document.getElementById(element.id);
                         if (elDiv) {
                             elDiv.style.transform = `rotate(${element.rotation}deg)`;
+                            elDiv.style.left = `${element.x}px`;
+                            elDiv.style.top = `${element.y}px`;
                         }
                     });
                     
                     // Also update selection box
-                    if (selectionBox) {
+                    if (selectionBox && !rotateAsPersistentGroup) {
                         selectionBox.style.transform = `rotate(${firstElement.rotation}deg)`;
                     }
                     
@@ -1314,8 +1440,13 @@
             commitHistoryTransaction();
             rotatingElements = null;
             initialRotations = [];
+            initialGroupPositions = [];
+            rotationCenter = null;
+            rotateAsPersistentGroup = false;
             document.removeEventListener('mousemove', rotate);
             document.removeEventListener('mouseup', stopRotate);
+            renderElements();
+            updateSelectionInfo();
         }
         
 
@@ -1515,6 +1646,37 @@
         multiSelectCheckbox.addEventListener('change', () => {
             multiSelectMode = multiSelectCheckbox.checked;
         });
+
+        function createGroupFromSelection() {
+            const selectedElements = model.elements.filter(element => element.selected);
+            if (selectedElements.length < 2) return false;
+            beginHistoryTransaction('成组');
+            const groupId = `web-group-${Date.now()}-${++groupSequence}`;
+            selectedElements.forEach(element => element.groupId = groupId);
+            commitHistoryTransaction();
+            renderElements();
+            updateModelPreview();
+            updateSelectionInfo();
+            return true;
+        }
+
+        function ungroupSelection() {
+            const selectedElements = model.elements.filter(element => element.selected && element.groupId);
+            if (selectedElements.length === 0) return false;
+            const selectedGroupIds = new Set(selectedElements.map(element => element.groupId));
+            beginHistoryTransaction('解组');
+            model.elements.forEach(element => {
+                if (selectedGroupIds.has(element.groupId)) delete element.groupId;
+            });
+            commitHistoryTransaction();
+            renderElements();
+            updateModelPreview();
+            updateSelectionInfo();
+            return true;
+        }
+
+        groupButton.addEventListener('click', createGroupFromSelection);
+        ungroupButton.addEventListener('click', ungroupSelection);
         
         // Layer input change
         layerInput.addEventListener('input', () => {
@@ -1540,9 +1702,28 @@
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
                 beginHistoryTransaction('修改旋转');
-                selectedElements.forEach(el => {
-                    el.rotation = rotation;
-                });
+                if (getPersistentGroupId(selectedElements)) {
+                    const delta = rotation - (selectedElements[0].rotation || 0);
+                    const radians = delta * Math.PI / 180;
+                    const pivot = getGroupRotationCenter(selectedElements);
+                    const centerX = pivot.modelX;
+                    const centerY = pivot.modelY;
+                    selectedElements.forEach(element => {
+                        const dx = element.x + element.width / 2 - centerX;
+                        const dy = element.y + element.height / 2 - centerY;
+                        const rotatedCenterX = centerX + dx * Math.cos(radians) - dy * Math.sin(radians);
+                        const rotatedCenterY = centerY + dx * Math.sin(radians) + dy * Math.cos(radians);
+                        element.x = rotatedCenterX - element.width / 2;
+                        element.y = rotatedCenterY - element.height / 2;
+                        element.rotation = (element.rotation || 0) + delta;
+                        while (element.rotation > 180) element.rotation -= 360;
+                        while (element.rotation < -180) element.rotation += 360;
+                    });
+                } else {
+                    selectedElements.forEach(el => {
+                        el.rotation = rotation;
+                    });
+                }
                 renderElements();
                 updateModelPreview();
                 updateDebugInfo();
@@ -1732,13 +1913,20 @@
         pasteButton.addEventListener('click', () => {
             if (clipboard) {
                 beginHistoryTransaction('粘贴对象');
+                const pastedGroupIds = new Map();
+                model.elements.forEach(el => el.selected = false);
                 clipboard.forEach((element, index) => {
                     const newElement = JSON.parse(JSON.stringify(element));
                     newElement.id = Date.now().toString() + index;
                     newElement.x = newElement.x + 20;
                     newElement.y = newElement.y + 20;
                     newElement.selected = true;
-                    model.elements.forEach(el => el.selected = false);
+                    if (newElement.groupId) {
+                        if (!pastedGroupIds.has(newElement.groupId)) {
+                            pastedGroupIds.set(newElement.groupId, `web-group-${Date.now()}-${++groupSequence}`);
+                        }
+                        newElement.groupId = pastedGroupIds.get(newElement.groupId);
+                    }
                     model.elements.push(newElement);
                 });
                 commitHistoryTransaction();
