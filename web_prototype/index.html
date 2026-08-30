@@ -419,6 +419,12 @@
             <button id="group-button" disabled>成组</button>
             <button id="ungroup-button" disabled>解组</button>
         </div>
+
+        <div class="toolbar-group">
+            <label>插入</label>
+            <button id="insert-image-button">插入图片</button>
+            <button id="replace-image-button" disabled>替换图片</button>
+        </div>
         
         <div class="toolbar-group">
             <label>排列</label>
@@ -546,6 +552,7 @@
     
     <input type="file" id="file-input" accept=".json" style="display: none;">
     <input type="file" id="latex-file-input" accept=".tex" style="display: none;">
+    <input type="file" id="image-file-input" accept="image/png,image/jpeg,image/webp,image/gif" style="display: none;">
     </div>
 
     <script>
@@ -663,6 +670,7 @@
         const exportPdfButton = document.getElementById('export-pdf-button');
         const fileInput = document.getElementById('file-input');
         const latexFileInput = document.getElementById('latex-file-input');
+        const imageFileInput = document.getElementById('image-file-input');
         const copyButton = document.getElementById('copy-button');
         const undoButton = document.getElementById('undo-button');
         const redoButton = document.getElementById('redo-button');
@@ -670,6 +678,8 @@
         const deleteButton = document.getElementById('delete-button');
         const groupButton = document.getElementById('group-button');
         const ungroupButton = document.getElementById('ungroup-button');
+        const insertImageButton = document.getElementById('insert-image-button');
+        const replaceImageButton = document.getElementById('replace-image-button');
         const multiSelectCheckbox = document.getElementById('multi-select-checkbox');
         const modelJson = document.getElementById('model-json');
         const resetButton = document.getElementById('reset-button');
@@ -706,6 +716,10 @@
         let multiSelectMode = false;
         let clipboard = null;
         let groupSequence = 0;
+        let imageSequence = 0;
+        let pendingImageMode = null;
+        const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+        const SUPPORTED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
 
         // Bounded model history. Selection is captured with each transaction so
         // undo/redo restores both the data and the editor focus deterministically.
@@ -971,7 +985,19 @@
                     div.style.display = 'flex';
                     div.style.alignItems = 'center';
                     div.style.justifyContent = 'center';
-                    div.textContent = element.content;
+                    if (/^data:image\/(png|jpeg|webp|gif);base64,/i.test(element.imageDataUrl || '')) {
+                        const image = document.createElement('img');
+                        image.src = element.imageDataUrl;
+                        image.alt = element.content || '图片';
+                        image.draggable = false;
+                        image.style.width = '100%';
+                        image.style.height = '100%';
+                        image.style.objectFit = 'contain';
+                        image.style.pointerEvents = 'none';
+                        div.appendChild(image);
+                    } else {
+                        div.textContent = element.content;
+                    }
                 } else if (element.type === 'textbox') {
                     // Textbox element
                     div.style.width = `${element.width}px`;
@@ -1037,6 +1063,7 @@
             }
             groupButton.disabled = selectedElements.length < 2 || Boolean(getPersistentGroupId(selectedElements));
             ungroupButton.disabled = !selectedElements.some(element => element.groupId);
+            replaceImageButton.disabled = selectedElements.length !== 1 || selectedElements[0].type !== 'image';
         }
 
         function updateDebugInfo() {
@@ -1677,6 +1704,90 @@
 
         groupButton.addEventListener('click', createGroupFromSelection);
         ungroupButton.addEventListener('click', ungroupSelection);
+
+        function readImageFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('无法读取图片文件'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function decodeImage(dataUrl) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+                image.onerror = () => reject(new Error('图片解码失败'));
+                image.src = dataUrl;
+            });
+        }
+
+        function chooseImage(mode) {
+            pendingImageMode = mode;
+            imageFileInput.click();
+        }
+
+        insertImageButton.addEventListener('click', () => chooseImage('insert'));
+        replaceImageButton.addEventListener('click', () => chooseImage('replace'));
+
+        imageFileInput.addEventListener('change', async () => {
+            const file = imageFileInput.files[0];
+            const mode = pendingImageMode;
+            imageFileInput.value = '';
+            pendingImageMode = null;
+            if (!file || !mode) return;
+            if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
+                alert('仅支持 PNG、JPEG、WebP 或 GIF 图片。');
+                return;
+            }
+            if (file.size > MAX_IMAGE_BYTES) {
+                alert('图片不能超过 2 MB，以避免项目文件和撤销历史过大。');
+                return;
+            }
+
+            try {
+                const dataUrl = await readImageFile(file);
+                const dimensions = await decodeImage(dataUrl);
+                if (mode === 'replace') {
+                    const selectedImages = model.elements.filter(element => element.selected && element.type === 'image');
+                    if (selectedImages.length !== 1) return;
+                    beginHistoryTransaction('替换图片');
+                    selectedImages[0].content = file.name;
+                    selectedImages[0].imageDataUrl = dataUrl;
+                    selectedImages[0].imageMimeType = file.type;
+                    selectedImages[0].imageNaturalWidth = dimensions.width;
+                    selectedImages[0].imageNaturalHeight = dimensions.height;
+                } else {
+                    beginHistoryTransaction('插入图片');
+                    const scale = Math.min(1, 320 / dimensions.width, 240 / dimensions.height);
+                    const imageCount = model.elements.filter(element => element.type === 'image').length;
+                    model.elements.forEach(element => element.selected = false);
+                    model.elements.push({
+                        id: `image-${Date.now()}-${++imageSequence}`,
+                        type: 'image',
+                        content: file.name,
+                        imageDataUrl: dataUrl,
+                        imageMimeType: file.type,
+                        imageNaturalWidth: dimensions.width,
+                        imageNaturalHeight: dimensions.height,
+                        x: 80 + (imageCount % 5) * 20,
+                        y: 80 + (imageCount % 5) * 20,
+                        width: Math.max(50, Math.round(dimensions.width * scale)),
+                        height: Math.max(50, Math.round(dimensions.height * scale)),
+                        rotation: 0,
+                        layerId: Math.min(...model.elements.map(element => element.layerId || 0)) - 1,
+                        selected: true
+                    });
+                }
+                commitHistoryTransaction();
+                renderElements();
+                updateModelPreview();
+                updateSelectionInfo();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
         
         // Layer input change
         layerInput.addEventListener('input', () => {
