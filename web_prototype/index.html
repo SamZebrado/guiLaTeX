@@ -329,6 +329,14 @@
         }
 
         @media print {
+            html,
+            body {
+                width: 8.5in;
+                height: 11in;
+                margin: 0;
+                overflow: hidden;
+            }
+
             .toolbar,
             .properties-panel,
             .debug-info,
@@ -339,11 +347,16 @@
             }
 
             .main-container {
+                display: block;
+                width: 8.5in;
+                height: 11in;
                 padding: 0;
                 margin: 0;
+                overflow: hidden;
             }
 
             .canvas-container {
+                display: block;
                 padding: 0;
             }
 
@@ -360,6 +373,10 @@
             }
 
             .text-element {
+                box-sizing: border-box;
+                padding: 0 !important;
+                border: none !important;
+                overflow: hidden;
                 cursor: default;
                 outline: none !important;
             }
@@ -1554,6 +1571,11 @@
         });
 
         exportPdfButton.addEventListener('click', () => {
+            if (!preparePrintLayout()) {
+                restorePrintLayout();
+                alert('部分文字无法在当前文本框内完整打印。请增大文本框或减小字号后重试。');
+                return;
+            }
             window.print();
         });
         
@@ -1635,6 +1657,76 @@
             };
             return ir;
         }
+
+        // Keep the editable canvas unchanged while producing a bounded,
+        // overlap-free print representation of the single-page model.
+        const printStyleSnapshots = new Map();
+        let printLayoutPrepared = false;
+
+        function preparePrintLayout() {
+            if (printLayoutPrepared) {
+                return [...document.querySelectorAll('[data-print-content-fits]')]
+                    .every(element => element.dataset.printContentFits === 'true');
+            }
+            printLayoutPrepared = true;
+            let allContentFits = true;
+
+            model.elements.forEach(element => {
+                const elementDiv = document.getElementById(element.id);
+                if (!elementDiv || element.visible === false) return;
+
+                printStyleSnapshots.set(element.id, elementDiv.getAttribute('style') || '');
+                elementDiv.style.boxSizing = 'border-box';
+                elementDiv.style.width = `${element.width}px`;
+                elementDiv.style.height = `${element.height}px`;
+                elementDiv.style.minHeight = '0';
+                elementDiv.style.maxHeight = `${element.height}px`;
+                elementDiv.style.padding = '0';
+                elementDiv.style.border = 'none';
+                elementDiv.style.overflow = 'hidden';
+
+                if (element.type !== 'textbox' && element.type !== 'paragraph') return;
+
+                const originalFontSize = Number(element.fontSize) || parseFloat(getComputedStyle(elementDiv).fontSize) || 16;
+                const minimumFontSize = 8;
+                let fittedFontSize = originalFontSize;
+                elementDiv.style.lineHeight = '1.2';
+                elementDiv.style.overflowWrap = 'break-word';
+                elementDiv.style.fontSize = `${fittedFontSize}px`;
+
+                const contentFits = () => (
+                    elementDiv.scrollWidth <= elementDiv.clientWidth
+                    && elementDiv.scrollHeight <= elementDiv.clientHeight
+                );
+                while (!contentFits() && fittedFontSize > minimumFontSize) {
+                    fittedFontSize = Math.max(minimumFontSize, fittedFontSize - 0.25);
+                    elementDiv.style.fontSize = `${fittedFontSize}px`;
+                }
+
+                elementDiv.dataset.printOriginalFontSize = String(originalFontSize);
+                elementDiv.dataset.printFittedFontSize = String(fittedFontSize);
+                elementDiv.dataset.printContentFits = String(contentFits());
+                allContentFits = allContentFits && contentFits();
+            });
+            return allContentFits;
+        }
+
+        function restorePrintLayout() {
+            if (!printLayoutPrepared) return;
+            printStyleSnapshots.forEach((style, elementId) => {
+                const elementDiv = document.getElementById(elementId);
+                if (!elementDiv) return;
+                elementDiv.setAttribute('style', style);
+                delete elementDiv.dataset.printOriginalFontSize;
+                delete elementDiv.dataset.printFittedFontSize;
+                delete elementDiv.dataset.printContentFits;
+            });
+            printStyleSnapshots.clear();
+            printLayoutPrepared = false;
+        }
+
+        window.addEventListener('beforeprint', preparePrintLayout);
+        window.addEventListener('afterprint', restorePrintLayout);
         
         // Initialize
         renderElements();
@@ -1645,6 +1737,8 @@
         // Expose to window for Playwright testing
         window.model = model;
         window.renderElements = renderElements;
+        window.preparePrintLayout = preparePrintLayout;
+        window.restorePrintLayout = restorePrintLayout;
         
         // Output font information
         const requestedFontStack = "'Noto Sans SC', 'Source Han Sans SC', 'Inter', 'Noto Sans', sans-serif";
