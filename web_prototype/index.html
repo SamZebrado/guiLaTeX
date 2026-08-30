@@ -411,6 +411,8 @@
         
         <div class="toolbar-group">
             <label>编辑</label>
+            <button id="undo-button" disabled>撤销</button>
+            <button id="redo-button" disabled>重做</button>
             <button id="copy-button">复制</button>
             <button id="paste-button">粘贴</button>
             <button id="delete-button">删除</button>
@@ -660,6 +662,8 @@
         const fileInput = document.getElementById('file-input');
         const latexFileInput = document.getElementById('latex-file-input');
         const copyButton = document.getElementById('copy-button');
+        const undoButton = document.getElementById('undo-button');
+        const redoButton = document.getElementById('redo-button');
         const pasteButton = document.getElementById('paste-button');
         const deleteButton = document.getElementById('delete-button');
         const multiSelectCheckbox = document.getElementById('multi-select-checkbox');
@@ -692,6 +696,101 @@
         // Multi-select variables
         let multiSelectMode = false;
         let clipboard = null;
+
+        // Bounded model history. Selection is captured with each transaction so
+        // undo/redo restores both the data and the editor focus deterministically.
+        const HISTORY_LIMIT = 100;
+        const undoStack = [];
+        const redoStack = [];
+        let historyTransaction = null;
+
+        function cloneModel(value = model) {
+            return JSON.parse(JSON.stringify(value));
+        }
+
+        function updateHistoryControls() {
+            undoButton.disabled = undoStack.length === 0 && historyTransaction === null;
+            redoButton.disabled = redoStack.length === 0;
+            undoButton.title = undoStack.length ? `撤销：${undoStack[undoStack.length - 1].label}` : '没有可撤销的操作';
+            redoButton.title = redoStack.length ? `重做：${redoStack[redoStack.length - 1].label}` : '没有可重做的操作';
+        }
+
+        function beginHistoryTransaction(label) {
+            if (historyTransaction) return;
+            historyTransaction = {
+                label,
+                before: cloneModel(),
+                beforeSerialized: JSON.stringify(model)
+            };
+            updateHistoryControls();
+        }
+
+        function commitHistoryTransaction() {
+            if (!historyTransaction) return false;
+            const transaction = historyTransaction;
+            historyTransaction = null;
+            const afterSerialized = JSON.stringify(model);
+            if (afterSerialized === transaction.beforeSerialized) {
+                updateHistoryControls();
+                return false;
+            }
+            undoStack.push({ label: transaction.label, before: transaction.before, after: cloneModel() });
+            if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+            redoStack.length = 0;
+            updateHistoryControls();
+            return true;
+        }
+
+        function refreshEditorAfterHistory() {
+            window.model = model;
+            renderElements();
+            updateModelPreview();
+            updateDebugInfo();
+            updateSelectionInfo();
+            const selectedElements = model.elements.filter(element => element.selected);
+            if (selectedElements.length === 1) {
+                const element = selectedElements[0];
+                contentInput.value = element.content || '';
+                fontSizeSlider.value = element.fontSize || 16;
+                fontSizeValue.textContent = element.fontSize || 16;
+                chineseFontSelect.value = element.chineseFont || 'Noto Sans SC';
+                englishFontSelect.value = element.englishFont || 'Inter';
+                rotationSlider.value = element.rotation || 0;
+                rotationValue.textContent = element.rotation || 0;
+                layerInput.value = element.layerId ?? '';
+            } else {
+                contentInput.value = '';
+            }
+        }
+
+        function undoModelChange() {
+            commitHistoryTransaction();
+            const entry = undoStack.pop();
+            if (!entry) return false;
+            model = cloneModel(entry.before);
+            redoStack.push(entry);
+            refreshEditorAfterHistory();
+            updateHistoryControls();
+            return true;
+        }
+
+        function redoModelChange() {
+            commitHistoryTransaction();
+            const entry = redoStack.pop();
+            if (!entry) return false;
+            model = cloneModel(entry.after);
+            undoStack.push(entry);
+            refreshEditorAfterHistory();
+            updateHistoryControls();
+            return true;
+        }
+
+        function clearModelHistory() {
+            historyTransaction = null;
+            undoStack.length = 0;
+            redoStack.length = 0;
+            updateHistoryControls();
+        }
         
         // Create selection box
         function createSelectionBox(element) {
@@ -953,6 +1052,7 @@
                     clickedElement.selected = true;
                     elementsToDrag = [clickedElement];
                 }
+                beginHistoryTransaction('移动对象');
                 
                 // 计算所有要拖动的元素的偏移量
                 draggedElements = elementsToDrag.map(el => {
@@ -1013,6 +1113,7 @@
             
             const selectedElement = model.elements.find(el => el.selected);
             if (selectedElement) {
+                beginHistoryTransaction('移动对象');
                 const paperRect = paper.getBoundingClientRect();
                 const mouseX = e.clientX - paperRect.left;
                 const mouseY = e.clientY - paperRect.top;
@@ -1032,6 +1133,7 @@
         
         // Stop dragging
         function stopDrag() {
+            commitHistoryTransaction();
             draggedElements = null;
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', stopDrag);
@@ -1058,6 +1160,7 @@
             
             const selectedElement = model.elements.find(el => el.selected);
             if (selectedElement && (selectedElement.type === 'image' || selectedElement.type === 'textbox')) {
+                beginHistoryTransaction('调整对象大小');
                 resizingElement = selectedElement;
                 resizePosition = e.target.dataset.position;
                 
@@ -1123,6 +1226,7 @@
         
         // Stop resizing
         function stopResize() {
+            commitHistoryTransaction();
             resizingElement = null;
             resizePosition = '';
             document.removeEventListener('mousemove', resize);
@@ -1138,6 +1242,7 @@
             
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('旋转对象');
                 rotatingElements = selectedElements;
                 initialRotations = selectedElements.map(el => el.rotation || 0);
                 
@@ -1206,6 +1311,7 @@
         
         // Stop rotating
         function stopRotate() {
+            commitHistoryTransaction();
             rotatingElements = null;
             initialRotations = [];
             document.removeEventListener('mousemove', rotate);
@@ -1218,10 +1324,12 @@
         function moveToTop() {
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('移到顶部');
                 const minLayerId = Math.min(...model.elements.map(el => el.layerId || 0));
                 selectedElements.forEach(el => {
                     el.layerId = minLayerId - 1;
                 });
+                commitHistoryTransaction();
                 renderElements();
                 updateModelPreview();
                 updateDebugInfo();
@@ -1231,10 +1339,12 @@
         function moveToBottom() {
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('移到底部');
                 const maxLayerId = Math.max(...model.elements.map(el => el.layerId || 0));
                 selectedElements.forEach(el => {
                     el.layerId = maxLayerId + 1;
                 });
+                commitHistoryTransaction();
                 renderElements();
                 updateModelPreview();
                 updateDebugInfo();
@@ -1244,9 +1354,11 @@
         function moveUp() {
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('上移图层');
                 selectedElements.forEach(el => {
                     el.layerId = (el.layerId || 0) - 1;
                 });
+                commitHistoryTransaction();
                 renderElements();
                 updateModelPreview();
                 updateDebugInfo();
@@ -1256,9 +1368,11 @@
         function moveDown() {
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('下移图层');
                 selectedElements.forEach(el => {
                     el.layerId = (el.layerId || 0) + 1;
                 });
+                commitHistoryTransaction();
                 renderElements();
                 updateModelPreview();
                 updateDebugInfo();
@@ -1283,6 +1397,7 @@
         
         // Reset demo button
         resetButton.addEventListener('click', () => {
+            beginHistoryTransaction('重置演示');
             // Reset model to initial state
             model = {
                 elements: [
@@ -1369,6 +1484,8 @@
                     }
                 ]
             };
+            window.model = model;
+            commitHistoryTransaction();
             
             // Reset properties panel
             contentInput.value = '';
@@ -1405,6 +1522,7 @@
             if (selectedElements.length > 0) {
                 const layerValue = parseFloat(layerInput.value);
                 if (!isNaN(layerValue)) {
+                    beginHistoryTransaction('修改图层');
                     selectedElements.forEach(el => {
                         el.layerId = layerValue;
                     });
@@ -1421,6 +1539,7 @@
             
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('修改旋转');
                 selectedElements.forEach(el => {
                     el.rotation = rotation;
                 });
@@ -1434,6 +1553,7 @@
         contentInput.addEventListener('input', () => {
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length === 1) {
+                beginHistoryTransaction('编辑文字');
                 selectedElements[0].content = contentInput.value;
                 renderElements();
                 updateModelPreview();
@@ -1447,6 +1567,7 @@
             
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('修改字号');
                 selectedElements.forEach(el => {
                     if (el.type !== 'image') {
                         el.fontSize = fontSize;
@@ -1461,11 +1582,13 @@
         chineseFontSelect.addEventListener('change', () => {
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('修改中文字体');
                 selectedElements.forEach(el => {
                     if (el.type !== 'image') {
                         el.chineseFont = chineseFontSelect.value;
                     }
                 });
+                commitHistoryTransaction();
                 renderElements();
                 updateModelPreview();
             }
@@ -1475,11 +1598,13 @@
         englishFontSelect.addEventListener('change', () => {
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('修改英文字体');
                 selectedElements.forEach(el => {
                     if (el.type !== 'image') {
                         el.englishFont = englishFontSelect.value;
                     }
                 });
+                commitHistoryTransaction();
                 renderElements();
                 updateModelPreview();
             }
@@ -1487,10 +1612,12 @@
         
         // Layer to integer button
         layerToIntegerBtn.addEventListener('click', () => {
+            beginHistoryTransaction('规范图层编号');
             const sortedElements = [...model.elements].sort((a, b) => (a.layerId || 0) - (b.layerId || 0));
             sortedElements.forEach((element, index) => {
                 element.layerId = index;
             });
+            commitHistoryTransaction();
             renderElements();
             updateModelPreview();
         });
@@ -1518,6 +1645,8 @@
                 reader.onload = (e) => {
                     try {
                         model = JSON.parse(e.target.result);
+                        window.model = model;
+                        clearModelHistory();
                         renderElements();
                         updateModelPreview();
                         updateDebugInfo();
@@ -1602,6 +1731,7 @@
         
         pasteButton.addEventListener('click', () => {
             if (clipboard) {
+                beginHistoryTransaction('粘贴对象');
                 clipboard.forEach((element, index) => {
                     const newElement = JSON.parse(JSON.stringify(element));
                     newElement.id = Date.now().toString() + index;
@@ -1611,6 +1741,7 @@
                     model.elements.forEach(el => el.selected = false);
                     model.elements.push(newElement);
                 });
+                commitHistoryTransaction();
                 renderElements();
                 updateModelPreview();
                 updateSelectionInfo();
@@ -1620,10 +1751,32 @@
         deleteButton.addEventListener('click', () => {
             const selectedElements = model.elements.filter(el => el.selected);
             if (selectedElements.length > 0) {
+                beginHistoryTransaction('删除对象');
                 model.elements = model.elements.filter(el => !el.selected);
+                commitHistoryTransaction();
                 renderElements();
                 updateModelPreview();
                 updateSelectionInfo();
+            }
+        });
+
+        [contentInput, fontSizeSlider, rotationSlider, layerInput].forEach(control => {
+            control.addEventListener('change', commitHistoryTransaction);
+            control.addEventListener('blur', commitHistoryTransaction);
+        });
+
+        undoButton.addEventListener('click', undoModelChange);
+        redoButton.addEventListener('click', redoModelChange);
+        document.addEventListener('keydown', event => {
+            const modifier = event.metaKey || event.ctrlKey;
+            if (!modifier) return;
+            const key = event.key.toLowerCase();
+            if (key === 'z' && !event.shiftKey) {
+                event.preventDefault();
+                undoModelChange();
+            } else if ((key === 'z' && event.shiftKey) || key === 'y') {
+                event.preventDefault();
+                redoModelChange();
             }
         });
         
@@ -1737,8 +1890,18 @@
         // Expose to window for Playwright testing
         window.model = model;
         window.renderElements = renderElements;
+        window.undoModelChange = undoModelChange;
+        window.redoModelChange = redoModelChange;
+        window.getHistoryStatus = () => ({
+            undo_count: undoStack.length,
+            redo_count: redoStack.length,
+            transaction_open: historyTransaction !== null,
+            undo_label: undoStack.at(-1)?.label || null,
+            redo_label: redoStack.at(-1)?.label || null
+        });
         window.preparePrintLayout = preparePrintLayout;
         window.restorePrintLayout = restorePrintLayout;
+        updateHistoryControls();
         
         // Output font information
         const requestedFontStack = "'Noto Sans SC', 'Source Han Sans SC', 'Inter', 'Noto Sans', sans-serif";
