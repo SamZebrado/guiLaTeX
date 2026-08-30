@@ -1,127 +1,56 @@
 # guiLaTeX
 
-A visual LaTeX editor with drag-and-drop functionality, enabling users to visually manipulate LaTeX elements without writing code.
+guiLaTeX is a Web-first visual editor for a bounded, single-page LaTeX layout format. The current Web v1 lets you place text, images, and a supported subset of equations on a Letter-size canvas, edit them visually, save the project, and export the result.
 
-## Vision
+## Run the Web editor
 
-guiLaTeX aims to be:
-- A visual LaTeX editor with true WYSIWYG experience
-- Support drag-and-drop editing of LaTeX elements (like Photoshop)
-- Allow direct formatting changes (font, size, color, layout) like Word
-- Generate high-quality LaTeX output in the background
-- Cross-platform (Windows, macOS, Linux)
+Python 3.8 or newer is sufficient; the Web v1 runtime has no third-party Python dependency.
 
-## Why guiLaTeX?
+```bash
+python3 web_prototype/server.py
+```
 
-Existing LaTeX editors fall into two categories:
-1. **Code editors** (TeXstudio, Texmaker): Require knowledge of LaTeX syntax
-2. **Structure editors** (LyX): Focus on document structure, not visual manipulation
+Open `http://127.0.0.1:8000/` in a Chromium-based browser. The loopback server provides the editor and the same-origin LaTeX import/export endpoints.
 
-guiLaTeX fills the gap by providing:
-- **True visual editing**: Drag and drop elements like in Photoshop
-- **Direct formatting**: Change fonts, colors, sizes like in Word
-- **LaTeX quality**: Professional output powered by LaTeX engine
-- **No code required**: Users don't need to write LaTeX code
+## Web v1 capabilities
 
-## Features (Planned)
+- Single Letter-size page with drag, resize, rotation, coordinate, size, font-size, and layer controls.
+- Multi-selection and persistent groups. Group move and rotation, ungroup, undo/redo, and project reopen preserve the supported group contract.
+- Project save/open using guiLaTeX JSON.
+- Raster image insertion and replacement (PNG, JPEG, GIF, or WebP; up to 2 MB each).
+- Offline equation insertion from a bounded TeX-like subset rendered as safe local MathML.
+- Export of the internal representation (IR) as JSON.
+- Export of conforming LaTeX and import of guiLaTeX-generated conforming `.tex` through the normal Web UI.
+- PDF output through the browser print dialog, with a print layout matched to the editor page.
 
-### Core Features
-- Visual canvas with drag-and-drop support
-- Element selection and manipulation
-- Property panel for formatting (font, size, color, alignment)
-- Real-time PDF preview
-- Math formula visual editor
-- Table and figure support
+For operating instructions, see [docs/user-guide.md](docs/user-guide.md).
 
-### Advanced Features
-- Import existing LaTeX documents
-- Export to LaTeX source code
-- Template library
-- Custom themes
-- Plugin system (future)
+## Deliberate v1 boundaries
 
-## Technology Stack
+- The LaTeX importer is for guiLaTeX's conforming single-page output, not arbitrary LaTeX documents.
+- Project JSON is the lossless persistence format. Persistent group metadata and embedded image bytes are not represented by the conforming LaTeX format.
+- Equation support is intentionally limited to the documented offline TeX-like subset; it is not a general TeX or MathML parser.
+- PDF export uses Chromium's print pipeline. It is not native TeX compilation and does not promise identical font metrics to an external TeX engine.
+- The server binds to loopback by default and is intended for local use. Collaboration, multi-page documents, tables, templates, and plugins are outside this Web v1.
+- The Qt application is a secondary desktop validation route and is not the Web v1 completion criterion.
 
-### Under Evaluation
-- **Option 1**: Qt 6 (C++ or Python)
-  - Pros: Native performance, cross-platform, mature
-  - Cons: Steeper learning curve, larger binaries
+## Tests
 
-- **Option 2**: Electron + React/Vue
-  - Pros: Web technologies, rapid development, large ecosystem
-  - Cons: Larger memory footprint, performance overhead
+Run the Web contract suite from the repository root:
 
-### Core Components
-1. **Visual Editor Canvas**: Element rendering and manipulation
-2. **Property Editor**: Formatting controls
-3. **LaTeX Bridge**: Visual ↔ LaTeX conversion
-4. **Preview System**: Real-time PDF rendering
+```bash
+python3 -m unittest discover -s tests -p 'test_web_*.py'
+```
 
-## Project Status
+Real Chromium evidence is also required for release acceptance; unit tests alone do not prove browser interaction or downloaded artifacts.
 
-**Current Phase**: Initialization and Planning
+## Repository layout
 
-See [STATUS.md](STATUS.md) for current state, [PLAN.md](PLAN.md) for development roadmap, and [PROJECT_LOG.md](PROJECT_LOG.md) for development history.
-
-### Web Version Status
-
-#### Currently Supported
-- ✅ Export to IR/JSON format
-- ✅ Export to LaTeX source code
-- ✅ Export to PDF via browser print
-
-#### Implementation Note
-- PDF export is implemented via browser print path (not native PDF generation)
-
-#### Usage Positioning
-- Single-page优先
-- 内部闭环优先
-- Web-first 中间版 / v1 里程碑版
-
-#### Notes
-- PDF can be obtained indirectly through:
-  1. Generate LaTeX first, then compile to PDF using external LaTeX compiler
-  2. Use browser print function (Ctrl+P or Cmd+P) to export to PDF
-- Qt version status is not a completion criterion for this version
-
-## Development
-
-This project uses a structured development workflow with STATUS + LOG + PLAN pattern. See [dev-workflow skill](../.trae/skills/dev-workflow/SKILL.md) for details.
-
-### Getting Started
-
-1. Read [STATUS.md](STATUS.md) to understand current state
-2. Read [PLAN.md](PLAN.md) to see active tasks
-3. Review recent [PROJECT_LOG.md](PROJECT_LOG.md) entries
-4. Choose a task from PLAN.md
-5. Implement with verification
-6. Update STATUS.md and PROJECT_LOG.md
-
-## Requirements
-
-### System Requirements
-- TeX Live 2022 or later (or MiKTeX)
-- C++17 compiler (if using Qt/C++)
-- Python 3.8+ (if using Qt/Python)
-- Node.js 16+ (if using Electron)
-
-### Platform Support
-- macOS 10.15+ (Intel and Apple Silicon)
-- Windows 10+
-- Linux (Ubuntu 20.04+, Fedora, etc.)
+- `web_prototype/` — Web v1 editor and local loopback server.
+- `export_core/` — shared IR validation and LaTeX conversion code.
+- `tests/test_web_*.py` — Web product and protocol contract tests.
+- `src/` — secondary Qt desktop implementation.
 
 ## License
 
-To be determined (considering MIT, Apache 2.0, or GPL v3)
-
-## Contributing
-
-Contributions are welcome! Please read the development workflow documentation before contributing.
-
-## Contact
-
-Project repository: `guiLaTeX/`
-
----
-
-**Note**: This project is in early development phase. Features and architecture are subject to change.
+No project license has been selected yet. Do not assume permission beyond the applicable copyright law.

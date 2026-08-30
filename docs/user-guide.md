@@ -1,172 +1,75 @@
-# guiLaTeX User Guide
+# guiLaTeX Web v1 User Guide
 
-## Introduction
+## Start the editor
 
-guiLaTeX is a visual LaTeX editor that allows you to create LaTeX documents using a drag-and-drop interface, similar to Photoshop or Word. This guide will help you get started with guiLaTeX and make the most of its features.
+From the repository root, run:
 
-## Installation
+```bash
+python3 web_prototype/server.py
+```
 
-### Prerequisites
-- Python 3.8 or higher
-- PyQt6
-- LaTeX distribution (TeX Live, MiKTeX, etc.)
+Then open `http://127.0.0.1:8000/` in a Chromium-based browser. Keep the server running while importing or exporting LaTeX.
 
-### Installation Steps
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd guiLaTeX
-   ```
+## Create and edit objects
 
-2. **Create and activate virtual environment**:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On macOS/Linux
-   # venv\Scripts\activate  # On Windows
-   ```
+Use the toolbar to insert text, an image, or an equation. Click an object to select it, then:
 
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+- Drag it on the canvas to move it.
+- Drag its resize handle to change its size.
+- Drag its rotation handle to rotate it.
+- Use the property panel to edit position, size, rotation, layer, and applicable text properties.
 
-4. **Run the application**:
-   ```bash
-   python src/gui/main.py
-   ```
+Property edits, dragging, grouping, insertion, deletion, and supported image/equation changes participate in the bounded undo/redo history. Use the Undo and Redo buttons.
 
-## User Interface Overview
+## Multi-select and groups
 
-The guiLaTeX interface consists of three main components:
+Enable **Multi-select**, then click each object that should be included. Select **Group** to create a persistent group.
 
-1. **Canvas** (left): The main editing area where you create and manipulate LaTeX elements
-2. **Property Panel** (right): Displays and allows editing of properties for selected elements
-3. **PDF Preview** (bottom): Shows real-time preview of the generated PDF
+- Moving or rotating one selected grouped member applies the group transform.
+- **Ungroup** removes the persistent relationship without deleting its members.
+- Saving and reopening a project preserves group membership and the supported group transform behavior.
 
-## Basic Usage
+The same object cannot belong to two groups at once.
 
-### Adding Elements
+## Images
 
-1. **Text Elements**:
-   - TODO: Add text element functionality
+Choose **Insert Image** and select a PNG, JPEG, GIF, or WebP file. Each image must be 2 MB or smaller. With an image selected, **Replace Image** changes its content while retaining its layout properties.
 
-2. **Math Elements**:
-   - TODO: Add math element functionality
+Image bytes are embedded in project JSON so project save/open is lossless for the supported workflow. Conforming LaTeX export preserves image placement metadata but not the embedded image binary; keep project JSON as the editable source of truth.
 
-3. **Other Elements**:
-   - TODO: Add other element types
+## Equations
 
-### Selecting Elements
+Choose **Insert Equation** to add the default formula. With the equation selected, edit its source in the **Content** field. The editor renders the supported TeX-like source as safe local MathML without a network dependency.
 
-- **Click** on an element to select it
-- **Ctrl+Click** to select multiple elements
-- **Ctrl+A** to select all elements
-- **Click outside** any element to deselect all
+The supported subset covers common symbols, `\\frac`, `\\sqrt`, superscripts, subscripts, grouped expressions, and `\\text`. Unsupported syntax is shown as a visible fallback rather than executed. This is not an arbitrary TeX or MathML parser.
 
-### Manipulating Elements
+## Save and reopen a project
 
-- **Drag** elements to move them around the canvas
-- **Resize** elements using resize handles (TODO: Implement resize functionality)
-- **Rotate** elements (TODO: Implement rotate functionality)
+Choose **Save Project** to download a guiLaTeX JSON file. Choose **Open Project** to restore it. Project JSON is the lossless format for all supported Web v1 fields, including groups and embedded images.
 
-### Editing Properties
+## LaTeX workflow
 
-When an element is selected, its properties are displayed in the Property Panel. You can edit:
+Choose **Export LaTeX** to download conforming `.tex`. Choose **Import LaTeX** to reopen guiLaTeX-generated conforming output through the same Web UI.
 
-- **Font**: Family, size, and color
-- **Text**: Content and formatting
-- **Position**: X and Y coordinates
+This roundtrip is intentionally bounded to the single-page, ungrouped conforming subset. It is not a general-purpose importer for arbitrary LaTeX. Fields outside that format, including persistent groups and embedded image bytes, require project JSON.
 
-### Exporting and Previewing
+## IR export
 
-- **F5** or **File → Preview PDF**: Generate and view PDF
-- **Ctrl+E** or **File → Export**: Export LaTeX code
+Choose **Export IR** to download the validated intermediate representation as JSON. This artifact is intended for diagnostics and integration; project JSON remains the normal editable-project format.
 
-## Keyboard Shortcuts
+## PDF output
 
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+N | New document |
-| Ctrl+O | Open document |
-| Ctrl+S | Save document |
-| Ctrl+E | Export document |
-| F5 | Preview PDF |
-| Ctrl+Q | Exit application |
-| Ctrl+Z | Undo |
-| Ctrl+Y | Redo |
-| Ctrl+X | Cut |
-| Ctrl+C | Copy |
-| Ctrl+V | Paste |
-| Ctrl+A | Select all |
-| Ctrl++ | Zoom in |
-| Ctrl+- | Zoom out |
+Choose **Export PDF**, then select **Save as PDF** in Chromium's print dialog. The editor applies a Letter-size print layout and hides editor chrome before printing.
 
-## Advanced Features
+PDF output uses the browser print engine, not native TeX compilation. Browser font availability and print settings can affect metrics. Confirm Letter paper, 100% scale, and disabled headers/footers if the print dialog has changed those settings.
 
-### LaTeX Integration
+## Current limits
 
-guiLaTeX automatically generates LaTeX code from your visual elements. You can:
+- One Letter-size page per project.
+- Local loopback use; no collaboration service.
+- No general LaTeX import, multi-page layout, tables, templates, or plugin system.
+- Equation input is limited to the supported offline TeX-like subset.
+- PDF is browser-print output, not a TeX-compiled preview.
+- Qt desktop behavior is separate from the Web v1 contract.
 
-- View the generated LaTeX code
-- Export the code to a .tex file
-- Compile to PDF with a single click
-
-### Math Formula Editing
-
-TODO: Add math formula editing instructions
-
-### Tables and Figures
-
-TODO: Add tables and figures instructions
-
-## Troubleshooting
-
-### Common Issues
-
-1. **LaTeX engine not found**:
-   - Ensure you have a LaTeX distribution installed
-   - Check that LaTeX commands are in your system PATH
-
-2. **PDF preview not working**:
-   - Check that LaTeX compilation is successful
-   - Ensure you have Poppler installed for PDF rendering
-
-3. **Elements not displaying correctly**:
-   - Check that PyQt6 is properly installed
-   - Restart the application
-
-## FAQ
-
-**Q: Can I import existing LaTeX documents?**
-A: TODO: Implement import functionality
-
-**Q: Is guiLaTeX cross-platform?**
-A: Yes, guiLaTeX works on Windows, macOS, and Linux.
-
-**Q: How do I add custom LaTeX packages?**
-A: TODO: Implement package management
-
-**Q: Can I collaborate with others on a document?**
-A: TODO: Implement collaboration features
-
-## Support
-
-If you encounter any issues or have questions:
-
-1. Check this user guide
-2. Refer to the project documentation
-3. TODO: Add support contact information
-
-## Contributing
-
-guiLaTeX is an open-source project. Contributions are welcome!
-
-- TODO: Add contribution guidelines
-
-## License
-
-TODO: Add license information
-
----
-
-**Note**: guiLaTeX is currently in development. Features and functionality may change.
+If an import is rejected, keep the original file, verify that it was exported by this Web version, and use project JSON when lossless editing is required.
