@@ -2204,36 +2204,58 @@
         
         // Import LaTeX
         importLatexButton.addEventListener('click', () => {
-            const importSteps = `LaTeX 导入流程：\n\n1. 准备 conforming LaTeX 文件（如 Qt 导出的 tex 文件）\n2. 运行 Python 桥接脚本：\n   python3 core_to_web_bridge.py <latex_file> <output_json>\n3. 点击"打开项目"按钮，选择生成的 JSON 文件\n\n注意：此功能依赖 Python 桥接脚本，浏览器内无法直接处理 LaTeX 文件。`;
-            
-            if (confirm(importSteps + '\n\n是否继续选择 LaTeX 文件？')) {
-                latexFileInput.click();
-            }
+            latexFileInput.click();
         });
         
-        latexFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                alert('已选择 LaTeX 文件：' + file.name + '\n\n请按照上述流程运行 Python 桥接脚本进行处理。');
-            }
+        latexFileInput.addEventListener('change', async () => {
+            const file = latexFileInput.files[0];
             latexFileInput.value = '';
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                alert('LaTeX 文件不能超过 5 MB。');
+                return;
+            }
+            try {
+                const response = await fetch('/api/import-latex', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-tex; charset=utf-8' },
+                    body: await file.text()
+                });
+                const payload = await response.json();
+                if (!response.ok || !payload.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+                model = payload.model;
+                window.model = model;
+                clearModelHistory();
+                renderElements();
+                updateModelPreview();
+                updateDebugInfo();
+                syncPropertyPanelFromSelection();
+            } catch (error) {
+                alert(`LaTeX 导入失败：${error.message}\n请通过 python3 web_prototype/server.py 启动本地 ExportCore 服务。`);
+            }
         });
         
         // Export LaTeX
-        exportLatexButton.addEventListener('click', () => {
-            const exportSteps = `LaTeX 导出流程：\n\n1. 点击"导出 IR"按钮，保存 IR 文件\n2. 运行 Python 桥接脚本：\n   python3 web_to_core_bridge.py <input_ir.json> <output.tex>\n3. 查看生成的 LaTeX 文件（保存在 temp/web_to_core/ 目录）\n\n注意：此功能依赖 Python 桥接脚本，浏览器内无法直接生成 LaTeX 文件。`;
-            
-            if (confirm(exportSteps + '\n\n是否先导出 IR 文件？')) {
-                // 自动触发导出 IR
-                const ir = exportToIR();
-                const dataStr = JSON.stringify(ir, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
+        exportLatexButton.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/export-latex', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: exportToIR() })
+                });
+                if (!response.ok) {
+                    const payload = await response.json().catch(() => ({}));
+                    throw new Error(payload.error || `HTTP ${response.status}`);
+                }
+                const latexBlob = await response.blob();
+                const url = URL.createObjectURL(latexBlob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = 'guilatex_ir.json';
+                link.download = 'guilatex_export.tex';
                 link.click();
                 URL.revokeObjectURL(url);
+            } catch (error) {
+                alert(`LaTeX 导出失败：${error.message}\n请通过 python3 web_prototype/server.py 启动本地 ExportCore 服务。`);
             }
         });
         
