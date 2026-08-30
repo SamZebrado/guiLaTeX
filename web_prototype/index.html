@@ -423,7 +423,6 @@
             <button id="save-button">保存项目</button>
             <button id="import-latex-button">导入 LaTeX</button>
             <button id="export-latex-button">导出 LaTeX</button>
-            <button id="export-screenshot-button">导出截图</button>
             <button id="export-ir-button">导出 IR</button>
             <button id="export-pdf-button">导出 PDF</button>
         </div>
@@ -685,7 +684,6 @@
         const saveButton = document.getElementById('save-button');
         const importLatexButton = document.getElementById('import-latex-button');
         const exportLatexButton = document.getElementById('export-latex-button');
-        const exportScreenshotButton = document.getElementById('export-screenshot-button');
         const exportIRButton = document.getElementById('export-ir-button');
         const exportPdfButton = document.getElementById('export-pdf-button');
         const fileInput = document.getElementById('file-input');
@@ -2054,6 +2052,35 @@
                 }
             }
         });
+
+        function updateSelectedGeometry() {
+            const selectedElements = model.elements.filter(element => element.selected);
+            if (selectedElements.length !== 1) return;
+            const element = selectedElements[0];
+            const values = {
+                x: Number.parseFloat(xInput.value),
+                y: Number.parseFloat(yInput.value),
+                width: Number.parseFloat(widthInput.value),
+                height: Number.parseFloat(heightInput.value)
+            };
+            if (!Object.values(values).every(Number.isFinite)) return;
+            beginHistoryTransaction('修改几何');
+            element.x = values.x;
+            element.y = values.y;
+            element.width = Math.max(1, values.width);
+            element.height = Math.max(1, values.height);
+            widthInput.value = element.width;
+            heightInput.value = element.height;
+            renderElements();
+            updateModelPreview();
+            updateDebugInfo();
+        }
+
+        [xInput, yInput, widthInput, heightInput].forEach(control => {
+            control.addEventListener('input', updateSelectedGeometry);
+            control.addEventListener('change', commitHistoryTransaction);
+            control.addEventListener('blur', commitHistoryTransaction);
+        });
         
         // Handle rotation slider change - support multiple elements
         rotationSlider.addEventListener('input', () => {
@@ -2259,10 +2286,6 @@
             }
         });
         
-        exportScreenshotButton.addEventListener('click', () => {
-            alert('请使用浏览器截图功能手动截图。\n\n快捷键：\n- Mac: Cmd+Shift+4\n- Windows: Win+Shift+S');
-        });
-
         exportPdfButton.addEventListener('click', () => {
             if (!preparePrintLayout()) {
                 restorePrintLayout();
