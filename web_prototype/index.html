@@ -792,21 +792,7 @@
             renderElements();
             updateModelPreview();
             updateDebugInfo();
-            updateSelectionInfo();
-            const selectedElements = model.elements.filter(element => element.selected);
-            if (selectedElements.length === 1) {
-                const element = selectedElements[0];
-                contentInput.value = element.content || '';
-                fontSizeSlider.value = element.fontSize || 16;
-                fontSizeValue.textContent = element.fontSize || 16;
-                chineseFontSelect.value = element.chineseFont || 'Noto Sans SC';
-                englishFontSelect.value = element.englishFont || 'Inter';
-                rotationSlider.value = element.rotation || 0;
-                rotationValue.textContent = element.rotation || 0;
-                layerInput.value = element.layerId ?? '';
-            } else {
-                contentInput.value = '';
-            }
+            syncPropertyPanelFromSelection();
         }
 
         function undoModelChange() {
@@ -1245,6 +1231,27 @@
             replaceImageButton.disabled = selectedElements.length !== 1 || selectedElements[0].type !== 'image';
         }
 
+        function syncPropertyPanelFromSelection() {
+            updateSelectionInfo();
+            const selectedElements = model.elements.filter(element => element.selected);
+            if (selectedElements.length === 1) {
+                const element = selectedElements[0];
+                contentInput.value = element.content || '';
+                if (element.type !== 'image') {
+                    fontSizeSlider.value = element.fontSize || 16;
+                    fontSizeValue.textContent = element.fontSize || 16;
+                    chineseFontSelect.value = element.chineseFont || 'Noto Sans SC';
+                    englishFontSelect.value = element.englishFont || 'Inter';
+                }
+                rotationSlider.value = element.rotation || 0;
+                rotationValue.textContent = element.rotation || 0;
+                layerInput.value = element.layerId ?? '';
+            } else {
+                contentInput.value = '';
+                layerInput.value = '';
+            }
+        }
+
         function updateDebugInfo() {
             debugOffset.textContent = `偏移: (${Math.round(offsetX)}, ${Math.round(offsetY)})`;
             if (draggedElements && draggedElements.length > 0) {
@@ -1269,7 +1276,7 @@
                 updateSelectionBox();
                 updateModelPreview();
                 updateDebugInfo();
-                updateSelectionInfo();
+                syncPropertyPanelFromSelection();
                 return;
             }
             
@@ -1322,7 +1329,7 @@
             updateSelectionBox();
             updateModelPreview();
             updateDebugInfo();
-            updateSelectionInfo();
+            syncPropertyPanelFromSelection();
         }
         
         // Start dragging
@@ -1730,6 +1737,7 @@
             renderElements();
             updateModelPreview();
             updateDebugInfo();
+            syncPropertyPanelFromSelection();
         });
         
         // Reset demo button
@@ -1835,6 +1843,7 @@
             renderElements();
             updateModelPreview();
             updateDebugInfo();
+            syncPropertyPanelFromSelection();
         });
         
         // Toggle debug info
@@ -1883,6 +1892,34 @@
 
         groupButton.addEventListener('click', createGroupFromSelection);
         ungroupButton.addEventListener('click', ungroupSelection);
+
+        function boxesOverlap(first, second, padding = 12) {
+            return first.x < second.x + second.width + padding
+                && first.x + first.width + padding > second.x
+                && first.y < second.y + second.height + padding
+                && first.y + first.height + padding > second.y;
+        }
+
+        function findAvailablePlacement(width, height) {
+            const canvasWidth = paper.clientWidth || 816;
+            const canvasHeight = paper.clientHeight || 1056;
+            const occupied = model.elements
+                .filter(element => element.visible !== false)
+                .map(element => ({ x: element.x, y: element.y, width: element.width, height: element.height }));
+            const step = 20;
+            const margin = 20;
+            for (let y = margin; y <= canvasHeight - height - margin; y += step) {
+                for (let x = margin; x <= canvasWidth - width - margin; x += step) {
+                    const candidate = { x, y, width, height };
+                    if (!occupied.some(box => boxesOverlap(candidate, box))) return { x, y };
+                }
+            }
+            const fallbackIndex = model.elements.length % 10;
+            return {
+                x: Math.max(margin, Math.min(canvasWidth - width - margin, margin + fallbackIndex * step)),
+                y: Math.max(margin, Math.min(canvasHeight - height - margin, margin + fallbackIndex * step))
+            };
+        }
 
         function readImageFile(file) {
             return new Promise((resolve, reject) => {
@@ -1940,7 +1977,12 @@
                 } else {
                     beginHistoryTransaction('插入图片');
                     const scale = Math.min(1, 320 / dimensions.width, 240 / dimensions.height);
-                    const imageCount = model.elements.filter(element => element.type === 'image').length;
+                    const width = Math.max(50, Math.round(dimensions.width * scale));
+                    const height = Math.max(50, Math.round(dimensions.height * scale));
+                    const placement = findAvailablePlacement(width, height);
+                    const minLayerId = model.elements.length
+                        ? Math.min(...model.elements.map(element => element.layerId || 0))
+                        : 0;
                     model.elements.forEach(element => element.selected = false);
                     model.elements.push({
                         id: `image-${Date.now()}-${++imageSequence}`,
@@ -1950,19 +1992,19 @@
                         imageMimeType: file.type,
                         imageNaturalWidth: dimensions.width,
                         imageNaturalHeight: dimensions.height,
-                        x: 80 + (imageCount % 5) * 20,
-                        y: 80 + (imageCount % 5) * 20,
-                        width: Math.max(50, Math.round(dimensions.width * scale)),
-                        height: Math.max(50, Math.round(dimensions.height * scale)),
+                        x: placement.x,
+                        y: placement.y,
+                        width,
+                        height,
                         rotation: 0,
-                        layerId: Math.min(...model.elements.map(element => element.layerId || 0)) - 1,
+                        layerId: minLayerId - 1,
                         selected: true
                     });
                 }
                 commitHistoryTransaction();
                 renderElements();
                 updateModelPreview();
-                updateSelectionInfo();
+                syncPropertyPanelFromSelection();
             } catch (error) {
                 alert(error.message);
             }
@@ -1974,12 +2016,13 @@
             const minLayerId = model.elements.length
                 ? Math.min(...model.elements.map(element => element.layerId || 0))
                 : 0;
+            const placement = findAvailablePlacement(240, 60);
             const equation = {
                 id: `equation-${Date.now()}-${++equationSequence}`,
                 type: 'equation',
                 content: 'E = mc^2',
-                x: 100,
-                y: 100,
+                x: placement.x,
+                y: placement.y,
                 width: 240,
                 height: 60,
                 fontSize: 18,
@@ -1993,8 +2036,7 @@
             commitHistoryTransaction();
             renderElements();
             updateModelPreview();
-            updateSelectionInfo();
-            contentInput.value = equation.content;
+            syncPropertyPanelFromSelection();
         });
         
         // Layer input change
@@ -2150,7 +2192,7 @@
                         renderElements();
                         updateModelPreview();
                         updateDebugInfo();
-                        updateSelectionInfo();
+                        syncPropertyPanelFromSelection();
                     } catch (err) {
                         alert('无法打开文件：' + err.message);
                     }
@@ -2392,7 +2434,7 @@
         renderElements();
         updateModelPreview();
         updateDebugInfo();
-        updateSelectionInfo();
+        syncPropertyPanelFromSelection();
         
         // Expose to window for Playwright testing
         window.model = model;
