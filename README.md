@@ -25,6 +25,13 @@ Open `http://127.0.0.1:8000/` in a Chromium-based browser. The loopback server p
 
 For operating instructions, see [docs/user-guide.md](docs/user-guide.md).
 
+## Showcase
+
+- [朝堂风云录 / Project showcase](https://samzebrado.github.io/guiLaTeX/showcase/)
+- [Web v1 demo landing page](https://samzebrado.github.io/guiLaTeX/showcase/demo_index.html)
+
+GitHub Pages hosts the project story and release overview. The full Web v1 editor remains a local application because its conforming LaTeX workflow uses the bundled Python loopback server and ExportCore.
+
 ## Deliberate v1 boundaries
 
 - The LaTeX importer is for guiLaTeX's conforming single-page output, not arbitrary LaTeX documents.
