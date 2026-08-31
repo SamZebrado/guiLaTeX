@@ -53,4 +53,4 @@ Real Chromium evidence is also required for release acceptance; unit tests alone
 
 ## License
 
-No project license has been selected yet. Do not assume permission beyond the applicable copyright law.
+guiLaTeX Web v1 is released under the [Apache License 2.0](LICENSE).
