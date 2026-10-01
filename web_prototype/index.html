@@ -2243,10 +2243,17 @@
                 return;
             }
             try {
+                const texContent = await file.text();
+                let legacyGeometry = '';
+                if (!texContent.includes('"geometry_unit"')) {
+                    legacyGeometry = prompt('旧 LaTeX 没有单位标记。旧 Web 导出请输入 web-px；Qt/Core 毫米 IR 请输入 ir-mm。不确定请取消。', '');
+                    if (legacyGeometry === null) return;
+                    if (!['web-px', 'ir-mm'].includes(legacyGeometry)) throw new Error('必须明确选择 web-px 或 ir-mm');
+                }
                 const response = await fetch('/api/import-latex', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-tex; charset=utf-8' },
-                    body: await file.text()
+                    headers: { 'Content-Type': 'application/x-tex; charset=utf-8', 'X-GuiLatex-Legacy-Geometry': legacyGeometry },
+                    body: texContent
                 });
                 const payload = await response.json();
                 if (!response.ok || !payload.ok) throw new Error(payload.error || `HTTP ${response.status}`);
@@ -2376,10 +2383,9 @@
         
         // Export to IR function
         function exportToIR() {
-            // Map the actual canonical Letter CSS canvas to millimetres.
-            const paperStyle = getComputedStyle(document.querySelector('.paper'));
-            const mmPerPixelX = 215.9 / parseFloat(paperStyle.width);
-            const mmPerPixelY = 279.4 / parseFloat(paperStyle.height);
+            // Model coordinates are canonical Letter px, independent of presentation.
+            const mmPerPixelX = 215.9 / 816;
+            const mmPerPixelY = 279.4 / 1056;
             const ir = {
                 page_contract: { format: 'letter' },
                 geometry_unit: 'mm',

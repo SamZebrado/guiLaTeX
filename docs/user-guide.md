@@ -57,6 +57,8 @@ The editor uses CSS pixels on its 8.5 × 11 inch canvas (816 × 1056 CSS px). Ex
 
 This roundtrip is intentionally bounded to the single-page, ungrouped conforming subset. It is not a general-purpose importer for arbitrary LaTeX. Fields outside that format, including persistent groups and embedded image bytes, require project JSON.
 
+For older conforming files without a geometry-unit marker, import asks you to identify the source: `web-px` for pre-v1.1 Web exports, or `ir-mm` for Qt/Core millimetre exports. These old formats have indistinguishable metadata, so no automatic unit guess is made. Cancel if provenance is unknown. Current marked files import automatically. Export geometry always uses the canonical 816 × 1056 CSS-pixel coordinate space, regardless of viewport or responsive presentation.
+
 ## IR export
 
 Choose **Export IR** to download the validated intermediate representation as JSON. This artifact is intended for diagnostics and integration; project JSON remains the normal editable-project format.

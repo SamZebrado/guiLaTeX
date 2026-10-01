@@ -331,6 +331,13 @@ async function testExportIR(page) {
         if (ir.page_contract?.format !== 'letter' || ir.geometry_unit !== 'mm') {
             throw new Error('Export IR must declare Letter page contract and mm geometry');
         }
+        const originalViewport = page.viewportSize();
+        await page.setViewportSize({ width: 390, height: 844 });
+        const narrowIR = await page.evaluate(() => exportToIR());
+        await page.setViewportSize(originalViewport);
+        if (JSON.stringify(narrowIR) !== JSON.stringify(ir)) {
+            throw new Error('Export IR geometry must be viewport-invariant');
+        }
         
         console.log(`   IR 包含 ${ir.elements.length} 个元素`);
         

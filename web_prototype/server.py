@@ -34,11 +34,19 @@ def export_web_model_to_tex(web_model: dict) -> str:
     return export_ir_to_latex(normalized)
 
 
-def import_conforming_tex_to_web(tex_content: str) -> dict:
+def import_conforming_tex_to_web(tex_content: str, legacy_geometry: str | None = None) -> dict:
     validation = validate_tex_profile(tex_content)
     if not validation["ok"]:
         raise ValueError(validation["message"] + ": " + "; ".join(validation["issues"]))
-    return ir_to_web_model(import_own_exported_tex_to_ir(tex_content))
+    ir = import_own_exported_tex_to_ir(tex_content)
+    if 'geometry_unit' not in ir:
+        if legacy_geometry == 'web-px':
+            ir = normalize_web_model_to_ir(ir)
+        elif legacy_geometry != 'ir-mm':
+            raise ValueError('LEGACY_GEOMETRY_AMBIGUOUS: choose web-px for old Web output or ir-mm for Qt/Core output')
+    elif ir['geometry_unit'] != 'mm':
+        raise ValueError('Unsupported conforming geometry_unit')
+    return ir_to_web_model(ir)
 
 
 class GuiLatexHandler(SimpleHTTPRequestHandler):
@@ -88,7 +96,8 @@ class GuiLatexHandler(SimpleHTTPRequestHandler):
                 return
             if self.path == "/api/import-latex":
                 tex_content = body.decode("utf-8")
-                self._send_json(200, {"ok": True, "model": import_conforming_tex_to_web(tex_content)})
+                self._send_json(200, {"ok": True, "model": import_conforming_tex_to_web(
+                    tex_content, self.headers.get('X-GuiLatex-Legacy-Geometry'))})
                 return
             self._send_json(404, {"ok": False, "error": "未知 API 路径"})
         except (UnicodeDecodeError, json.JSONDecodeError, ValueError, KeyError, TypeError) as error:
