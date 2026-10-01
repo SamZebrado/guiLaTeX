@@ -53,6 +53,8 @@ Choose **Export LaTeX** to download conforming `.tex`. Choose **Import LaTeX** t
 
 Web exports declare the Letter page contract (215.9 × 279.4 mm) in IR and use Letter geometry and page height in conforming LaTeX. Shared ExportCore input without an explicit page contract retains the legacy A4 default for Qt compatibility.
 
+The editor uses CSS pixels on its 8.5 × 11 inch canvas (816 × 1056 CSS px). Export converts geometry to canonical IR millimetres; conforming import converts millimetres back to CSS pixels. Coordinate-system metadata is page-format-neutral: dimensions come from the page contract, with A4 retained only as the legacy default.
+
 This roundtrip is intentionally bounded to the single-page, ungrouped conforming subset. It is not a general-purpose importer for arbitrary LaTeX. Fields outside that format, including persistent groups and embedded image bytes, require project JSON.
 
 ## IR export

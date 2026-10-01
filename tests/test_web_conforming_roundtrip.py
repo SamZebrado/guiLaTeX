@@ -55,12 +55,13 @@ def test_single_page_ungrouped_web_tex_web_preserves_supported_fields():
     imported_ir = import_own_exported_tex_to_ir(tex)
     restored = ir_to_web_model(imported_ir)
 
-    assert normalized["elements"] == web_ir["elements"]
     assert normalized["page_contract"] == {"format": "letter"}
 
     restored_by_id = {element["id"]: element for element in restored["elements"]}
     for original in web_ir["elements"]:
         recovered = restored_by_id[original["id"]]
+        for field in ("x", "y", "width", "height"):
+            assert abs(recovered[field] - original[field]) < 1e-9
         assert recovered["page"] == original["page"]
         assert recovered["chineseFont"] == original["font_family_zh"]
         assert recovered["englishFont"] == original["font_family_en"]

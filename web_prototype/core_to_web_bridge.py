@@ -16,6 +16,7 @@ import re
 
 # 添加项目根目录到路径，以便导入 export_core
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from export_core.page_contract import ir_geometry_to_web_px
 
 def parse_latex_ir_metadata(latex_content):
     """
@@ -81,6 +82,9 @@ def ir_to_web_model(ir_data):
             'visible': element.get('visible', True),
             'selected': False
         }
+        # All Export IR geometry is mm, including legacy Qt/A4 IR. The Web
+        # editable canvas always uses CSS px; never interpret legacy IR as px.
+        web_element.update(ir_geometry_to_web_px(element))
         
         # 添加字体相关属性
         if element.get('font_family_zh'):

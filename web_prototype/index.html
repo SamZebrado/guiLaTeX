@@ -2376,8 +2376,13 @@
         
         // Export to IR function
         function exportToIR() {
+            // Map the actual canonical Letter CSS canvas to millimetres.
+            const paperStyle = getComputedStyle(document.querySelector('.paper'));
+            const mmPerPixelX = 215.9 / parseFloat(paperStyle.width);
+            const mmPerPixelY = 279.4 / parseFloat(paperStyle.height);
             const ir = {
                 page_contract: { format: 'letter' },
+                geometry_unit: 'mm',
                 elements: model.elements.map(element => {
                     // 计算 layer 值：Web 模型中 layerId 越小层级越高，Export IR 中 layer 越大层级越高
                     const maxLayerId = Math.max(...model.elements.map(el => el.layerId || 0));
@@ -2388,10 +2393,10 @@
                         type: element.role || element.type,
                         content: element.content,
                         page: element.page || 1,
-                        x: element.x,
-                        y: element.y,
-                        width: element.width,
-                        height: element.height,
+                        x: element.x * mmPerPixelX,
+                        y: element.y * mmPerPixelY,
+                        width: element.width * mmPerPixelX,
+                        height: element.height * mmPerPixelY,
                         rotation: element.rotation || 0,
                         layer: layer,
                         font_family_zh: element.chineseFont || undefined,

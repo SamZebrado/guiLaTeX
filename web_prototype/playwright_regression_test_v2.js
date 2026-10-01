@@ -328,6 +328,9 @@ async function testExportIR(page) {
         const ir = await page.evaluate(() => {
             return exportToIR();
         });
+        if (ir.page_contract?.format !== 'letter' || ir.geometry_unit !== 'mm') {
+            throw new Error('Export IR must declare Letter page contract and mm geometry');
+        }
         
         console.log(`   IR 包含 ${ir.elements.length} 个元素`);
         

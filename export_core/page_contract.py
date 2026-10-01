@@ -2,6 +2,27 @@
 
 PAGE_DIMENSIONS_MM = {"letter": (215.9, 279.4), "a4": (210, 297)}
 WEB_PAGE_FORMAT = "letter"
+# The canonical canvas is 8.5in x 11in. CSS defines 1in as 96 CSS px;
+# these are canvas coordinates, independent of display/device pixel ratio.
+WEB_CANVAS_INCHES = (8.5, 11)
+WEB_CANVAS_PX = tuple(value * 96 for value in WEB_CANVAS_INCHES)
+GEOMETRY_FIELDS = ("x", "y", "width", "height")
+
+
+def web_geometry_to_mm(element):
+    width_mm, height_mm = PAGE_DIMENSIONS_MM[WEB_PAGE_FORMAT]
+    return {field: element.get(field, 0) * (
+        width_mm / WEB_CANVAS_PX[0] if field in ("x", "width")
+        else height_mm / WEB_CANVAS_PX[1]
+    ) for field in GEOMETRY_FIELDS}
+
+
+def ir_geometry_to_web_px(element):
+    width_mm, height_mm = PAGE_DIMENSIONS_MM[WEB_PAGE_FORMAT]
+    return {field: element.get(field, 0) * (
+        WEB_CANVAS_PX[0] / width_mm if field in ("x", "width")
+        else WEB_CANVAS_PX[1] / height_mm
+    ) for field in GEOMETRY_FIELDS}
 
 
 def resolve_page_contract(ir):
