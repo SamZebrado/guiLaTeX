@@ -814,7 +814,7 @@
         function validDraft(value) {
             return value && value.version === 1 && value.model && Array.isArray(value.model.elements) &&
                 value.model.elements.every(element => element && typeof element === 'object' &&
-                    ['textbox', 'paragraph', 'image', 'equation'].includes(element.type) &&
+                    ['textbox', 'title', 'author', 'paragraph', 'image', 'equation'].includes(element.type) &&
                     ['x', 'y', 'width', 'height'].every(key => typeof element[key] === 'number' && Number.isFinite(element[key])));
         }
         function offerDraftRecovery() {

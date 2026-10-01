@@ -24,6 +24,9 @@ class WebDraftRecoveryContractTests(unittest.TestCase):
         self.assertIn("event.returnValue = ''", self.source)
         self.assertEqual(self.source.count('if (!confirmProjectReplacement()) return;'), 3)
 
+    def test_draft_accepts_actual_conforming_import_text_types(self):
+        self.assertIn("['textbox', 'title', 'author', 'paragraph', 'image', 'equation'].includes(element.type)", self.source)
+
     def test_storage_failure_visible_and_save_schema_unchanged(self):
         self.assertIn('本地草稿不可用', self.source)
         self.assertIn("draftStatus.setAttribute('role', 'status')", self.source)
