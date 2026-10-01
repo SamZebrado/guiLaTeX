@@ -51,6 +51,8 @@ Choose **Save Project** to download a guiLaTeX JSON file. Choose **Open Project*
 
 Choose **Export LaTeX** to download conforming `.tex`. Choose **Import LaTeX** to reopen guiLaTeX-generated conforming output through the same Web UI.
 
+Web exports declare the Letter page contract (215.9 × 279.4 mm) in IR and use Letter geometry and page height in conforming LaTeX. Shared ExportCore input without an explicit page contract retains the legacy A4 default for Qt compatibility.
+
 This roundtrip is intentionally bounded to the single-page, ungrouped conforming subset. It is not a general-purpose importer for arbitrary LaTeX. Fields outside that format, including persistent groups and embedded image bytes, require project JSON.
 
 ## IR export

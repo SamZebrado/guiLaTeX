@@ -2377,6 +2377,7 @@
         // Export to IR function
         function exportToIR() {
             const ir = {
+                page_contract: { format: 'letter' },
                 elements: model.elements.map(element => {
                     // 计算 layer 值：Web 模型中 layerId 越小层级越高，Export IR 中 layer 越大层级越高
                     const maxLayerId = Math.max(...model.elements.map(el => el.layerId || 0));

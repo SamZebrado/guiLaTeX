@@ -2,6 +2,7 @@
 
 from .ir_schema import ExportIR, ElementIR, SUPPORTED_TYPES, COORDINATE_SYSTEM
 from .latex_exporter import LatexExporter
+from .page_contract import WEB_PAGE_FORMAT
 
 __all__ = [
     'ExportIR',
@@ -37,7 +38,8 @@ def normalize_web_model_to_ir(web_model: dict) -> dict:
             ir_elements.append(ir_element)
     
     return {
-        'elements': ir_elements
+        'elements': ir_elements,
+        'page_contract': {'format': WEB_PAGE_FORMAT}
     }
 
 def _convert_web_element(web_element: dict) -> dict:
