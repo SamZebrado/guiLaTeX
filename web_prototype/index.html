@@ -752,6 +752,119 @@
             return JSON.parse(JSON.stringify(value));
         }
 
+        // The checkpoint represents editable content, not transient selection.
+        const DRAFT_KEY = 'guilatex.web.draft.v1';
+        function editableSnapshot(value = model) {
+            const snapshot = cloneModel(value);
+            snapshot.elements.forEach(element => delete element.selected);
+            return JSON.stringify(snapshot);
+        }
+        let cleanCheckpoint = editableSnapshot();
+        let storageError = null;
+        let recoveryPending = null;
+        let lastDraftSnapshot = null;
+        const draftStatus = document.createElement('div');
+        draftStatus.id = 'draft-status';
+        draftStatus.setAttribute('role', 'status');
+        draftStatus.setAttribute('aria-live', 'polite');
+        saveButton.parentElement.appendChild(draftStatus);
+
+        function isProjectDirty() {
+            return editableSnapshot() !== cleanCheckpoint;
+        }
+        function showDraftStatus() {
+            draftStatus.textContent = (isProjectDirty() ? '未保存的更改' : '已保存 / 无更改') +
+                (storageError ? ` · 本地草稿不可用：${storageError}。请保存项目 JSON。` : '');
+        }
+        function storageOperation(action) {
+            try {
+                action();
+                storageError = null;
+                return true;
+            } catch (error) {
+                storageError = error.message || String(error);
+                return false;
+            } finally {
+                showDraftStatus();
+            }
+        }
+        function syncDraft() {
+            showDraftStatus();
+            if (recoveryPending) return;
+            const snapshot = editableSnapshot();
+            if (!isProjectDirty()) {
+                if (lastDraftSnapshot !== null && storageOperation(() => localStorage.removeItem(DRAFT_KEY))) {
+                    lastDraftSnapshot = null;
+                }
+            } else if (lastDraftSnapshot !== snapshot) {
+                if (storageOperation(() => localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                    version: 1, model: cloneModel()
+                })))) lastDraftSnapshot = snapshot;
+            }
+        }
+        function markProjectClean() {
+            cleanCheckpoint = editableSnapshot();
+            recoveryPending = null;
+            if (storageOperation(() => localStorage.removeItem(DRAFT_KEY))) lastDraftSnapshot = null;
+            showDraftStatus();
+        }
+        function confirmProjectReplacement() {
+            return !isProjectDirty() || confirm('当前项目有未保存的更改。继续替换将丢弃这些更改，是否继续？');
+        }
+        function validDraft(value) {
+            return value && value.version === 1 && value.model && Array.isArray(value.model.elements) &&
+                value.model.elements.every(element => element && typeof element === 'object' &&
+                    ['textbox', 'paragraph', 'image', 'equation'].includes(element.type) &&
+                    ['x', 'y', 'width', 'height'].every(key => typeof element[key] === 'number' && Number.isFinite(element[key])));
+        }
+        function offerDraftRecovery() {
+            storageOperation(() => {
+                const raw = localStorage.getItem(DRAFT_KEY);
+                if (raw === null) return;
+                const draft = JSON.parse(raw);
+                if (!validDraft(draft)) throw new Error('草稿格式无效');
+                recoveryPending = draft.model;
+            });
+            if (!recoveryPending) return;
+            const dialog = document.createElement('dialog');
+            dialog.id = 'draft-recovery-dialog';
+            const message = document.createElement('p');
+            message.textContent = '发现本地未保存草稿。请选择恢复或丢弃。恢复后仍需保存项目。';
+            dialog.appendChild(message);
+            for (const recover of [true, false]) {
+                const button = document.createElement('button');
+                button.id = recover ? 'recover-draft-button' : 'discard-draft-button';
+                button.textContent = recover ? '恢复草稿' : '丢弃草稿';
+                button.addEventListener('click', () => {
+                    if (recover) {
+                        model = cloneModel(recoveryPending);
+                        cleanCheckpoint = null;
+                        recoveryPending = null;
+                        clearModelHistory();
+                        refreshEditorAfterHistory();
+                        syncDraft();
+                    } else {
+                        recoveryPending = null;
+                        markProjectClean();
+                    }
+                    dialog.close();
+                    dialog.remove();
+                });
+                dialog.appendChild(button);
+            }
+            dialog.addEventListener('cancel', event => event.preventDefault());
+            document.body.appendChild(dialog);
+            dialog.showModal();
+        }
+        window.addEventListener('beforeunload', event => {
+            syncDraft();
+            if (isProjectDirty()) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
+        window.getDraftStatus = () => ({ dirty: isProjectDirty(), storage_error: storageError, recovery_pending: !!recoveryPending });
+
         function updateHistoryControls() {
             undoButton.disabled = undoStack.length === 0 && historyTransaction === null;
             redoButton.disabled = redoStack.length === 0;
@@ -782,6 +895,7 @@
             if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
             redoStack.length = 0;
             updateHistoryControls();
+            syncDraft();
             return true;
         }
 
@@ -1193,6 +1307,7 @@
         // Update model JSON preview
         function updateModelPreview() {
             modelJson.textContent = JSON.stringify(model, null, 2);
+            syncDraft();
         }
         
         // Update debug info
@@ -1740,6 +1855,7 @@
         
         // Reset demo button
         resetButton.addEventListener('click', () => {
+            if (!confirmProjectReplacement()) return;
             beginHistoryTransaction('重置演示');
             // Reset model to initial state
             model = {
@@ -2201,6 +2317,7 @@
             link.download = 'guilatex_project.json';
             link.click();
             URL.revokeObjectURL(url);
+            markProjectClean();
         });
         
         openButton.addEventListener('click', () => {
@@ -2213,13 +2330,16 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
-                        model = JSON.parse(e.target.result);
+                        const openedModel = JSON.parse(e.target.result);
+                        if (!confirmProjectReplacement()) return;
+                        model = openedModel;
                         window.model = model;
                         clearModelHistory();
                         renderElements();
                         updateModelPreview();
                         updateDebugInfo();
                         syncPropertyPanelFromSelection();
+                        markProjectClean();
                     } catch (err) {
                         alert('无法打开文件：' + err.message);
                     }
@@ -2257,7 +2377,9 @@
                 });
                 const payload = await response.json();
                 if (!response.ok || !payload.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+                if (!confirmProjectReplacement()) return;
                 model = payload.model;
+                cleanCheckpoint = null; // Import creates a new, unsaved editable project.
                 window.model = model;
                 clearModelHistory();
                 renderElements();
@@ -2508,6 +2630,7 @@
         window.preparePrintLayout = preparePrintLayout;
         window.restorePrintLayout = restorePrintLayout;
         updateHistoryControls();
+        offerDraftRecovery();
         
         // Output font information
         const requestedFontStack = "'Noto Sans SC', 'Source Han Sans SC', 'Inter', 'Noto Sans', sans-serif";
