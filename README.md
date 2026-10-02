@@ -2,6 +2,9 @@
 
 guiLaTeX is a Web-first visual editor for a bounded, single-page LaTeX layout format. The current Web v1 lets you place text, images, and a supported subset of equations on a Letter-size canvas, edit them visually, save the project, and export the result.
 
+Web v1 is complete and feature-frozen. The current posture is public playtesting and
+bug-fix maintenance within the documented v1 boundaries.
+
 ## Run the Web editor
 
 Python 3.8 or newer is sufficient; the Web v1 runtime has no third-party Python dependency.
