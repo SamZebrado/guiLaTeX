@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_EMAILS = {
     "audit@guilatex.local",
     "guilatex@users.noreply.github.com",
+    "samzebrado@foxmail.com",
+    "noreply@github.com",
 }
 
 
@@ -55,7 +57,15 @@ EMAIL = re.compile(rb"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.I)
 
 
 def scan_blob(label: str, data: bytes) -> list[str]:
-    findings = [f"{label}: {name}" for name, pattern in forbidden_patterns() if pattern.search(data)]
+    allowed_email_spans = {
+        match.span() for match in EMAIL.finditer(data)
+        if match.group().decode("ascii").lower() in ALLOWED_EMAILS
+    }
+    findings = [
+        f"{label}: {name}" for name, pattern in forbidden_patterns()
+        if any(not (name == "private_foxmail_email" and match.span() in allowed_email_spans)
+               for match in pattern.finditer(data))
+    ]
     for value in EMAIL.findall(data):
         email = value.decode("ascii", errors="ignore").lower()
         if email and email not in ALLOWED_EMAILS:
@@ -90,6 +100,38 @@ def history_findings() -> list[str]:
         if value not in ALLOWED_EMAILS:
             findings.append("commit_metadata: unapproved_email")
     return findings
+
+
+class PublicPrivacyPolicyTest(unittest.TestCase):
+    def test_owner_approved_addresses_are_allowed_in_content(self) -> None:
+        for email in ("samzebrado@foxmail.com", "noreply@github.com"):
+            with self.subTest(email=email):
+                self.assertEqual(scan_blob("fixture", email.encode()), [])
+
+    def test_approved_addresses_are_case_insensitive(self) -> None:
+        self.assertEqual(scan_blob("fixture", b"SAMZEBRADO@FOXMAIL.COM"), [])
+
+    def test_address_prefix_and_domain_suffix_are_not_allowlisted(self) -> None:
+        email = b"samzebrado@foxmail.com"
+        for value in (b"other" + email, email + b".attacker.test"):
+            with self.subTest(value=value):
+                self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+                self.assertIn("fixture: private_foxmail_email", scan_blob("fixture", value))
+
+    def test_other_addresses_on_approved_domains_are_rejected(self) -> None:
+        for domain in (b"foxmail.com", b"github.com"):
+            self.assertIn("fixture: unapproved_email",
+                          scan_blob("fixture", b"unapproved" + b"@" + domain))
+
+    def test_allowed_email_does_not_hide_a_secret_in_the_same_blob(self) -> None:
+        for prefix, category in ((b"s" + b"k-", "openai_key"),
+                                 (b"g" + b"hp_", "github_token")):
+            value = b"noreply@github.com " + prefix + b"a" * 32
+            self.assertIn("fixture: " + category, scan_blob("fixture", value))
+
+    def test_allowed_email_does_not_hide_a_private_path(self) -> None:
+        value = b"noreply@github.com /" + b"Users" + b"/sam" + b"zebrado/"
+        self.assertIn("fixture: private_macos_home", scan_blob("fixture", value))
 
 
 class PublicPrivacyTest(unittest.TestCase):
