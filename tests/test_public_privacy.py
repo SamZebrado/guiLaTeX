@@ -53,7 +53,13 @@ def forbidden_patterns() -> list[tuple[str, re.Pattern[bytes]]]:
     ]
 
 
-EMAIL = re.compile(rb"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.I)
+# Include ASCII atom punctuation so a different local part cannot be parsed as
+# an approved suffix (for example, +noreply must not become noreply).
+EMAIL = re.compile(
+    rb"(?<![A-Z0-9.!#$%&'*+/=?^_`{|}~-])"
+    rb"[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}(?![A-Z0-9.-])",
+    re.I,
+)
 
 
 def scan_blob(label: str, data: bytes) -> list[str]:
@@ -122,6 +128,13 @@ class PublicPrivacyPolicyTest(unittest.TestCase):
         for domain in (b"foxmail.com", b"github.com"):
             self.assertIn("fixture: unapproved_email",
                           scan_blob("fixture", b"unapproved" + b"@" + domain))
+
+    def test_punctuation_prefixed_addresses_are_not_allowlisted(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for prefix in b".!#$%&'*+-/=?^_`{|}~":
+                value = bytes([prefix]) + email
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
 
     def test_allowed_email_does_not_hide_a_secret_in_the_same_blob(self) -> None:
         for prefix, category in ((b"s" + b"k-", "openai_key"),
