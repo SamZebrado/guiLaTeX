@@ -53,8 +53,7 @@ def forbidden_patterns() -> list[tuple[str, re.Pattern[bytes]]]:
     ]
 
 
-# Include ASCII atom punctuation so a different local part cannot be parsed as
-# an approved suffix (for example, +noreply must not become noreply).
+# Include atom punctuation so another local part cannot become an approved suffix.
 EMAIL = re.compile(
     rb"(?<![A-Z0-9.!#$%&'*+/=?^_`{|}~-])"
     rb"(?:[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+|\"(?:[^\"\\\r\n]|\\.)*\")"
@@ -62,16 +61,22 @@ EMAIL = re.compile(
     re.I,
 )
 BRACKETED_DOMAIN = re.compile(rb"@\[(?:[^\]\\\r\n]|\\.)*\]")
+QUOTED_LOCAL_PART = re.compile(rb"\"(?:[^\"\\\r\n]|\\.)*\"@")
+# A terminal prose period is a delimiter; a following domain label is not.
+DOMAIN_CONTINUATION = re.compile(rb"(?:[A-Z0-9_\x80-\xff-]|\.+[A-Z0-9_\x80-\xff-])", re.I)
 
 
 def scan_blob(label: str, data: bytes) -> list[str]:
     email_matches = list(EMAIL.finditer(data))
-    bracketed_domains = [match.span() for match in BRACKETED_DOMAIN.finditer(data)]
+    enclosing_tokens = [match.span() for pattern in (BRACKETED_DOMAIN, QUOTED_LOCAL_PART)
+                        for match in pattern.finditer(data)]
     allowed_email_spans = {
         match.span() for match in email_matches
-        if match.group().decode("ascii").lower() in ALLOWED_EMAILS
+        if match.group().lower() in {email.encode("ascii") for email in ALLOWED_EMAILS}
+        and not (match.start() and data[match.start() - 1] >= 128)
+        and not DOMAIN_CONTINUATION.match(data, match.end())
         and not any(start < match.start() and match.end() < end
-                    for start, end in bracketed_domains)
+                    for start, end in enclosing_tokens)
     }
     findings = [
         f"{label}: {name}" for name, pattern in forbidden_patterns()
@@ -147,9 +152,29 @@ class PublicPrivacyPolicyTest(unittest.TestCase):
             with self.subTest(suffix=suffix):
                 self.assertIn("fixture: unapproved_email", scan_blob("fixture", email + suffix))
 
+    def test_approved_addresses_before_sentence_punctuation_are_allowed(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for suffix in (b".", b",", b";", b")"):
+                with self.subTest(value=email + suffix):
+                    self.assertEqual(scan_blob("fixture", email + suffix), [])
+
+    def test_domain_continuations_are_not_allowlisted(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for suffix in (b"-evil", b".attacker123", b".x", b".123"):
+                with self.subTest(value=email + suffix):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", email + suffix))
+
+    def test_non_ascii_address_parts_are_not_allowlisted(self) -> None:
+        extra = "é".encode("utf-8")
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for value in (extra + email, email + extra, email + b"." + extra):
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
     def test_approved_substring_inside_another_address_is_rejected(self) -> None:
         for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
             values = (b'"' + email + b'"' + b"@" + b"attacker.test",
+                      b'"' + email + b'"' + b"@" + "é.test".encode("utf-8"),
                       b"other" + b"@" + b"[" + email + b"]",
                       b"other" + b"@" + b"[escaped\\] " + email + b"]")
             for value in values:
