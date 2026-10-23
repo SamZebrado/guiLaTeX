@@ -60,19 +60,57 @@ EMAIL = re.compile(
     rb"@[A-Z0-9.-]+\.[A-Z]{2,}\b",
     re.I,
 )
-BRACKETED_DOMAIN = re.compile(rb"@\[(?:[^\]\\\r\n]|\\.)*\]")
-QUOTED_LOCAL_PART = re.compile(rb"\"(?:[^\"\\\r\n]|\\.)*\"@")
+BRACKETED_DOMAIN = re.compile(rb"\[(?:[^\]\\\r\n]|\\.)*\]")
+QUOTED_STRING = re.compile(rb"\"(?:[^\"\\]|\\[\s\S])*\"")
 # A terminal prose period is a delimiter; a following domain label is not.
 DOMAIN_CONTINUATION = re.compile(rb"(?:[A-Z0-9_\x80-\xff-]|\.+[A-Z0-9_\x80-\xff-])", re.I)
 
 
+def skip_email_comments_and_whitespace(data: bytes, position: int) -> int:
+    while position < len(data):
+        if data[position] in b" \t\r\n":
+            position += 1
+            continue
+        if data[position] != ord("("):
+            break
+        depth = 1
+        position += 1
+        while position < len(data) and depth:
+            value = data[position]
+            if value == ord("\\"):
+                position += 2
+                continue
+            depth += (value == ord("(")) - (value == ord(")"))
+            position += 1
+        if depth:
+            break
+    return position
+
+
+def enclosing_email_spans(data: bytes) -> list[tuple[int, int]]:
+    spans = []
+    for token in QUOTED_STRING.finditer(data):
+        position = skip_email_comments_and_whitespace(data, token.end())
+        if position < len(data) and data[position] == ord("@"):
+            spans.append((token.start(), position + 1))
+    for separator in re.finditer(rb"@", data):
+        position = skip_email_comments_and_whitespace(data, separator.end())
+        domain = BRACKETED_DOMAIN.match(data, position)
+        if domain:
+            spans.append((separator.start(), domain.end()))
+    return spans
+
+
 def scan_blob(label: str, data: bytes) -> list[str]:
     email_matches = list(EMAIL.finditer(data))
-    enclosing_tokens = [match.span() for pattern in (BRACKETED_DOMAIN, QUOTED_LOCAL_PART)
-                        for match in pattern.finditer(data)]
-    allowed_email_spans = {
+    approved_candidates = {
         match.span() for match in email_matches
         if match.group().lower() in {email.encode("ascii") for email in ALLOWED_EMAILS}
+    }
+    enclosing_tokens = enclosing_email_spans(data) if approved_candidates else []
+    allowed_email_spans = {
+        match.span() for match in email_matches
+        if match.span() in approved_candidates
         and not (match.start() and data[match.start() - 1] >= 128)
         and not DOMAIN_CONTINUATION.match(data, match.end())
         and not any(start < match.start() and match.end() < end
@@ -178,6 +216,26 @@ class PublicPrivacyPolicyTest(unittest.TestCase):
                       b"other" + b"@" + b"[" + email + b"]",
                       b"other" + b"@" + b"[escaped\\] " + email + b"]")
             for value in values:
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_quoted_local_whitespace_and_comments_are_not_allowlisted(self) -> None:
+        gaps = (b" ", b"\t", b"\r\n \t", b" (comment) ",
+                b" (outer (inner\\) text) tail) ")
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            values = [b'"' + email + b'"' + gap + b"@" + b"attacker.test"
+                      for gap in gaps]
+            values.append(b'"prefix\r\n ' + email + b'"' + b"@" + b"attacker.test")
+            for value in values:
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_bracketed_domain_whitespace_and_comments_are_not_allowlisted(self) -> None:
+        gaps = (b" ", b"\t", b"\r\n \t", b" (comment) ",
+                b" (outer (inner\\) text) tail) ")
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for gap in gaps:
+                value = b"other" + b"@" + gap + b"[" + email + b"]"
                 with self.subTest(value=value):
                     self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
 
