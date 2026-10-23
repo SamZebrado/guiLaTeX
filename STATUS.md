@@ -1,5 +1,10 @@
 # guiLaTeX 项目状态
 
+> **Current Web maintenance checkpoint (2026-10-24):** see
+> [docs/maintenance-checkpoint-2026-10-24.md](docs/maintenance-checkpoint-2026-10-24.md).
+> The Qt planning material below is historical; it does not replace the Web v1
+> scope in README.md or authorize restarting the old roadmap.
+
 ## 项目概览
 - **项目名称**: guiLaTeX
 - **项目描述**: 可视化LaTeX编辑器，支持像Photoshop那样选中拖动编辑LaTeX元素，像Word那样改变字体字号颜色排版
