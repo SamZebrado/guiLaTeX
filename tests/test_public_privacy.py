@@ -57,24 +57,29 @@ def forbidden_patterns() -> list[tuple[str, re.Pattern[bytes]]]:
 # an approved suffix (for example, +noreply must not become noreply).
 EMAIL = re.compile(
     rb"(?<![A-Z0-9.!#$%&'*+/=?^_`{|}~-])"
-    rb"[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}(?![A-Z0-9.-])",
+    rb"(?:[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+|\"(?:[^\"\\\r\n]|\\.)*\")"
+    rb"@[A-Z0-9.-]+\.[A-Z]{2,}\b",
     re.I,
 )
+BRACKETED_DOMAIN = re.compile(rb"@\[(?:[^\]\\\r\n]|\\.)*\]")
 
 
 def scan_blob(label: str, data: bytes) -> list[str]:
+    email_matches = list(EMAIL.finditer(data))
+    bracketed_domains = [match.span() for match in BRACKETED_DOMAIN.finditer(data)]
     allowed_email_spans = {
-        match.span() for match in EMAIL.finditer(data)
+        match.span() for match in email_matches
         if match.group().decode("ascii").lower() in ALLOWED_EMAILS
+        and not any(start < match.start() and match.end() < end
+                    for start, end in bracketed_domains)
     }
     findings = [
         f"{label}: {name}" for name, pattern in forbidden_patterns()
         if any(not (name == "private_foxmail_email" and match.span() in allowed_email_spans)
                for match in pattern.finditer(data))
     ]
-    for value in EMAIL.findall(data):
-        email = value.decode("ascii", errors="ignore").lower()
-        if email and email not in ALLOWED_EMAILS:
+    for match in email_matches:
+        if match.span() not in allowed_email_spans:
             findings.append(f"{label}: unapproved_email")
     return findings
 
@@ -133,6 +138,21 @@ class PublicPrivacyPolicyTest(unittest.TestCase):
         for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
             for prefix in b".!#$%&'*+-/=?^_`{|}~":
                 value = bytes([prefix]) + email
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_unapproved_address_before_sentence_punctuation_is_rejected(self) -> None:
+        email = b"unapproved" + b"@" + b"example.com"
+        for suffix in (b".", b",", b";", b")"):
+            with self.subTest(suffix=suffix):
+                self.assertIn("fixture: unapproved_email", scan_blob("fixture", email + suffix))
+
+    def test_approved_substring_inside_another_address_is_rejected(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            values = (b'"' + email + b'"' + b"@" + b"attacker.test",
+                      b"other" + b"@" + b"[" + email + b"]",
+                      b"other" + b"@" + b"[escaped\\] " + email + b"]")
+            for value in values:
                 with self.subTest(value=value):
                     self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
 
