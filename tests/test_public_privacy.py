@@ -102,6 +102,20 @@ def enclosing_email_spans(data: bytes) -> list[tuple[int, int]]:
     return spans
 
 
+def has_email_continuation(data: bytes, start: int, end: int) -> bool:
+    if (start and data[start - 1] >= 128) or DOMAIN_CONTINUATION.match(data, end):
+        return True
+    position = skip_email_comments_and_whitespace(data, end)
+    if position < len(data) and data[position] == ord("."):
+        label = skip_email_comments_and_whitespace(data, position + 1)
+        if DOMAIN_CONTINUATION.match(data, label):
+            return True
+    for dot in re.finditer(rb"\.", data[:start]):
+        if skip_email_comments_and_whitespace(data, dot.end()) == start:
+            return True
+    return False
+
+
 def scan_blob(label: str, data: bytes) -> list[str]:
     email_matches = list(EMAIL.finditer(data))
     approved_candidates = {
@@ -112,8 +126,7 @@ def scan_blob(label: str, data: bytes) -> list[str]:
     allowed_email_spans = {
         match.span() for match in email_matches
         if match.span() in approved_candidates
-        and not (match.start() and data[match.start() - 1] >= 128)
-        and not DOMAIN_CONTINUATION.match(data, match.end())
+        and not has_email_continuation(data, match.start(), match.end())
         and not any(start < match.start() and match.end() < end
                     for start, end in enclosing_tokens)
     }
@@ -249,6 +262,18 @@ class PublicPrivacyPolicyTest(unittest.TestCase):
         for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
             value = b'note "unfinished\n' + b'"' + email + b'" ' + b"@" + b"attacker.test"
             self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_dot_atom_continuations_across_comments_and_whitespace_are_rejected(self) -> None:
+        gaps = (b" ", b"\t", b"\r\n \t", b"(comment)",
+                b" (outer (inner\\) text) tail) ")
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for gap in gaps:
+                values = (b"other." + gap + email,
+                          b"other" + gap + b"." + gap + email,
+                          email + gap + b"." + gap + b"attacker.test")
+                for value in values:
+                    with self.subTest(value=value):
+                        self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
 
     def test_allowed_email_does_not_hide_a_secret_in_the_same_blob(self) -> None:
         for prefix, category in ((b"s" + b"k-", "openai_key"),
