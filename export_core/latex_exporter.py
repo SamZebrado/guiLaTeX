@@ -2,17 +2,18 @@
 
 import datetime
 from typing import List, Dict, Any
+from .page_contract import resolve_page_contract
 
 class LatexExporter:
     """LaTeX Exporter for guiLaTeX Export IR"""
     
     def __init__(self):
-        self.page_width = 210  # A4 width in mm
-        self.page_height = 297  # A4 height in mm
+        self.page_format, self.page_width, self.page_height = resolve_page_contract({})
     
     def export(self, ir: Dict[str, Any]) -> str:
         """Export IR to LaTeX"""
         elements = ir.get("elements", [])
+        self.page_format, self.page_width, self.page_height = resolve_page_contract(ir)
         
         # Sort elements by layer (ascending) so that higher layers are rendered on top
         sorted_elements = sorted(elements, key=lambda x: x.get("layer", 0))
@@ -44,12 +45,12 @@ class LatexExporter:
         """Generate LaTeX preamble"""
         return """% Preamble / 宏包区
 \\documentclass{article}
-\\usepackage[margin=0mm]{geometry}
+\\usepackage[PAGE_PAPER,margin=0mm]{geometry}
 \\usepackage{xcolor}
 \\usepackage{graphicx}
 \\usepackage{tikz}
 \\usepackage{amsmath}
-"""
+""".replace("PAGE_PAPER", self.page_format + "paper")
     
     def _generate_metadata(self, ir: Dict[str, Any]) -> str:
         """Generate metadata section"""
@@ -59,7 +60,7 @@ class LatexExporter:
         # 构建元数据
         metadata = {
             "export_date": now,
-            "page_size": "A4 (210mm × 297mm)",
+            "page_size": self._page_description(),
             "exporter": "guiLaTeX ExportCore",
             "version": "1.0",
             "ir": ir  # 嵌入完整的 IR 数据用于导回
@@ -73,7 +74,7 @@ class LatexExporter:
             "% Metadata / 注释区",
             "% Exported by guiLaTeX ExportCore",
             f"% Export date: {now}",
-            "% Page size: A4 (210mm × 297mm)",
+            f"% Page size: {self._page_description()}",
             "% IR Metadata for roundtrip:",
             "% BEGIN_IR_METADATA",
         ]
@@ -85,6 +86,10 @@ class LatexExporter:
         metadata_lines.append("% END_IR_METADATA")
         
         return "\n".join(metadata_lines)
+
+    def _page_description(self):
+        name = "Letter" if self.page_format == "letter" else "A4"
+        return f"{name} ({self.page_width}mm × {self.page_height}mm)"
     
     def _generate_semantic_summary(self, elements: List[Dict[str, Any]]) -> str:
         """Generate semantic summary section"""

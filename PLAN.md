@@ -1,5 +1,10 @@
 # guiLaTeX 项目计划
 
+> **Current Web maintenance checkpoint (2026-10-24):** see
+> [docs/maintenance-checkpoint-2026-10-24.md](docs/maintenance-checkpoint-2026-10-24.md).
+> The Qt planning material below is historical; it does not replace the Web v1
+> scope in README.md or authorize restarting the old roadmap.
+
 ## 打包时发现的开发意见
 
 > 脱敏打包过程中发现的代码问题和改进建议，详见：

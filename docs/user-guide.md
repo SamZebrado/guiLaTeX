@@ -47,11 +47,23 @@ The supported subset covers common symbols, `\\frac`, `\\sqrt`, superscripts, su
 
 Choose **Save Project** to download a guiLaTeX JSON file. Choose **Open Project** to restore it. Project JSON is the lossless format for all supported Web v1 fields, including groups and embedded images.
 
+The save toolbar shows whether the project has unsaved changes. Selection alone is not a change; undoing back to the last saved/opened checkpoint returns to clean state. Save Project marks the downloaded snapshot clean; the browser cannot verify that you retained the download. Importing LaTeX or recovering a draft creates an unsaved project.
+
+The editor keeps one local recovery draft. On next startup at the same browser origin (including port), explicitly choose **Recover** or **Discard**; recovery is never automatic. Dirty projects warn before leaving or replacing/resetting the project. Browser unload warnings require user interaction and are not guaranteed during a browser crash.
+
+If browser storage is blocked or full, a visible warning asks you to save JSON; editing and downloads still work. Drafts are browser-local, can contain embedded images, and are not encrypted backups or multi-tab synchronization. Keep one editing tab per origin; clearing site data removes its draft. Regular JSON downloads remain the durable source of truth.
+
 ## LaTeX workflow
 
 Choose **Export LaTeX** to download conforming `.tex`. Choose **Import LaTeX** to reopen guiLaTeX-generated conforming output through the same Web UI.
 
+Web exports declare the Letter page contract (215.9 × 279.4 mm) in IR and use Letter geometry and page height in conforming LaTeX. Shared ExportCore input without an explicit page contract retains the legacy A4 default for Qt compatibility.
+
+The editor uses CSS pixels on its 8.5 × 11 inch canvas (816 × 1056 CSS px). Export converts geometry to canonical IR millimetres; conforming import converts millimetres back to CSS pixels. Coordinate-system metadata is page-format-neutral: dimensions come from the page contract, with A4 retained only as the legacy default.
+
 This roundtrip is intentionally bounded to the single-page, ungrouped conforming subset. It is not a general-purpose importer for arbitrary LaTeX. Fields outside that format, including persistent groups and embedded image bytes, require project JSON.
+
+For older conforming files without a geometry-unit marker, import asks you to identify the source: `web-px` for pre-v1.1 Web exports, or `ir-mm` for Qt/Core millimetre exports. These old formats have indistinguishable metadata, so no automatic unit guess is made. Cancel if provenance is unknown. Current marked files import automatically. Export geometry always uses the canonical 816 × 1056 CSS-pixel coordinate space, regardless of viewport or responsive presentation.
 
 ## IR export
 

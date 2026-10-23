@@ -2,6 +2,7 @@
 
 from .ir_schema import ExportIR, ElementIR, SUPPORTED_TYPES, COORDINATE_SYSTEM
 from .latex_exporter import LatexExporter
+from .page_contract import WEB_PAGE_FORMAT, web_geometry_to_mm
 
 __all__ = [
     'ExportIR',
@@ -29,15 +30,22 @@ def normalize_web_model_to_ir(web_model: dict) -> dict:
         标准化后的 Export IR 格式
     """
     # 从 Web 模型中提取元素并转换为标准格式
+    geometry_unit = web_model.get('geometry_unit', 'px')
+    if geometry_unit not in ('px', 'mm'):
+        raise ValueError('Unsupported Web geometry_unit: expected px or mm')
     ir_elements = []
     
     if 'elements' in web_model:
         for web_element in web_model['elements']:
             ir_element = _convert_web_element(web_element)
+            if geometry_unit == 'px':
+                ir_element.update(web_geometry_to_mm(web_element))
             ir_elements.append(ir_element)
     
     return {
-        'elements': ir_elements
+        'elements': ir_elements,
+        'page_contract': {'format': WEB_PAGE_FORMAT},
+        'geometry_unit': 'mm'
     }
 
 def _convert_web_element(web_element: dict) -> dict:

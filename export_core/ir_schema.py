@@ -95,7 +95,7 @@ SUPPORTED_TYPES = ["title", "author", "paragraph", "textbox", "equation", "image
 COORDINATE_SYSTEM = {
     "origin": "top-left corner of the page",
     "unit": "millimeters (mm)",
-    "page_size": "A4 (210mm × 297mm)",
+    "page_size": "dimensions from page_contract; absent contract defaults to legacy A4",
     "rotation_direction": "clockwise",
     "layer_order": "higher number means higher layer (appears on top)"
 }

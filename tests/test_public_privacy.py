@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_EMAILS = {
     "audit@guilatex.local",
     "guilatex@users.noreply.github.com",
+    "samzebrado@foxmail.com",
+    "noreply@github.com",
 }
 
 
@@ -51,14 +53,90 @@ def forbidden_patterns() -> list[tuple[str, re.Pattern[bytes]]]:
     ]
 
 
-EMAIL = re.compile(rb"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.I)
+# Include atom punctuation so another local part cannot become an approved suffix.
+EMAIL = re.compile(
+    rb"(?<![A-Z0-9.!#$%&'*+/=?^_`{|}~-])"
+    rb"(?:[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+|\"(?:[^\"\\\r\n]|\\.)*\")"
+    rb"@[A-Z0-9.-]+\.[A-Z]{2,}\b",
+    re.I,
+)
+BRACKETED_DOMAIN = re.compile(rb"\[(?:[^\]\\]|\\[\s\S])*\]")
+# Overlapping matches keep a stray earlier quote from consuming a local-part quote.
+QUOTED_STRING = re.compile(rb"(?=(\"(?:[^\"\\]|\\[\s\S])*\"))")
+# A terminal prose period is a delimiter; a following domain label is not.
+DOMAIN_CONTINUATION = re.compile(rb"(?:[A-Z0-9_\x80-\xff-]|\.+[A-Z0-9_\x80-\xff-])", re.I)
+
+
+def skip_email_comments_and_whitespace(data: bytes, position: int) -> int:
+    while position < len(data):
+        if data[position] in b" \t\r\n":
+            position += 1
+            continue
+        if data[position] != ord("("):
+            break
+        depth = 1
+        position += 1
+        while position < len(data) and depth:
+            value = data[position]
+            if value == ord("\\"):
+                position += 2
+                continue
+            depth += (value == ord("(")) - (value == ord(")"))
+            position += 1
+        if depth:
+            break
+    return position
+
+
+def enclosing_email_spans(data: bytes) -> list[tuple[int, int]]:
+    spans = []
+    for token in QUOTED_STRING.finditer(data):
+        position = skip_email_comments_and_whitespace(data, token.end(1))
+        if position < len(data) and data[position] == ord("@"):
+            spans.append((token.start(1), position + 1))
+    for separator in re.finditer(rb"@", data):
+        position = skip_email_comments_and_whitespace(data, separator.end())
+        domain = BRACKETED_DOMAIN.match(data, position)
+        if domain:
+            spans.append((separator.start(), domain.end()))
+    return spans
+
+
+def has_email_continuation(data: bytes, start: int, end: int) -> bool:
+    if (start and data[start - 1] >= 128) or DOMAIN_CONTINUATION.match(data, end):
+        return True
+    position = skip_email_comments_and_whitespace(data, end)
+    if position < len(data) and data[position] == ord("."):
+        label = skip_email_comments_and_whitespace(data, position + 1)
+        if DOMAIN_CONTINUATION.match(data, label):
+            return True
+    for dot in re.finditer(rb"\.", data[:start]):
+        if skip_email_comments_and_whitespace(data, dot.end()) == start:
+            return True
+    return False
 
 
 def scan_blob(label: str, data: bytes) -> list[str]:
-    findings = [f"{label}: {name}" for name, pattern in forbidden_patterns() if pattern.search(data)]
-    for value in EMAIL.findall(data):
-        email = value.decode("ascii", errors="ignore").lower()
-        if email and email not in ALLOWED_EMAILS:
+    email_matches = list(EMAIL.finditer(data))
+    approved_candidates = {
+        match.span() for match in email_matches
+        if match.group().lower() in {email.encode("ascii") for email in ALLOWED_EMAILS}
+    }
+    enclosing_tokens = enclosing_email_spans(data) if approved_candidates else []
+    allowed_email_spans = {
+        match.span() for match in email_matches
+        if match.span() in approved_candidates
+        and not has_email_continuation(data, match.start(), match.end())
+        and not any(start < match.start() and match.end() < end
+                    for start, end in enclosing_tokens)
+    }
+    findings = [
+        f"{label}: {name}" for name, pattern in forbidden_patterns()
+        if any(not (name == "private_foxmail_email" and match.span() in allowed_email_spans)
+               for match in pattern.finditer(data))
+    ]
+    for match in email_matches:
+        if match.span() not in allowed_email_spans:
             findings.append(f"{label}: unapproved_email")
     return findings
 
@@ -90,6 +168,122 @@ def history_findings() -> list[str]:
         if value not in ALLOWED_EMAILS:
             findings.append("commit_metadata: unapproved_email")
     return findings
+
+
+class PublicPrivacyPolicyTest(unittest.TestCase):
+    def test_owner_approved_addresses_are_allowed_in_content(self) -> None:
+        for email in ("samzebrado@foxmail.com", "noreply@github.com"):
+            with self.subTest(email=email):
+                self.assertEqual(scan_blob("fixture", email.encode()), [])
+
+    def test_approved_addresses_are_case_insensitive(self) -> None:
+        self.assertEqual(scan_blob("fixture", b"SAMZEBRADO@FOXMAIL.COM"), [])
+
+    def test_address_prefix_and_domain_suffix_are_not_allowlisted(self) -> None:
+        email = b"samzebrado@foxmail.com"
+        for value in (b"other" + email, email + b".attacker.test"):
+            with self.subTest(value=value):
+                self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+                self.assertIn("fixture: private_foxmail_email", scan_blob("fixture", value))
+
+    def test_other_addresses_on_approved_domains_are_rejected(self) -> None:
+        for domain in (b"foxmail.com", b"github.com"):
+            self.assertIn("fixture: unapproved_email",
+                          scan_blob("fixture", b"unapproved" + b"@" + domain))
+
+    def test_punctuation_prefixed_addresses_are_not_allowlisted(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for prefix in b".!#$%&'*+-/=?^_`{|}~":
+                value = bytes([prefix]) + email
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_unapproved_address_before_sentence_punctuation_is_rejected(self) -> None:
+        email = b"unapproved" + b"@" + b"example.com"
+        for suffix in (b".", b",", b";", b")"):
+            with self.subTest(suffix=suffix):
+                self.assertIn("fixture: unapproved_email", scan_blob("fixture", email + suffix))
+
+    def test_approved_addresses_before_sentence_punctuation_are_allowed(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for suffix in (b".", b",", b";", b")"):
+                with self.subTest(value=email + suffix):
+                    self.assertEqual(scan_blob("fixture", email + suffix), [])
+
+    def test_domain_continuations_are_not_allowlisted(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for suffix in (b"-evil", b".attacker123", b".x", b".123"):
+                with self.subTest(value=email + suffix):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", email + suffix))
+
+    def test_non_ascii_address_parts_are_not_allowlisted(self) -> None:
+        extra = "é".encode("utf-8")
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for value in (extra + email, email + extra, email + b"." + extra):
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_approved_substring_inside_another_address_is_rejected(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            values = (b'"' + email + b'"' + b"@" + b"attacker.test",
+                      b'"' + email + b'"' + b"@" + "é.test".encode("utf-8"),
+                      b"other" + b"@" + b"[" + email + b"]",
+                      b"other" + b"@" + b"[escaped\\] " + email + b"]")
+            for value in values:
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_quoted_local_whitespace_and_comments_are_not_allowlisted(self) -> None:
+        gaps = (b" ", b"\t", b"\r\n \t", b" (comment) ",
+                b" (outer (inner\\) text) tail) ")
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            values = [b'"' + email + b'"' + gap + b"@" + b"attacker.test"
+                      for gap in gaps]
+            values.append(b'"prefix\r\n ' + email + b'"' + b"@" + b"attacker.test")
+            for value in values:
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_bracketed_domain_whitespace_and_comments_are_not_allowlisted(self) -> None:
+        gaps = (b" ", b"\t", b"\r\n \t", b" (comment) ",
+                b" (outer (inner\\) text) tail) ")
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for gap in gaps:
+                value = b"other" + b"@" + gap + b"[" + email + b"]"
+                with self.subTest(value=value):
+                    self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_folded_bracketed_domains_are_not_allowlisted(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            value = b"other" + b"@" + b"[prefix\r\n " + email + b"]"
+            self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_unpaired_quotes_do_not_hide_address_enclosures(self) -> None:
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            value = b'note "unfinished\n' + b'"' + email + b'" ' + b"@" + b"attacker.test"
+            self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_dot_atom_continuations_across_comments_and_whitespace_are_rejected(self) -> None:
+        gaps = (b" ", b"\t", b"\r\n \t", b"(comment)",
+                b" (outer (inner\\) text) tail) ")
+        for email in (b"samzebrado@foxmail.com", b"noreply@github.com"):
+            for gap in gaps:
+                values = (b"other." + gap + email,
+                          b"other" + gap + b"." + gap + email,
+                          email + gap + b"." + gap + b"attacker.test")
+                for value in values:
+                    with self.subTest(value=value):
+                        self.assertIn("fixture: unapproved_email", scan_blob("fixture", value))
+
+    def test_allowed_email_does_not_hide_a_secret_in_the_same_blob(self) -> None:
+        for prefix, category in ((b"s" + b"k-", "openai_key"),
+                                 (b"g" + b"hp_", "github_token")):
+            value = b"noreply@github.com " + prefix + b"a" * 32
+            self.assertIn("fixture: " + category, scan_blob("fixture", value))
+
+    def test_allowed_email_does_not_hide_a_private_path(self) -> None:
+        value = b"noreply@github.com /" + b"Users" + b"/sam" + b"zebrado/"
+        self.assertIn("fixture: private_macos_home", scan_blob("fixture", value))
 
 
 class PublicPrivacyTest(unittest.TestCase):
